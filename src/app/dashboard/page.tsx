@@ -156,7 +156,7 @@ export default function DashboardPage() {
 		<div className="min-h-screen">
 			<Navigation />
 			<main className="container mx-auto px-4 py-8">
-				<h1 className="text-4xl font-bold mb-8">Dashboard</h1>
+				<h1 className="mb-8 text-3xl font-bold sm:text-4xl">Dashboard</h1>
 
 				{!convexUser && (
 					<div className="text-muted-foreground">Loading your dashboard...</div>
@@ -234,15 +234,15 @@ export default function DashboardPage() {
 							</div>
 						)}
 
-						<div className="grid gap-4 lg:grid-cols-3">
-							<Card className="lg:col-span-2">
+							<div className="grid gap-4 lg:grid-cols-3">
+								<Card className="lg:col-span-2">
 								<CardHeader>
 									<CardTitle>Revenue (last 6 months)</CardTitle>
 									<p className="text-sm text-muted-foreground">
 										Paid invoices by issue date
 									</p>
 								</CardHeader>
-								<CardContent className="h-[320px]">
+									<CardContent className="h-[240px] sm:h-[320px]">
 									{invoiceList.length ? (
 										<ResponsiveContainer width="100%" height="100%">
 											<BarChart
@@ -290,14 +290,14 @@ export default function DashboardPage() {
 								</CardContent>
 							</Card>
 
-							<Card>
+								<Card>
 								<CardHeader>
 									<CardTitle>Invoice status mix</CardTitle>
 									<p className="text-sm text-muted-foreground">
 										All invoices grouped by status
 									</p>
 								</CardHeader>
-								<CardContent className="h-[320px]">
+									<CardContent className="h-[240px] sm:h-[320px]">
 									{invoiceList.length ? (
 										<ResponsiveContainer width="100%" height="100%">
 											<PieChart>
@@ -339,14 +339,14 @@ export default function DashboardPage() {
 							</Card>
 						</div>
 
-						<Card>
+							<Card>
 							<CardHeader>
 								<CardTitle>Top clients by billed amount</CardTitle>
 								<p className="text-sm text-muted-foreground">
 									Based on all invoices
 								</p>
 							</CardHeader>
-							<CardContent className="h-[320px]">
+								<CardContent className="h-[240px] sm:h-[320px]">
 								{topClientsData.length ? (
 									<ResponsiveContainer width="100%" height="100%">
 										<BarChart

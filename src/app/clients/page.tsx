@@ -208,8 +208,8 @@ export default function ClientsPage() {
 		<div className="min-h-screen">
 			<Navigation />
 			<main className="container mx-auto px-4 py-8">
-				<div className="mb-8 flex items-center justify-between gap-2">
-					<h1 className="text-4xl font-bold">Clients</h1>
+				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<h1 className="text-3xl font-bold sm:text-4xl">Clients</h1>
 					<Dialog open={open} onOpenChange={setOpen}>
 						<DialogTrigger asChild>
 							<Button>Add Client</Button>
@@ -292,7 +292,7 @@ export default function ClientsPage() {
 						onSelectionChange={setSelectedClients}
 						renderToolbar={() =>
 							selectedCount > 0 ? (
-								<div className="flex flex-wrap items-center gap-2">
+								<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
 									<span className="text-sm text-muted-foreground">
 										{selectedCount} selected
 									</span>
@@ -301,6 +301,7 @@ export default function ClientsPage() {
 											<Button
 												variant="destructive"
 												size="sm"
+												className="w-full sm:w-auto"
 												disabled={isDeleting}
 											>
 												{isDeleting ? (

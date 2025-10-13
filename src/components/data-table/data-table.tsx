@@ -121,15 +121,21 @@ export function DataTable<TData, TValue>({
 							onChange={(event) =>
 								table.getColumn(filterKey)?.setFilterValue(event.target.value)
 							}
-							className="max-w-sm"
+							className="w-full max-w-full sm:max-w-sm"
 						/>
 					) : null}
 				</div>
-				<div className="flex flex-wrap items-center justify-end gap-2">
-					{renderToolbar ? renderToolbar(table) : null}
+				<div className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+					{renderToolbar ? (
+						<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+							{renderToolbar(table)}
+						</div>
+					) : null}
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
-							<Button variant="outline">Columns</Button>
+							<Button variant="outline" className="w-full sm:w-auto">
+								Columns
+							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
 							{table

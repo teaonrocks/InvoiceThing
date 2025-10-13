@@ -508,9 +508,9 @@ export default function InvoicesPage() {
 		<div className="min-h-screen">
 			<Navigation />
 			<main className="container mx-auto px-4 py-8">
-				<div className="mb-8 flex items-center justify-between gap-2">
-					<h1 className="text-4xl font-bold">Invoices</h1>
-					<Button asChild>
+				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<h1 className="text-3xl font-bold sm:text-4xl">Invoices</h1>
+					<Button asChild className="w-full sm:w-auto">
 						<Link href="/invoices/new">Create Invoice</Link>
 					</Button>
 				</div>
@@ -542,13 +542,18 @@ export default function InvoicesPage() {
 							meta={{ onDeleteInvoice: handleDeleteInvoice, isDeleting }}
 							renderToolbar={() =>
 								selectedCount > 0 ? (
-									<div className="flex flex-wrap items-center gap-2">
+									<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
 										<span className="text-sm text-muted-foreground">
 											{selectedCount} selected
 										</span>
 										<DropdownMenu>
 											<DropdownMenuTrigger asChild>
-												<Button variant="outline" size="sm" disabled={isBusy}>
+												<Button
+													variant="outline"
+													size="sm"
+													className="w-full sm:w-auto"
+													disabled={isBusy}
+												>
 													{isBulkUpdating ? (
 														<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 													) : (
@@ -572,6 +577,7 @@ export default function InvoicesPage() {
 										<Button
 											variant="outline"
 											size="sm"
+											className="w-full sm:w-auto"
 											onClick={handleBulkDownload}
 											disabled={isBusy}
 										>
@@ -587,6 +593,7 @@ export default function InvoicesPage() {
 												<Button
 													variant="destructive"
 													size="sm"
+													className="w-full sm:w-auto"
 													disabled={isBusy}
 												>
 													{isDeleting ? (

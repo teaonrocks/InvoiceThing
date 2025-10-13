@@ -11,22 +11,24 @@ export default async function Home() {
 	}
 
 	return (
-		<div className="flex min-h-screen flex-col items-center justify-center p-8">
-			<div className="max-w-4xl text-center space-y-8">
-				<h1 className="text-5xl font-bold tracking-tight">
+		<div className="flex min-h-screen flex-col items-center justify-center px-6 py-12 sm:px-8">
+			<div className="space-y-8 text-center">
+				<h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
 					Welcome to InvoiceThing
 				</h1>
-				<p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+				<p className="mx-auto max-w-2xl text-lg text-muted-foreground sm:text-xl">
 					The simple and powerful invoice management system for freelancers.
 					Create professional invoices, track payments, and manage clients all
 					in one place.
 				</p>
-				<div className="flex gap-4 justify-center items-center pt-4">
+				<div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row sm:gap-4">
 					<Link href="/sign-up">
-						<Button size="lg">Get Started</Button>
+						<Button size="lg" className="w-48 sm:w-auto">
+							Get Started
+						</Button>
 					</Link>
 					<Link href="/sign-in">
-						<Button variant="outline" size="lg">
+						<Button variant="outline" size="lg" className="w-48 sm:w-auto">
 							Sign In
 						</Button>
 					</Link>
