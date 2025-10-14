@@ -1,24 +1,47 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+function normalizeField(value: string | undefined | null) {
+	const trimmed = value?.trim();
+	return trimmed ? trimmed : undefined;
+}
+
+function normalizeClientAddress(args: {
+	streetName?: string | null;
+	buildingName?: string | null;
+	unitNumber?: string | null;
+	postalCode?: string | null;
+}) {
+	return {
+		streetName: normalizeField(args.streetName ?? undefined),
+		buildingName: normalizeField(args.buildingName ?? undefined),
+		unitNumber: normalizeField(args.unitNumber ?? undefined),
+		postalCode: normalizeField(args.postalCode ?? undefined),
+	};
+}
+
 // Create a new client
 export const create = mutation({
 	args: {
 		userId: v.id("users"),
 		name: v.string(),
 		email: v.optional(v.string()),
-		address: v.optional(v.string()),
+		streetName: v.optional(v.string()),
+		buildingName: v.optional(v.string()),
+		unitNumber: v.optional(v.string()),
+		postalCode: v.optional(v.string()),
 		contactPerson: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
+		const normalizedAddress = normalizeClientAddress(args);
 		const clientId = await ctx.db.insert("clients", {
 			userId: args.userId,
 			name: args.name,
 			email: args.email,
-			address: args.address,
 			contactPerson: args.contactPerson,
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
+			...normalizedAddress,
 		});
 		return clientId;
 	},
@@ -49,13 +72,18 @@ export const update = mutation({
 		clientId: v.id("clients"),
 		name: v.optional(v.string()),
 		email: v.optional(v.string()),
-		address: v.optional(v.string()),
+		streetName: v.optional(v.string()),
+		buildingName: v.optional(v.string()),
+		unitNumber: v.optional(v.string()),
+		postalCode: v.optional(v.string()),
 		contactPerson: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const { clientId, ...updates } = args;
+		const normalizedAddress = normalizeClientAddress(updates);
 		await ctx.db.patch(clientId, {
 			...updates,
+			...normalizedAddress,
 			updatedAt: Date.now(),
 		});
 	},

@@ -42,6 +42,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { DownloadInvoicePDF } from "@/components/download-invoice-pdf";
+import { formatAddressParts } from "@/lib/utils";
 
 // Component to view claim receipt images
 function ClaimImageViewer({ storageId }: { storageId: Id<"_storage"> }) {
@@ -156,6 +157,13 @@ export default function InvoiceDetailPage({
 		);
 	}
 
+	const formattedClientAddress = formatAddressParts({
+		streetName: invoice.client?.streetName,
+		buildingName: invoice.client?.buildingName,
+		unitNumber: invoice.client?.unitNumber,
+		postalCode: invoice.client?.postalCode,
+	});
+
 	return (
 		<div className="container max-w-5xl mx-auto py-8">
 			{/* Header */}
@@ -230,9 +238,9 @@ export default function InvoiceDetailPage({
 								<p className="text-sm text-muted-foreground">
 									{invoice.client?.email}
 								</p>
-								{invoice.client?.address && (
+								{formattedClientAddress && (
 									<p className="text-sm text-muted-foreground">
-										{invoice.client.address}
+										{formattedClientAddress}
 									</p>
 								)}
 								{invoice.client?.contactPerson && (

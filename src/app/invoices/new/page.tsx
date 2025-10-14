@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
@@ -103,7 +103,10 @@ export default function NewInvoicePage() {
 	const [showNewClientModal, setShowNewClientModal] = useState(false);
 	const [newClientName, setNewClientName] = useState("");
 	const [newClientEmail, setNewClientEmail] = useState("");
-	const [newClientAddress, setNewClientAddress] = useState("");
+	const [newClientStreetName, setNewClientStreetName] = useState("");
+	const [newClientBuildingName, setNewClientBuildingName] = useState("");
+	const [newClientUnitNumber, setNewClientUnitNumber] = useState("");
+	const [newClientPostalCode, setNewClientPostalCode] = useState("");
 	const [newClientContactPerson, setNewClientContactPerson] = useState("");
 	const [isCreatingClient, setIsCreatingClient] = useState(false);
 
@@ -146,9 +149,12 @@ export default function NewInvoicePage() {
 			const clientId = await createClient({
 				userId: currentUser._id,
 				name: newClientName,
-				email: newClientEmail || undefined,
-				address: newClientAddress || undefined,
-				contactPerson: newClientContactPerson || undefined,
+				email: newClientEmail.trim() || undefined,
+				streetName: newClientStreetName.trim() || undefined,
+				buildingName: newClientBuildingName.trim() || undefined,
+				unitNumber: newClientUnitNumber.trim() || undefined,
+				postalCode: newClientPostalCode.trim() || undefined,
+				contactPerson: newClientContactPerson.trim() || undefined,
 			});
 
 			toast({
@@ -161,7 +167,10 @@ export default function NewInvoicePage() {
 			// Reset form
 			setNewClientName("");
 			setNewClientEmail("");
-			setNewClientAddress("");
+			setNewClientStreetName("");
+			setNewClientBuildingName("");
+			setNewClientUnitNumber("");
+			setNewClientPostalCode("");
 			setNewClientContactPerson("");
 			setSearchValue("");
 		} catch (error) {
@@ -920,7 +929,10 @@ export default function NewInvoicePage() {
 						// Reset form when closing
 						setNewClientName("");
 						setNewClientEmail("");
-						setNewClientAddress("");
+						setNewClientStreetName("");
+						setNewClientBuildingName("");
+						setNewClientUnitNumber("");
+						setNewClientPostalCode("");
 						setNewClientContactPerson("");
 						setSearchValue("");
 					}
@@ -955,14 +967,46 @@ export default function NewInvoicePage() {
 								onChange={(e) => setNewClientEmail(e.target.value)}
 							/>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor="newClientAddress">Address (Optional)</Label>
-							<Input
-								id="newClientAddress"
-								placeholder="123 Main St, City, Country"
-								value={newClientAddress}
-								onChange={(e) => setNewClientAddress(e.target.value)}
-							/>
+						<div className="grid gap-4 md:grid-cols-2">
+							<div className="space-y-2">
+								<Label htmlFor="newClientStreetName">Street name</Label>
+								<Input
+									id="newClientStreetName"
+									placeholder="123 Main Street"
+									value={newClientStreetName}
+									onChange={(e) => setNewClientStreetName(e.target.value)}
+									autoComplete="address-line1"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="newClientBuildingName">Building</Label>
+								<Input
+									id="newClientBuildingName"
+									placeholder="Sunrise Plaza"
+									value={newClientBuildingName}
+									onChange={(e) => setNewClientBuildingName(e.target.value)}
+									autoComplete="address-line2"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="newClientUnitNumber">Unit</Label>
+								<Input
+									id="newClientUnitNumber"
+									placeholder="#04-01"
+									value={newClientUnitNumber}
+									onChange={(e) => setNewClientUnitNumber(e.target.value)}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="newClientPostalCode">Postal code</Label>
+								<Input
+									id="newClientPostalCode"
+									placeholder="123456"
+									value={newClientPostalCode}
+									onChange={(e) => setNewClientPostalCode(e.target.value)}
+									autoComplete="postal-code"
+								/>
+							</div>
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="newClientContactPerson">

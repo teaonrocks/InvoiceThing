@@ -8,7 +8,6 @@ import type { Id } from "../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Dialog,
@@ -21,6 +20,7 @@ import {
 import { ArrowLeft, Loader2, Trash2, Save } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { formatAddressParts } from "@/lib/utils";
 
 export default function ClientDetailPage({
 	params,
@@ -39,7 +39,10 @@ export default function ClientDetailPage({
 
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
-	const [address, setAddress] = useState("");
+	const [streetName, setStreetName] = useState("");
+	const [buildingName, setBuildingName] = useState("");
+	const [unitNumber, setUnitNumber] = useState("");
+	const [postalCode, setPostalCode] = useState("");
 	const [contactPerson, setContactPerson] = useState("");
 	const [isEditing, setIsEditing] = useState(false);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +55,10 @@ export default function ClientDetailPage({
 		if (client && !isLoaded) {
 			setName(client.name);
 			setEmail(client.email || "");
-			setAddress(client.address || "");
+			setStreetName(client.streetName || "");
+			setBuildingName(client.buildingName || "");
+			setUnitNumber(client.unitNumber || "");
+			setPostalCode(client.postalCode || "");
 			setContactPerson(client.contactPerson || "");
 			setIsLoaded(true);
 		}
@@ -77,7 +83,10 @@ export default function ClientDetailPage({
 				clientId: id as Id<"clients">,
 				name,
 				email: email || undefined,
-				address: address || undefined,
+				streetName: streetName.trim() || undefined,
+				buildingName: buildingName.trim() || undefined,
+				unitNumber: unitNumber.trim() || undefined,
+				postalCode: postalCode.trim() || undefined,
 				contactPerson: contactPerson || undefined,
 			});
 
@@ -130,6 +139,13 @@ export default function ClientDetailPage({
 			</div>
 		);
 	}
+
+	const formattedAddress = formatAddressParts({
+		streetName: client.streetName,
+		buildingName: client.buildingName,
+		unitNumber: client.unitNumber,
+		postalCode: client.postalCode,
+	});
 
 	return (
 		<div className="container max-w-3xl mx-auto py-8">
@@ -191,15 +207,43 @@ export default function ClientDetailPage({
 								/>
 							</div>
 
-							<div className="space-y-2">
-								<Label htmlFor="address">Address</Label>
-								<Textarea
-									id="address"
-									value={address}
-									onChange={(e) => setAddress(e.target.value)}
-									placeholder="123 Main St, City, State, ZIP"
-									rows={3}
-								/>
+							<div className="grid gap-4 sm:grid-cols-2">
+								<div className="grid gap-2 sm:col-span-2">
+									<Label htmlFor="streetName">Street name</Label>
+									<Input
+										id="streetName"
+										value={streetName}
+										onChange={(e) => setStreetName(e.target.value)}
+										placeholder="123 Main Street"
+									/>
+								</div>
+								<div className="grid gap-2">
+									<Label htmlFor="buildingName">Building name</Label>
+									<Input
+										id="buildingName"
+										value={buildingName}
+										onChange={(e) => setBuildingName(e.target.value)}
+										placeholder="Sunrise Plaza"
+									/>
+								</div>
+								<div className="grid gap-2">
+									<Label htmlFor="unitNumber">Unit number</Label>
+									<Input
+										id="unitNumber"
+										value={unitNumber}
+										onChange={(e) => setUnitNumber(e.target.value)}
+										placeholder="12-34"
+									/>
+								</div>
+								<div className="grid gap-2">
+									<Label htmlFor="postalCode">Postal code</Label>
+									<Input
+										id="postalCode"
+										value={postalCode}
+										onChange={(e) => setPostalCode(e.target.value)}
+										placeholder="123456"
+									/>
+								</div>
 							</div>
 
 							<div className="space-y-2">
@@ -222,7 +266,10 @@ export default function ClientDetailPage({
 										if (client) {
 											setName(client.name);
 											setEmail(client.email || "");
-											setAddress(client.address || "");
+											setStreetName(client.streetName || "");
+											setBuildingName(client.buildingName || "");
+											setUnitNumber(client.unitNumber || "");
+											setPostalCode(client.postalCode || "");
 											setContactPerson(client.contactPerson || "");
 										}
 									}}
@@ -249,11 +296,11 @@ export default function ClientDetailPage({
 								<p className="text-lg">{client.email || "No email provided"}</p>
 							</div>
 
-							{client.address && (
+							{formattedAddress && (
 								<div>
 									<Label className="text-muted-foreground">Address</Label>
 									<p className="text-lg whitespace-pre-wrap">
-										{client.address}
+										{formattedAddress}
 									</p>
 								</div>
 							)}

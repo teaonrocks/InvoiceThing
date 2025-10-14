@@ -39,18 +39,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { clientColumns } from "./columns";
 import { useAppData } from "@/context/app-data-provider";
+import { formatAddressParts } from "@/lib/utils";
 
 export default function ClientsPage() {
 	const { toast } = useToast();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
-	const [address, setAddress] = useState("");
+	const [streetName, setStreetName] = useState("");
+	const [buildingName, setBuildingName] = useState("");
+	const [unitNumber, setUnitNumber] = useState("");
+	const [postalCode, setPostalCode] = useState("");
 	const [contactPerson, setContactPerson] = useState("");
 	const [selectedClients, setSelectedClients] = useState<ClientRow[]>([]);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -76,13 +79,19 @@ export default function ClientsPage() {
 			userId: convexUser._id,
 			name,
 			email: email || undefined,
-			address: address || undefined,
+			streetName: streetName.trim() || undefined,
+			buildingName: buildingName.trim() || undefined,
+			unitNumber: unitNumber.trim() || undefined,
+			postalCode: postalCode.trim() || undefined,
 			contactPerson: contactPerson || undefined,
 		});
 
 		setName("");
 		setEmail("");
-		setAddress("");
+		setStreetName("");
+		setBuildingName("");
+		setUnitNumber("");
+		setPostalCode("");
 		setContactPerson("");
 		setOpen(false);
 	};
@@ -91,12 +100,18 @@ export default function ClientsPage() {
 
 	const tableData: ClientRow[] = useMemo(() => {
 		return clientList.map((client) => {
+			const formattedAddress = formatAddressParts({
+				streetName: client.streetName ?? undefined,
+				buildingName: client.buildingName ?? undefined,
+				unitNumber: client.unitNumber ?? undefined,
+				postalCode: client.postalCode ?? undefined,
+			});
 			const invoiceCount = (client as { invoiceCount?: number }).invoiceCount;
 			return {
 				_id: client._id,
 				name: client.name,
 				email: client.email ?? undefined,
-				address: client.address ?? undefined,
+				address: formattedAddress,
 				contactPerson: client.contactPerson ?? undefined,
 				createdAt: client.createdAt,
 				invoiceCount:
@@ -113,6 +128,15 @@ export default function ClientsPage() {
 	}, [clientList, previewClientId]);
 
 	const clientForPreview = previewClient ?? fallbackPreviewClient;
+	const previewAddress = useMemo(() => {
+		if (!clientForPreview) return undefined;
+		return formatAddressParts({
+			streetName: (clientForPreview as { streetName?: string }).streetName,
+			buildingName: (clientForPreview as { buildingName?: string }).buildingName,
+			unitNumber: (clientForPreview as { unitNumber?: string }).unitNumber,
+			postalCode: (clientForPreview as { postalCode?: string }).postalCode,
+		});
+	}, [clientForPreview]);
 
 	const previewInvoiceCount = useMemo(() => {
 		if (!clientForPreview) return undefined;
@@ -249,14 +273,43 @@ export default function ClientsPage() {
 											onChange={(event) => setContactPerson(event.target.value)}
 										/>
 									</div>
-									<div className="grid gap-2">
-										<Label htmlFor="client-address">Address</Label>
-										<Textarea
-											id="client-address"
-											value={address}
-											onChange={(event) => setAddress(event.target.value)}
-											rows={3}
-										/>
+									<div className="grid gap-4 sm:grid-cols-2">
+										<div className="grid gap-2 sm:col-span-2">
+											<Label htmlFor="client-street">Street name</Label>
+											<Input
+												id="client-street"
+												value={streetName}
+												onChange={(event) => setStreetName(event.target.value)}
+												placeholder="123 Main Street"
+											/>
+										</div>
+										<div className="grid gap-2">
+											<Label htmlFor="client-building">Building name</Label>
+											<Input
+												id="client-building"
+												value={buildingName}
+												onChange={(event) => setBuildingName(event.target.value)}
+												placeholder="Sunrise Plaza"
+											/>
+										</div>
+										<div className="grid gap-2">
+											<Label htmlFor="client-unit">Unit number</Label>
+											<Input
+												id="client-unit"
+												value={unitNumber}
+												onChange={(event) => setUnitNumber(event.target.value)}
+												placeholder="12-34"
+											/>
+										</div>
+										<div className="grid gap-2">
+											<Label htmlFor="client-postal">Postal code</Label>
+											<Input
+												id="client-postal"
+												value={postalCode}
+												onChange={(event) => setPostalCode(event.target.value)}
+												placeholder="123456"
+											/>
+										</div>
 									</div>
 								</div>
 								<DialogFooter>
@@ -410,7 +463,7 @@ export default function ClientsPage() {
 											Address
 										</p>
 										<p className="whitespace-pre-line rounded-md border bg-muted/30 p-3 text-sm">
-											{clientForPreview.address ?? "No address on file"}
+											{previewAddress ?? "No address on file"}
 										</p>
 									</div>
 								</div>

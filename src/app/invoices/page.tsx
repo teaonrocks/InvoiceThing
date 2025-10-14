@@ -67,6 +67,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatAddressParts } from "@/lib/utils";
 
 const STATUS_OPTIONS: InvoiceStatusOption[] = [
 	{ value: "draft", label: "Draft", color: "bg-gray-500" },
@@ -89,6 +90,10 @@ type InvoicePreview = {
 		name: string;
 		email?: string | null;
 		contactPerson?: string | null;
+		streetName?: string | null;
+		buildingName?: string | null;
+		unitNumber?: string | null;
+		postalCode?: string | null;
 	} | null;
 	lineItems?: {
 		description: string;
@@ -158,7 +163,11 @@ export default function InvoicesPage() {
 				? {
 						name: invoice.client.name,
 						email: invoice.client.email ?? null,
-						contactPerson: invoice.client.contactPerson ?? null,
+					contactPerson: invoice.client.contactPerson ?? null,
+					streetName: invoice.client.streetName ?? null,
+					buildingName: invoice.client.buildingName ?? null,
+					unitNumber: invoice.client.unitNumber ?? null,
+					postalCode: invoice.client.postalCode ?? null,
 					}
 				: null,
 			lineItems: (invoice.lineItems ?? []).map((item) => ({
@@ -192,7 +201,11 @@ export default function InvoicesPage() {
 				? {
 						name: invoice.client.name,
 						email: invoice.client.email ?? null,
-						contactPerson: invoice.client.contactPerson ?? null,
+					contactPerson: invoice.client.contactPerson ?? null,
+					streetName: invoice.client.streetName ?? null,
+					buildingName: invoice.client.buildingName ?? null,
+					unitNumber: invoice.client.unitNumber ?? null,
+					postalCode: invoice.client.postalCode ?? null,
 					}
 				: null,
 			lineItems: [],
@@ -249,6 +262,17 @@ export default function InvoicesPage() {
 		return STATUS_OPTIONS.find(
 			(option) => option.value === invoiceForPreview.status
 		);
+	}, [invoiceForPreview]);
+
+	const previewAddress = useMemo(() => {
+		const client = invoiceForPreview?.client;
+		if (!client) return undefined;
+		return formatAddressParts({
+			streetName: client.streetName ?? undefined,
+			buildingName: client.buildingName ?? undefined,
+			unitNumber: client.unitNumber ?? undefined,
+			postalCode: client.postalCode ?? undefined,
+		});
 	}, [invoiceForPreview]);
 
 	const tableData: InvoiceRow[] = useMemo(
@@ -426,17 +450,17 @@ export default function InvoicesPage() {
 
 				const clientInfo = invoice.client
 					? {
-							name: invoice.client.name,
-							email: invoice.client.email ?? "",
-							address: invoice.client.address,
-							contactPerson: invoice.client.contactPerson,
-						}
+						name: invoice.client.name,
+						email: invoice.client.email ?? undefined,
+						contactPerson: invoice.client.contactPerson ?? undefined,
+						streetName: invoice.client.streetName ?? undefined,
+						buildingName: invoice.client.buildingName ?? undefined,
+						unitNumber: invoice.client.unitNumber ?? undefined,
+						postalCode: invoice.client.postalCode ?? undefined,
+					}
 					: {
-							name: "Unknown client",
-							email: "",
-							address: undefined,
-							contactPerson: undefined,
-						};
+						name: "Unknown client",
+					};
 
 				const pdfData = {
 					invoiceNumber: invoice.invoiceNumber,
@@ -691,6 +715,11 @@ export default function InvoicesPage() {
 												{invoiceForPreview.client?.contactPerson ? (
 													<p className="text-sm text-muted-foreground">
 														Contact: {invoiceForPreview.client.contactPerson}
+													</p>
+												) : null}
+												{previewAddress ? (
+													<p className="text-sm text-muted-foreground">
+														{previewAddress}
 													</p>
 												) : null}
 											</div>

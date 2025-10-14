@@ -8,6 +8,7 @@ import {
 	StyleSheet,
 	Image,
 } from "@react-pdf/renderer";
+import { formatAddressParts } from "@/lib/utils";
 
 // Register fonts (optional - using built-in fonts for now)
 // Font.register({
@@ -226,8 +227,11 @@ type InvoiceData = {
 	client: {
 		name: string;
 		email?: string;
-		address?: string;
 		contactPerson?: string;
+		streetName?: string;
+		buildingName?: string;
+		unitNumber?: string;
+		postalCode?: string;
 	};
 	lineItems: Array<{
 		description: string;
@@ -253,6 +257,13 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 	const receiptPageMap = new Map<(typeof claims)[number], number>();
 	claimsWithImages.forEach((claim, index) => {
 		receiptPageMap.set(claim, index + 2);
+	});
+
+	const formattedClientAddress = formatAddressParts({
+		streetName: invoice.client.streetName,
+		buildingName: invoice.client.buildingName,
+		unitNumber: invoice.client.unitNumber,
+		postalCode: invoice.client.postalCode,
 	});
 
 	return (
@@ -294,9 +305,9 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 							{invoice.client.email}
 						</Text>
 					)}
-					{invoice.client.address && (
+					{formattedClientAddress && (
 						<Text style={{ fontSize: 10, color: "#666" }}>
-							{invoice.client.address}
+							{formattedClientAddress}
 						</Text>
 					)}
 				</View>

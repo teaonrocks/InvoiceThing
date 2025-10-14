@@ -20,12 +20,17 @@ type Invoice = {
 	tax: number;
 	total: number;
 	notes?: string;
-	client: {
-		name: string;
-		email?: string;
-		address?: string;
-		contactPerson?: string;
-	} | null;
+	client:
+		| {
+			name: string;
+			email?: string;
+			contactPerson?: string;
+			streetName?: string;
+			buildingName?: string;
+			unitNumber?: string;
+			postalCode?: string;
+		}
+		| null;
 	lineItems: Array<{
 		_id: string;
 		description: string;
