@@ -416,7 +416,13 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 				)}
 
 				{/* Totals and Payment Information Section */}
-				<View style={styles.totalsContainer}>
+				<View
+					style={
+						invoice.paymentInstructions
+							? styles.totalsContainer
+							: { marginTop: 20, alignItems: "flex-end" }
+					}
+				>
 					{/* Payment Instructions (Left Side) */}
 					{invoice.paymentInstructions && (
 						<View style={styles.paymentInfo}>
