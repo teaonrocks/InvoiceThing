@@ -9,18 +9,21 @@ import { useStoreUser } from "@/hooks/use-store-user";
 import { useAppData } from "@/context/app-data-provider";
 import { format } from "date-fns";
 import {
-	ResponsiveContainer,
 	BarChart,
 	Bar,
 	CartesianGrid,
 	XAxis,
 	YAxis,
-	Tooltip as RechartsTooltip,
-	Legend,
 	PieChart,
 	Pie,
 	Cell,
 } from "recharts";
+import {
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+	type ChartConfig,
+} from "@/components/ui/chart";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
@@ -32,10 +35,10 @@ const STATUS_LABELS: Record<InvoiceStatus, string> = {
 };
 
 const STATUS_COLORS: Record<InvoiceStatus, string> = {
-	draft: "#9CA3AF",
-	sent: "#3B82F6",
-	paid: "#10B981",
-	overdue: "#EF4444",
+	draft: "hsl(var(--chart-1))",
+	sent: "hsl(var(--chart-2))",
+	paid: "hsl(var(--chart-3))",
+	overdue: "hsl(var(--chart-4))",
 };
 
 export default function DashboardPage() {
@@ -112,12 +115,14 @@ export default function DashboardPage() {
 			}
 		});
 
-		return (Object.keys(counts) as InvoiceStatus[]).map((status) => ({
-			status,
-			label: STATUS_LABELS[status],
-			count: counts[status],
-			color: STATUS_COLORS[status],
-		}));
+		return (Object.keys(counts) as InvoiceStatus[])
+			.map((status) => ({
+				status,
+				label: STATUS_LABELS[status],
+				count: counts[status],
+				color: STATUS_COLORS[status],
+			}))
+			.filter((item) => item.count > 0);
 	}, [invoiceList]);
 
 	const topClientsData = useMemo(() => {
@@ -143,14 +148,39 @@ export default function DashboardPage() {
 			}));
 	}, [invoiceList]);
 
-	const tooltipStyle = {
-		backgroundColor: "var(--background)",
-		borderRadius: "0.5rem",
-		border: "1px solid var(--border)",
-		color: "var(--foreground)",
-		fontSize: "0.75rem",
-		padding: "0.5rem 0.75rem",
-	};
+	// Chart configurations
+	const revenueChartConfig = {
+		revenue: {
+			label: "Revenue",
+			color: "hsl(var(--chart-1))",
+		},
+	} satisfies ChartConfig;
+
+	const statusChartConfig = {
+		draft: {
+			label: "Draft",
+			color: "hsl(var(--muted-foreground))", // Gray
+		},
+		sent: {
+			label: "Sent",
+			color: "hsl(221 83% 53%)", // Blue (blue-500)
+		},
+		paid: {
+			label: "Paid",
+			color: "hsl(142 71% 45%)", // Green (green-500)
+		},
+		overdue: {
+			label: "Overdue",
+			color: "hsl(0 84% 60%)", // Red (red-500)
+		},
+	} satisfies ChartConfig;
+
+	const clientsChartConfig = {
+		value: {
+			label: "Billed",
+			color: "hsl(var(--chart-1))",
+		},
+	} satisfies ChartConfig;
 
 	return (
 		<div className="min-h-screen">
@@ -234,54 +264,57 @@ export default function DashboardPage() {
 							</div>
 						)}
 
-							<div className="grid gap-4 lg:grid-cols-3">
-								<Card className="lg:col-span-2">
+						<div className="grid gap-4 lg:grid-cols-3">
+							<Card className="lg:col-span-2">
 								<CardHeader>
 									<CardTitle>Revenue (last 6 months)</CardTitle>
 									<p className="text-sm text-muted-foreground">
 										Paid invoices by issue date
 									</p>
 								</CardHeader>
-									<CardContent className="h-[240px] sm:h-[320px]">
+								<CardContent className="h-[240px] sm:h-[320px]">
 									{invoiceList.length ? (
-										<ResponsiveContainer width="100%" height="100%">
+										<ChartContainer
+											config={revenueChartConfig}
+											className="h-full w-full"
+										>
 											<BarChart
+												accessibilityLayer
 												data={monthlyRevenueData}
 												margin={{ top: 16, right: 16, left: 8, bottom: 16 }}
 											>
-												<CartesianGrid strokeDasharray="4 4" stroke="#E5E7EB" />
+												<CartesianGrid vertical={false} />
 												<XAxis
 													dataKey="month"
-													axisLine={false}
 													tickLine={false}
-													style={{
-														fontSize: "0.75rem",
-														fill: "var(--muted-foreground)",
-													}}
+													tickMargin={10}
+													axisLine={false}
+													tickFormatter={(value) => value.slice(0, 3)}
 												/>
 												<YAxis
-													axisLine={false}
 													tickLine={false}
-													style={{
-														fontSize: "0.75rem",
-														fill: "var(--muted-foreground)",
-													}}
+													axisLine={false}
+													tickMargin={8}
 													tickFormatter={(value) => `$${value}`}
 												/>
-												<RechartsTooltip
-													contentStyle={tooltipStyle}
-													formatter={(value: number) => [
-														`$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
-														"Revenue",
-													]}
+												<ChartTooltip
+													content={
+														<ChartTooltipContent
+															formatter={(value) =>
+																`$${Number(value).toLocaleString(undefined, {
+																	maximumFractionDigits: 2,
+																})}`
+															}
+														/>
+													}
 												/>
 												<Bar
 													dataKey="revenue"
-													fill="hsl(var(--primary))"
-													radius={[6, 6, 6, 6]}
+													fill="var(--color-revenue)"
+													radius={[6, 6, 0, 0]}
 												/>
 											</BarChart>
-										</ResponsiveContainer>
+										</ChartContainer>
 									) : (
 										<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 											Create an invoice to see revenue trends.
@@ -290,46 +323,41 @@ export default function DashboardPage() {
 								</CardContent>
 							</Card>
 
-								<Card>
+							<Card>
 								<CardHeader>
 									<CardTitle>Invoice status mix</CardTitle>
 									<p className="text-sm text-muted-foreground">
 										All invoices grouped by status
 									</p>
 								</CardHeader>
-									<CardContent className="h-[240px] sm:h-[320px]">
+								<CardContent className="h-[240px] sm:h-[320px]">
 									{invoiceList.length ? (
-										<ResponsiveContainer width="100%" height="100%">
+										<ChartContainer
+											config={statusChartConfig}
+											className="h-full w-full"
+										>
 											<PieChart>
+												<ChartTooltip content={<ChartTooltipContent hideLabel />} />
 												<Pie
 													data={statusData}
 													dataKey="count"
-													nameKey="label"
+													nameKey="status"
 													innerRadius={60}
 													outerRadius={100}
-													paddingAngle={4}
+													paddingAngle={statusData.length > 1 ? 4 : 0}
+													startAngle={0}
+													endAngle={360}
+													label
 												>
 													{statusData.map((entry) => (
-														<Cell key={entry.status} fill={entry.color} />
+														<Cell
+															key={entry.status}
+															fill={`var(--color-${entry.status})`}
+														/>
 													))}
 												</Pie>
-												<RechartsTooltip
-													contentStyle={tooltipStyle}
-													formatter={(value: number, _name, entry) => [
-														value,
-														entry?.payload?.label ?? "",
-													]}
-												/>
-												<Legend
-													verticalAlign="bottom"
-													iconType="circle"
-													wrapperStyle={{
-														fontSize: "0.75rem",
-														color: "var(--muted-foreground)",
-													}}
-												/>
 											</PieChart>
-										</ResponsiveContainer>
+										</ChartContainer>
 									) : (
 										<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 											No invoices yet.
@@ -339,58 +367,60 @@ export default function DashboardPage() {
 							</Card>
 						</div>
 
-							<Card>
+						<Card>
 							<CardHeader>
 								<CardTitle>Top clients by billed amount</CardTitle>
 								<p className="text-sm text-muted-foreground">
 									Based on all invoices
 								</p>
 							</CardHeader>
-								<CardContent className="h-[240px] sm:h-[320px]">
+							<CardContent className="h-[240px] sm:h-[320px]">
 								{topClientsData.length ? (
-									<ResponsiveContainer width="100%" height="100%">
+									<ChartContainer
+										config={clientsChartConfig}
+										className="h-full w-full"
+									>
 										<BarChart
+											accessibilityLayer
 											data={topClientsData}
 											layout="vertical"
 											margin={{ top: 16, right: 16, left: 32, bottom: 16 }}
 										>
-											<CartesianGrid strokeDasharray="4 4" stroke="#E5E7EB" />
+											<CartesianGrid horizontal={false} />
 											<XAxis
 												type="number"
-												axisLine={false}
 												tickLine={false}
-												style={{
-													fontSize: "0.75rem",
-													fill: "var(--muted-foreground)",
-												}}
+												axisLine={false}
+												tickMargin={8}
 												tickFormatter={(value) => `$${value}`}
 											/>
 											<YAxis
 												dataKey="name"
 												type="category"
-												axisLine={false}
 												tickLine={false}
+												axisLine={false}
 												width={140}
-												style={{
-													fontSize: "0.75rem",
-													fill: "var(--muted-foreground)",
-												}}
+												tickMargin={8}
 											/>
-											<RechartsTooltip
-												contentStyle={tooltipStyle}
-												formatter={(value: number) => [
-													`$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
-													"Billed",
-												]}
+											<ChartTooltip
+												content={
+													<ChartTooltipContent
+														formatter={(value) =>
+															`$${Number(value).toLocaleString(undefined, {
+																maximumFractionDigits: 2,
+															})}`
+														}
+													/>
+												}
 											/>
 											<Bar
 												dataKey="value"
-												fill="hsl(var(--primary))"
-												radius={[6, 6, 6, 6]}
+												fill="var(--color-value)"
+												radius={[0, 6, 6, 0]}
 												maxBarSize={32}
 											/>
 										</BarChart>
-									</ResponsiveContainer>
+									</ChartContainer>
 								) : (
 									<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 										No client billing data yet.
