@@ -368,7 +368,11 @@ export default function EditInvoicePage({
 									required
 								>
 									<SelectTrigger id="client">
-										<SelectValue placeholder="Select a client" />
+										<SelectValue placeholder="Select a client">
+											{selectedClientId
+												? clients?.find((c) => c._id === selectedClientId)?.name
+												: "Select a client"}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										{clients?.map((client) => (
