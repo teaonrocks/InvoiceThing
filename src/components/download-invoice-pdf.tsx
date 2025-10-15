@@ -47,7 +47,13 @@ type Invoice = {
 	}>;
 };
 
-export function DownloadInvoicePDF({ invoice }: { invoice: Invoice }) {
+export function DownloadInvoicePDF({ 
+	invoice,
+	paymentInstructions,
+}: { 
+	invoice: Invoice;
+	paymentInstructions?: string;
+}) {
 	const [isClient, setIsClient] = useState(false);
 
 	// Collect all storage IDs from claims
@@ -108,6 +114,7 @@ export function DownloadInvoicePDF({ invoice }: { invoice: Invoice }) {
 		tax: invoice.tax,
 		total: invoice.total,
 		notes: invoice.notes,
+		paymentInstructions,
 	};
 
 	return (

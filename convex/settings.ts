@@ -18,6 +18,7 @@ export const get = query({
 				invoiceNumberStart: 1,
 				dueDateDays: 14,
 				taxRate: 0,
+				paymentInstructions: undefined,
 			};
 		}
 
@@ -33,6 +34,7 @@ export const upsert = mutation({
 		invoiceNumberStart: v.optional(v.number()),
 		dueDateDays: v.optional(v.number()),
 		taxRate: v.optional(v.number()),
+		paymentInstructions: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const existing = await ctx.db
@@ -45,6 +47,7 @@ export const upsert = mutation({
 			invoiceNumberStart: args.invoiceNumberStart,
 			dueDateDays: args.dueDateDays,
 			taxRate: args.taxRate,
+			paymentInstructions: args.paymentInstructions,
 		};
 
 		if (existing) {
@@ -62,6 +65,7 @@ export const upsert = mutation({
 				invoiceNumberStart: args.invoiceNumberStart ?? 1,
 				dueDateDays: args.dueDateDays ?? 14,
 				taxRate: args.taxRate ?? 0,
+				paymentInstructions: args.paymentInstructions,
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
 			});

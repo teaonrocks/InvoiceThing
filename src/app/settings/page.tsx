@@ -8,6 +8,7 @@ import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
 	Card,
 	CardContent,
@@ -34,6 +35,7 @@ export default function SettingsPage() {
 	const [invoiceNumberStart, setInvoiceNumberStart] = useState(1);
 	const [dueDateDays, setDueDateDays] = useState(14);
 	const [taxRate, setTaxRate] = useState(0);
+	const [paymentInstructions, setPaymentInstructions] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
 
@@ -44,6 +46,7 @@ export default function SettingsPage() {
 			setInvoiceNumberStart(settings.invoiceNumberStart);
 			setDueDateDays(settings.dueDateDays);
 			setTaxRate(settings.taxRate * 100); // Convert to percentage
+			setPaymentInstructions(settings.paymentInstructions || "");
 			setIsLoaded(true);
 		}
 	}, [settings, isLoaded]);
@@ -69,6 +72,7 @@ export default function SettingsPage() {
 				invoiceNumberStart,
 				dueDateDays,
 				taxRate: taxRate / 100, // Convert percentage to decimal
+				paymentInstructions: paymentInstructions.trim() || undefined,
 			});
 
 			toast({
@@ -184,6 +188,35 @@ export default function SettingsPage() {
 										Set to 0 for no tax, or enter tax rate (e.g., 10 for 10%)
 									</p>
 								</div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* Payment Information */}
+					<Card>
+						<CardHeader>
+							<CardTitle>Payment Information</CardTitle>
+							<CardDescription>
+								Add payment instructions to show on your invoices
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="paymentInstructions">
+									Payment Instructions
+								</Label>
+								<Textarea
+									id="paymentInstructions"
+									value={paymentInstructions}
+									onChange={(e) => setPaymentInstructions(e.target.value)}
+									placeholder="Example:&#10;&#10;Bank Transfer:&#10;Bank: ABC Bank&#10;Account Name: Your Business Name&#10;Account Number: 1234567890&#10;&#10;PayPal: yourname@example.com&#10;&#10;Venmo: @yourname"
+									rows={8}
+									className="font-mono text-sm"
+								/>
+								<p className="text-xs text-muted-foreground">
+									This information will appear on your invoices to help clients
+									pay you. Leave blank to hide this section.
+								</p>
 							</div>
 						</CardContent>
 					</Card>

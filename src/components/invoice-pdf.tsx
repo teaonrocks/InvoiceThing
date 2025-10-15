@@ -99,8 +99,13 @@ const styles = StyleSheet.create({
 		flex: 1,
 		textAlign: "right",
 	},
-	totals: {
+	totalsContainer: {
 		marginTop: 20,
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "flex-start",
+	},
+	totals: {
 		alignItems: "flex-end",
 	},
 	totalRow: {
@@ -123,6 +128,22 @@ const styles = StyleSheet.create({
 		paddingTop: 8,
 		borderTopWidth: 2,
 		borderTopColor: "#333",
+	},
+	paymentInfo: {
+		flex: 1,
+		maxWidth: "45%",
+		paddingRight: 20,
+	},
+	paymentTitle: {
+		fontFamily: "Helvetica-Bold",
+		marginBottom: 8,
+		fontSize: 11,
+	},
+	paymentText: {
+		fontSize: 9,
+		lineHeight: 1.5,
+		whiteSpace: "pre-wrap",
+		color: "#333",
 	},
 	notes: {
 		marginTop: 30,
@@ -249,6 +270,7 @@ type InvoiceData = {
 	tax: number;
 	total: number;
 	notes?: string;
+	paymentInstructions?: string;
 };
 
 export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
@@ -393,25 +415,38 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 					</View>
 				)}
 
-				{/* Totals */}
-				<View style={styles.totals}>
-					<View style={styles.totalRow}>
-						<Text style={styles.totalLabel}>Subtotal:</Text>
-						<Text style={styles.totalValue}>
-							${invoice.subtotal.toFixed(2)}
-						</Text>
-					</View>
-					{invoice.tax > 0 && (
-						<View style={styles.totalRow}>
-							<Text style={styles.totalLabel}>
-								Tax ({((invoice.tax / invoice.subtotal) * 100).toFixed(1)}%):
+				{/* Totals and Payment Information Section */}
+				<View style={styles.totalsContainer}>
+					{/* Payment Instructions (Left Side) */}
+					{invoice.paymentInstructions && (
+						<View style={styles.paymentInfo}>
+							<Text style={styles.paymentTitle}>Payment Information</Text>
+							<Text style={styles.paymentText}>
+								{invoice.paymentInstructions}
 							</Text>
-							<Text style={styles.totalValue}>${invoice.tax.toFixed(2)}</Text>
 						</View>
 					)}
-					<View style={[styles.totalRow, styles.grandTotal]}>
-						<Text style={styles.totalLabel}>Total:</Text>
-						<Text style={styles.totalValue}>${invoice.total.toFixed(2)}</Text>
+
+					{/* Totals (Right Side) */}
+					<View style={styles.totals}>
+						<View style={styles.totalRow}>
+							<Text style={styles.totalLabel}>Subtotal:</Text>
+							<Text style={styles.totalValue}>
+								${invoice.subtotal.toFixed(2)}
+							</Text>
+						</View>
+						{invoice.tax > 0 && (
+							<View style={styles.totalRow}>
+								<Text style={styles.totalLabel}>
+									Tax ({((invoice.tax / invoice.subtotal) * 100).toFixed(1)}%):
+								</Text>
+								<Text style={styles.totalValue}>${invoice.tax.toFixed(2)}</Text>
+							</View>
+						)}
+						<View style={[styles.totalRow, styles.grandTotal]}>
+							<Text style={styles.totalLabel}>Total:</Text>
+							<Text style={styles.totalValue}>${invoice.total.toFixed(2)}</Text>
+						</View>
 					</View>
 				</View>
 

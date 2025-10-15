@@ -109,6 +109,10 @@ export default function InvoiceDetailPage({
 	const invoice = useQuery(api.invoices.get, {
 		invoiceId: id as Id<"invoices">,
 	});
+	const settings = useQuery(
+		api.settings.get,
+		invoice?.userId ? { userId: invoice.userId } : "skip"
+	);
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const deleteInvoice = useMutation(api.invoices.remove);
 
@@ -210,7 +214,10 @@ export default function InvoiceDetailPage({
 									Edit
 								</Link>
 							</Button>
-							<DownloadInvoicePDF invoice={invoice} />
+							<DownloadInvoicePDF 
+								invoice={invoice} 
+								paymentInstructions={settings?.paymentInstructions}
+							/>
 							<Button variant="outline" size="sm" disabled>
 								<Mail className="h-4 w-4 mr-2" />
 								Email

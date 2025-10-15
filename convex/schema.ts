@@ -76,6 +76,7 @@ export default defineSchema({
 		invoiceNumberStart: v.number(), // Starting number for auto-generation
 		dueDateDays: v.number(), // Default days from issue date to due date
 		taxRate: v.number(), // Default tax rate (e.g., 0.1 for 10%)
+		paymentInstructions: v.optional(v.string()), // Payment details to show on invoice
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	}).index("by_user", ["userId"]),

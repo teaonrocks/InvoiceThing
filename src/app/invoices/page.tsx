@@ -122,8 +122,13 @@ type InvoiceListEntry = Doc<"invoices"> & {
 export default function InvoicesPage() {
 	const { toast } = useToast();
 	const convex = useConvex();
-	const { invoices: cachedInvoices } = useAppData();
+	const { invoices: cachedInvoices, currentUser } = useAppData();
 	const invoices = cachedInvoices;
+
+	const settings = useQuery(
+		api.settings.get,
+		currentUser?._id ? { userId: currentUser._id } : "skip"
+	);
 
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const updateStatusBulk = useMutation(api.invoices.updateStatusBulk);
@@ -483,6 +488,7 @@ export default function InvoicesPage() {
 					tax: invoice.tax,
 					total: invoice.total,
 					notes: invoice.notes,
+					paymentInstructions: settings?.paymentInstructions,
 				};
 
 				const blob = await pdf(<InvoicePDF invoice={pdfData} />).toBlob();
@@ -510,7 +516,7 @@ export default function InvoicesPage() {
 		} finally {
 			setIsDownloading(false);
 		}
-	}, [convex, selectedIds, toast]);
+	}, [convex, selectedIds, toast, settings?.paymentInstructions]);
 
 	useEffect(() => {
 		if (!previewInvoiceId) return;
