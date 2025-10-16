@@ -40,6 +40,7 @@ export default defineSchema({
 		),
 		subtotal: v.number(),
 		tax: v.number(),
+		roundingAdjustment: v.optional(v.number()), // Amount added/subtracted due to rounding
 		total: v.number(),
 		notes: v.optional(v.string()),
 		createdAt: v.number(),
@@ -77,6 +78,8 @@ export default defineSchema({
 		dueDateDays: v.number(), // Default days from issue date to due date
 		taxRate: v.number(), // Default tax rate (e.g., 0.1 for 10%)
 		paymentInstructions: v.optional(v.string()), // Payment details to show on invoice
+		enableRounding: v.optional(v.boolean()), // Whether to enable invoice total rounding
+		roundingIncrement: v.optional(v.number()), // Rounding increment (e.g., 0.05, 0.10, 1.00)
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	}).index("by_user", ["userId"]),

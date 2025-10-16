@@ -3,6 +3,12 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 
+// Utility function to round invoice total
+function roundToIncrement(value: number, increment: number): number {
+	if (increment <= 0) return value;
+	return Math.round(value / increment) * increment;
+}
+
 // Create a new invoice with line items
 export const create = mutation({
 	args: {
@@ -38,6 +44,12 @@ export const create = mutation({
 		taxRate: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
+		// Get user settings for rounding
+		const settings = await ctx.db
+			.query("settings")
+			.withIndex("by_user", (q) => q.eq("userId", args.userId))
+			.unique();
+
 		// Calculate totals from line items
 		let subtotal = 0;
 		const lineItems = args.lineItems.map((item, index) => {
@@ -62,7 +74,19 @@ export const create = mutation({
 
 		const taxRate = args.taxRate ?? 0;
 		const tax = (subtotal + claimsTotal) * taxRate;
-		const total = subtotal + claimsTotal + tax;
+		const totalBeforeRounding = subtotal + claimsTotal + tax;
+		let total = totalBeforeRounding;
+		let roundingAdjustment: number | undefined = undefined;
+
+		// Apply rounding if enabled
+		if (settings?.enableRounding && settings?.roundingIncrement) {
+			total = roundToIncrement(total, settings.roundingIncrement);
+			roundingAdjustment = total - totalBeforeRounding;
+			// Only store if there's an actual adjustment
+			if (Math.abs(roundingAdjustment) < 0.001) {
+				roundingAdjustment = undefined;
+			}
+		}
 
 		// Create invoice
 		const invoiceId = await ctx.db.insert("invoices", {
@@ -74,6 +98,7 @@ export const create = mutation({
 			status: args.status,
 			subtotal: subtotal + claimsTotal,
 			tax,
+			roundingAdjustment,
 			total,
 			notes: args.notes,
 			createdAt: Date.now(),
@@ -237,6 +262,12 @@ export const update = mutation({
 		taxRate: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
+		// Get user settings for rounding
+		const settings = await ctx.db
+			.query("settings")
+			.withIndex("by_user", (q) => q.eq("userId", args.userId))
+			.unique();
+
 		// Calculate totals from line items
 		let lineSubtotal = 0;
 		const lineItems = args.lineItems.map((item, index) => {
@@ -261,7 +292,19 @@ export const update = mutation({
 		const subtotal = lineSubtotal + claimsTotal;
 		const taxRate = args.taxRate ?? 0;
 		const tax = subtotal * taxRate;
-		const total = subtotal + tax;
+		const totalBeforeRounding = subtotal + tax;
+		let total = totalBeforeRounding;
+		let roundingAdjustment: number | undefined = undefined;
+
+		// Apply rounding if enabled
+		if (settings?.enableRounding && settings?.roundingIncrement) {
+			total = roundToIncrement(total, settings.roundingIncrement);
+			roundingAdjustment = total - totalBeforeRounding;
+			// Only store if there's an actual adjustment
+			if (Math.abs(roundingAdjustment) < 0.001) {
+				roundingAdjustment = undefined;
+			}
+		}
 
 		// Update invoice
 		await ctx.db.patch(args.invoiceId, {
@@ -272,6 +315,7 @@ export const update = mutation({
 			dueDate: args.dueDate,
 			subtotal,
 			tax,
+			roundingAdjustment,
 			total,
 			notes: args.notes,
 			updatedAt: Date.now(),

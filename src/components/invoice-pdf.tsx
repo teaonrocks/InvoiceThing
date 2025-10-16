@@ -118,6 +118,12 @@ const styles = StyleSheet.create({
 		textAlign: "right",
 		marginRight: 20,
 	},
+	totalLabelNoWrap: {
+		flex: 1,
+		textAlign: "right",
+		marginRight: 20,
+		whiteSpace: "nowrap",
+	},
 	totalValue: {
 		width: 80,
 		textAlign: "right",
@@ -268,6 +274,7 @@ type InvoiceData = {
 	}>;
 	subtotal: number;
 	tax: number;
+	roundingAdjustment?: number;
 	total: number;
 	notes?: string;
 	paymentInstructions?: string;
@@ -447,6 +454,14 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 									Tax ({((invoice.tax / invoice.subtotal) * 100).toFixed(1)}%):
 								</Text>
 								<Text style={styles.totalValue}>${invoice.tax.toFixed(2)}</Text>
+							</View>
+						)}
+						{invoice.roundingAdjustment && Math.abs(invoice.roundingAdjustment) >= 0.001 && (
+							<View style={styles.totalRow}>
+								<Text style={styles.totalLabelNoWrap}>Rounding:</Text>
+								<Text style={styles.totalValue}>
+									{invoice.roundingAdjustment > 0 ? '+' : ''}${invoice.roundingAdjustment.toFixed(2)}
+								</Text>
 							</View>
 						)}
 						<View style={[styles.totalRow, styles.grandTotal]}>

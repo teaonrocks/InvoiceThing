@@ -18,6 +18,7 @@ type Invoice = {
 	status: "draft" | "sent" | "paid" | "overdue";
 	subtotal: number;
 	tax: number;
+	roundingAdjustment?: number;
 	total: number;
 	notes?: string;
 	client:
@@ -112,6 +113,7 @@ export function DownloadInvoicePDF({
 		})),
 		subtotal: invoice.subtotal,
 		tax: invoice.tax,
+		roundingAdjustment: invoice.roundingAdjustment,
 		total: invoice.total,
 		notes: invoice.notes,
 		paymentInstructions,

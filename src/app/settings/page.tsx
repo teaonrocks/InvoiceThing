@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
 	Card,
 	CardContent,
@@ -16,9 +17,22 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Settings as SettingsIcon } from "lucide-react";
 import { useAppData } from "@/context/app-data-provider";
+
+// Utility function to round invoice total (same as in backend)
+function roundToIncrement(value: number, increment: number): number {
+	if (increment <= 0) return value;
+	return Math.round(value / increment) * increment;
+}
 
 export default function SettingsPage() {
 	useStoreUser();
@@ -36,6 +50,8 @@ export default function SettingsPage() {
 	const [dueDateDays, setDueDateDays] = useState(14);
 	const [taxRate, setTaxRate] = useState(0);
 	const [paymentInstructions, setPaymentInstructions] = useState("");
+	const [enableRounding, setEnableRounding] = useState(false);
+	const [roundingIncrement, setRoundingIncrement] = useState(0.05);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
 
@@ -47,6 +63,8 @@ export default function SettingsPage() {
 			setDueDateDays(settings.dueDateDays);
 			setTaxRate(settings.taxRate * 100); // Convert to percentage
 			setPaymentInstructions(settings.paymentInstructions || "");
+			setEnableRounding(settings.enableRounding ?? false);
+			setRoundingIncrement(settings.roundingIncrement ?? 0.05);
 			setIsLoaded(true);
 		}
 	}, [settings, isLoaded]);
@@ -73,6 +91,8 @@ export default function SettingsPage() {
 				dueDateDays,
 				taxRate: taxRate / 100, // Convert percentage to decimal
 				paymentInstructions: paymentInstructions.trim() || undefined,
+				enableRounding,
+				roundingIncrement,
 			});
 
 			toast({
@@ -188,6 +208,50 @@ export default function SettingsPage() {
 										Set to 0 for no tax, or enter tax rate (e.g., 10 for 10%)
 									</p>
 								</div>
+							</div>
+
+							{/* Rounding Settings */}
+							<div className="border-t pt-4 space-y-4">
+								<div className="flex items-center justify-between">
+									<div className="space-y-0.5">
+										<Label htmlFor="enableRounding">Enable Invoice Rounding</Label>
+										<p className="text-xs text-muted-foreground">
+											Round invoice totals to nearest increment for cleaner amounts
+										</p>
+									</div>
+									<Switch
+										id="enableRounding"
+										checked={enableRounding}
+										onCheckedChange={setEnableRounding}
+									/>
+								</div>
+
+								{enableRounding && (
+									<div className="space-y-2">
+										<Label htmlFor="roundingIncrement">Rounding Increment</Label>
+										<Select
+											value={roundingIncrement.toString()}
+											onValueChange={(value) => setRoundingIncrement(parseFloat(value))}
+										>
+											<SelectTrigger id="roundingIncrement">
+												<SelectValue placeholder="Select rounding increment" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="0.01">$0.01 (Nearest cent)</SelectItem>
+												<SelectItem value="0.05">$0.05 (Nearest nickel)</SelectItem>
+												<SelectItem value="0.1">$0.10 (Nearest dime)</SelectItem>
+												<SelectItem value="0.25">$0.25 (Nearest quarter)</SelectItem>
+												<SelectItem value="0.5">$0.50 (Nearest 50 cents)</SelectItem>
+												<SelectItem value="1">$1.00 (Nearest dollar)</SelectItem>
+												<SelectItem value="5">$5.00 (Nearest $5)</SelectItem>
+												<SelectItem value="10">$10.00 (Nearest $10)</SelectItem>
+											</SelectContent>
+										</Select>
+										<p className="text-xs text-muted-foreground">
+											Example: $123.47 → ${roundToIncrement(123.47, roundingIncrement).toFixed(2)}
+										</p>
+									</div>
+								)}
 							</div>
 						</CardContent>
 					</Card>

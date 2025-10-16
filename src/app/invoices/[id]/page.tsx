@@ -374,6 +374,16 @@ export default function InvoiceDetailPage({
 									<span className="font-medium">${invoice.tax.toFixed(2)}</span>
 								</div>
 							)}
+							{invoice.roundingAdjustment && Math.abs(invoice.roundingAdjustment) >= 0.001 && (
+								<div className="flex justify-between gap-4">
+									<span className="text-muted-foreground shrink-0">
+										Rounding:
+									</span>
+									<span className="font-medium text-right">
+										{invoice.roundingAdjustment > 0 ? '+' : ''}${invoice.roundingAdjustment.toFixed(2)}
+									</span>
+								</div>
+							)}
 							<div className="border-t pt-2 flex justify-between text-lg font-bold">
 								<span>Total:</span>
 								<span>${invoice.total.toFixed(2)}</span>
