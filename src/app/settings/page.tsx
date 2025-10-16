@@ -102,10 +102,10 @@ export default function SettingsPage() {
 	return (
 		<div className="min-h-screen">
 			<Navigation />
-			<main className="container max-w-3xl mx-auto px-4 py-8">
-				<div className="flex items-center gap-3 mb-8">
-					<SettingsIcon className="h-8 w-8" />
-					<h1 className="text-4xl font-bold">Settings</h1>
+			<main className="container max-w-3xl mx-auto px-4 py-4 sm:py-8">
+				<div className="flex items-center gap-3 mb-6 sm:mb-8">
+					<SettingsIcon className="h-6 w-6 sm:h-8 sm:w-8" />
+					<h1 className="text-3xl sm:text-4xl font-bold">Settings</h1>
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-6">

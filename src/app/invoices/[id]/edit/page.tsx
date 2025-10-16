@@ -336,7 +336,7 @@ export default function EditInvoicePage({
 	}
 
 	return (
-		<div className="container max-w-4xl mx-auto py-8">
+		<div className="container max-w-4xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			<div className="mb-6">
 				<Link href={`/invoices/${id}`}>
 					<Button variant="ghost" size="sm">
@@ -348,7 +348,7 @@ export default function EditInvoicePage({
 
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-2xl">Edit Invoice</CardTitle>
+					<CardTitle className="text-xl sm:text-2xl">Edit Invoice</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSubmit} className="space-y-6">

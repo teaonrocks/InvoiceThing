@@ -148,7 +148,7 @@ export default function ClientDetailPage({
 	});
 
 	return (
-		<div className="container max-w-3xl mx-auto py-8">
+		<div className="container max-w-3xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			<div className="mb-6">
 				<Link href="/clients">
 					<Button variant="ghost" size="sm">
@@ -160,12 +160,12 @@ export default function ClientDetailPage({
 
 			<Card>
 				<CardHeader>
-					<div className="flex items-center justify-between">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 						<CardTitle className="text-2xl">
 							{isEditing ? "Edit Client" : client.name}
 						</CardTitle>
 						{!isEditing && (
-							<div className="flex gap-2">
+							<div className="flex gap-2 flex-wrap">
 								<Button onClick={() => setIsEditing(true)} size="sm">
 									<Save className="h-4 w-4 mr-2" />
 									Edit

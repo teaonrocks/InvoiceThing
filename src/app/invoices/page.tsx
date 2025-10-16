@@ -537,7 +537,7 @@ export default function InvoicesPage() {
 	return (
 		<div className="min-h-screen">
 			<Navigation />
-			<main className="container mx-auto px-4 py-8">
+			<main className="container mx-auto px-4 py-4 sm:py-8">
 				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<h1 className="text-3xl font-bold sm:text-4xl">Invoices</h1>
 					<Button asChild className="w-full sm:w-auto">

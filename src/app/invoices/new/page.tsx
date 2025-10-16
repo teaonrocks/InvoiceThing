@@ -376,7 +376,7 @@ export default function NewInvoicePage() {
 	}
 
 	return (
-		<div className="container max-w-4xl mx-auto py-8">
+		<div className="container max-w-4xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			<div className="mb-6">
 				<Link href="/invoices">
 					<Button variant="ghost" size="sm">
@@ -388,7 +388,7 @@ export default function NewInvoicePage() {
 
 			<Card>
 				<CardHeader>
-					<CardTitle className="text-2xl">Create New Invoice</CardTitle>
+					<CardTitle className="text-xl sm:text-2xl">Create New Invoice</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={handleSubmit} className="space-y-6">

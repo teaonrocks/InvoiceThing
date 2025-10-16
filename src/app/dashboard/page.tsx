@@ -185,7 +185,7 @@ export default function DashboardPage() {
 	return (
 		<div className="min-h-screen">
 			<Navigation />
-			<main className="container mx-auto px-4 py-8">
+			<main className="container mx-auto px-4 py-4 sm:py-8">
 				<h1 className="mb-8 text-3xl font-bold sm:text-4xl">Dashboard</h1>
 
 				{!convexUser && (

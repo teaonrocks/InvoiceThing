@@ -169,7 +169,7 @@ export default function InvoiceDetailPage({
 	});
 
 	return (
-		<div className="container max-w-5xl mx-auto py-8">
+		<div className="container max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			{/* Header */}
 			<div className="mb-6">
 				<Link href="/invoices">
@@ -182,12 +182,12 @@ export default function InvoiceDetailPage({
 
 			<Card>
 				<CardHeader>
-					<div className="flex items-start justify-between">
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 						<div>
-							<CardTitle className="text-3xl">
+							<CardTitle className="text-2xl sm:text-3xl">
 								Invoice #{invoice.invoiceNumber}
 							</CardTitle>
-							<div className="mt-2 flex items-center gap-3">
+							<div className="mt-2 flex items-center gap-3 flex-wrap">
 								<Badge className={getStatusColor(invoice.status)}>
 									{invoice.status}
 								</Badge>
@@ -207,7 +207,7 @@ export default function InvoiceDetailPage({
 								</Select>
 							</div>
 						</div>
-						<div className="flex gap-2">
+						<div className="flex gap-2 flex-wrap">
 							<Button variant="outline" size="sm" asChild>
 								<Link href={`/invoices/${invoice._id}/edit`}>
 									<Edit className="h-4 w-4 mr-2" />
@@ -283,72 +283,76 @@ export default function InvoiceDetailPage({
 					{/* Line Items */}
 					<div>
 						<h3 className="font-semibold mb-3">Items:</h3>
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Description</TableHead>
-									<TableHead className="text-right">Quantity</TableHead>
-									<TableHead className="text-right">Unit Price</TableHead>
-									<TableHead className="text-right">Amount</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{invoice.lineItems?.map((item) => (
-									<TableRow key={item._id}>
-										<TableCell>{item.description}</TableCell>
-										<TableCell className="text-right">
-											{item.quantity}
-										</TableCell>
-										<TableCell className="text-right">
-											${item.unitPrice.toFixed(2)}
-										</TableCell>
-										<TableCell className="text-right">
-											${item.total.toFixed(2)}
-										</TableCell>
+						<div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead className="min-w-[200px]">Description</TableHead>
+										<TableHead className="text-right whitespace-nowrap">Quantity</TableHead>
+										<TableHead className="text-right whitespace-nowrap">Unit Price</TableHead>
+										<TableHead className="text-right whitespace-nowrap">Amount</TableHead>
 									</TableRow>
-								))}
-							</TableBody>
-						</Table>
+								</TableHeader>
+								<TableBody>
+									{invoice.lineItems?.map((item) => (
+										<TableRow key={item._id}>
+											<TableCell>{item.description}</TableCell>
+											<TableCell className="text-right">
+												{item.quantity}
+											</TableCell>
+											<TableCell className="text-right">
+												${item.unitPrice.toFixed(2)}
+											</TableCell>
+											<TableCell className="text-right">
+												${item.total.toFixed(2)}
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
 					</div>
 
 					{/* Claims/Expenses */}
 					{invoice.claims && invoice.claims.length > 0 && (
 						<div>
 							<h3 className="font-semibold mb-3">Reimbursable Expenses:</h3>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Description</TableHead>
-										<TableHead className="text-right">Date</TableHead>
-										<TableHead className="text-right">Amount</TableHead>
-										<TableHead className="text-center">Receipt</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{invoice.claims.map((claim) => (
-										<TableRow key={claim._id}>
-											<TableCell>{claim.description}</TableCell>
-											<TableCell className="text-right">
-												{new Date(claim.date).toLocaleDateString()}
-											</TableCell>
-											<TableCell className="text-right">
-												${claim.amount.toFixed(2)}
-											</TableCell>
-											<TableCell className="text-center">
-												{claim.imageStorageId ? (
-													<ClaimImageViewer storageId={claim.imageStorageId} />
-												) : (
-													<ImageOff
-														className="mx-auto h-4 w-4 text-muted-foreground"
-														role="img"
-														aria-label="No receipt"
-													/>
-												)}
-											</TableCell>
+							<div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead className="min-w-[200px]">Description</TableHead>
+											<TableHead className="text-right whitespace-nowrap">Date</TableHead>
+											<TableHead className="text-right whitespace-nowrap">Amount</TableHead>
+											<TableHead className="text-center whitespace-nowrap">Receipt</TableHead>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+									</TableHeader>
+									<TableBody>
+										{invoice.claims.map((claim) => (
+											<TableRow key={claim._id}>
+												<TableCell>{claim.description}</TableCell>
+												<TableCell className="text-right">
+													{new Date(claim.date).toLocaleDateString()}
+												</TableCell>
+												<TableCell className="text-right">
+													${claim.amount.toFixed(2)}
+												</TableCell>
+												<TableCell className="text-center">
+													{claim.imageStorageId ? (
+														<ClaimImageViewer storageId={claim.imageStorageId} />
+													) : (
+														<ImageOff
+															className="mx-auto h-4 w-4 text-muted-foreground"
+															role="img"
+															aria-label="No receipt"
+														/>
+													)}
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
 						</div>
 					)}
 
