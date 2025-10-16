@@ -11,18 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ClientSelector } from "@/components/client-selector";
 import {
 	Plus,
 	Trash2,
@@ -94,7 +88,7 @@ export default function EditInvoicePage({
 
 	// Load invoice data when available
 	useEffect(() => {
-		if (invoice && !isLoaded) {
+		if (invoice && clients && !isLoaded) {
 			setSelectedClientId(invoice.clientId);
 			setInvoiceNumber(invoice.invoiceNumber);
 			setIssueDate(new Date(invoice.issueDate));
@@ -124,7 +118,7 @@ export default function EditInvoicePage({
 
 			setIsLoaded(true);
 		}
-	}, [invoice, isLoaded]);
+	}, [invoice, clients, isLoaded]);
 
 	const addLineItem = () => {
 		setLineItems([
@@ -362,26 +356,12 @@ export default function EditInvoicePage({
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div className="space-y-2">
 								<Label htmlFor="client">Client *</Label>
-								<Select
-									value={selectedClientId}
-									onValueChange={setSelectedClientId}
-									required
-								>
-									<SelectTrigger id="client">
-										<SelectValue placeholder="Select a client">
-											{selectedClientId
-												? clients?.find((c) => c._id === selectedClientId)?.name
-												: "Select a client"}
-										</SelectValue>
-									</SelectTrigger>
-									<SelectContent>
-										{clients?.map((client) => (
-											<SelectItem key={client._id} value={client._id}>
-												{client.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
+								<ClientSelector
+									clients={clients}
+									selectedClientId={selectedClientId}
+									onClientSelect={setSelectedClientId}
+									placeholder="Select a client"
+								/>
 							</div>
 
 							<div className="space-y-2">

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import { ClientSelector } from "@/components/client-selector";
 import {
 	Dialog,
 	DialogContent,
@@ -21,14 +22,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from "@/components/ui/command";
-import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
@@ -37,8 +30,6 @@ import {
 	Plus,
 	Trash2,
 	ArrowLeft,
-	Check,
-	ChevronsUpDown,
 	CalendarIcon,
 	Upload,
 	X,
@@ -87,8 +78,6 @@ export default function NewInvoicePage() {
 	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
 	const [selectedClientId, setSelectedClientId] = useState("");
-	const [comboboxOpen, setComboboxOpen] = useState(false);
-	const [searchValue, setSearchValue] = useState("");
 	const [invoiceNumber, setInvoiceNumber] = useState("");
 	const [issueDate, setIssueDate] = useState<Date>(new Date());
 	const [dueDate, setDueDate] = useState<Date | undefined>();
@@ -172,7 +161,6 @@ export default function NewInvoicePage() {
 			setNewClientUnitNumber("");
 			setNewClientPostalCode("");
 			setNewClientContactPerson("");
-			setSearchValue("");
 		} catch (error) {
 			console.error("Error creating client:", error);
 			toast({
@@ -408,102 +396,16 @@ export default function NewInvoicePage() {
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<div className="space-y-2">
 								<Label htmlFor="client">Client *</Label>
-								<Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
-									<PopoverTrigger asChild>
-										<Button
-											variant="outline"
-											role="combobox"
-											aria-expanded={comboboxOpen}
-											className="w-full justify-between"
-										>
-											{selectedClientId
-												? clients?.find(
-														(client) => client._id === selectedClientId
-													)?.name
-												: "Select a client..."}
-											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-										</Button>
-									</PopoverTrigger>
-									<PopoverContent className="w-full p-0" align="start">
-										<Command shouldFilter={false}>
-											<CommandInput
-												placeholder="Search clients..."
-												value={searchValue}
-												onValueChange={setSearchValue}
-											/>
-											<CommandList>
-												<CommandEmpty>
-													<div className="p-4 text-center">
-														<p className="text-sm text-muted-foreground mb-3">
-															No clients found.
-														</p>
-														<Button
-															size="sm"
-															onClick={() => {
-																setComboboxOpen(false);
-																setNewClientName(searchValue);
-																setShowNewClientModal(true);
-															}}
-														>
-															<Plus className="h-4 w-4 mr-2" />
-															Create &quot;{searchValue || "New Client"}&quot;
-														</Button>
-													</div>
-												</CommandEmpty>
-												<CommandGroup>
-													{clients
-														?.filter((client) =>
-															client.name
-																.toLowerCase()
-																.includes(searchValue.toLowerCase())
-														)
-														.map((client) => (
-															<CommandItem
-																key={client._id}
-																value={client.name}
-																onSelect={() => {
-																	setSelectedClientId(client._id);
-																	setComboboxOpen(false);
-																	setSearchValue("");
-																}}
-															>
-																<Check
-																	className={cn(
-																		"mr-2 h-4 w-4",
-																		selectedClientId === client._id
-																			? "opacity-100"
-																			: "opacity-0"
-																	)}
-																/>
-																<div className="flex flex-col">
-																	<span>{client.name}</span>
-																	<span className="text-xs text-muted-foreground">
-																		{client.email || "No email"}
-																	</span>
-																</div>
-															</CommandItem>
-														))}
-													{clients && clients.length > 0 && (
-														<CommandItem
-															onSelect={() => {
-																setComboboxOpen(false);
-																setNewClientName(searchValue);
-																setShowNewClientModal(true);
-																setSearchValue("");
-															}}
-															className="border-t"
-														>
-															<Plus className="mr-2 h-4 w-4" />
-															<span className="font-medium">
-																Create New Client
-															</span>
-														</CommandItem>
-													)}
-												</CommandGroup>
-											</CommandList>
-										</Command>
-									</PopoverContent>
-								</Popover>
+								<ClientSelector
+									clients={clients}
+									selectedClientId={selectedClientId}
+									onClientSelect={setSelectedClientId}
+									onCreateNewClient={(searchValue) => {
+										setNewClientName(searchValue);
+										setShowNewClientModal(true);
+									}}
+									showCreateOption={true}
+								/>
 							</div>
 
 							<div className="space-y-2">
@@ -934,7 +836,6 @@ export default function NewInvoicePage() {
 						setNewClientUnitNumber("");
 						setNewClientPostalCode("");
 						setNewClientContactPerson("");
-						setSearchValue("");
 					}
 				}}
 			>
