@@ -86,12 +86,11 @@ export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const [isUpdating, setIsUpdating] = useState(false);
 
-	// Get last 5 invoices sorted by issue date
+	// Get all invoices sorted by issue date (most recent first)
 	const recentInvoices = useMemo(
 		() =>
 			invoices
 				.sort((a, b) => b.issueDate - a.issueDate)
-				.slice(0, 5)
 				.map((invoice) => ({
 					_id: invoice._id as Id<"invoices">,
 					invoiceNumber: invoice.invoiceNumber,
@@ -238,6 +237,7 @@ export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
 				data={recentInvoices}
 				enableRowSelection={false}
 				onRowClick={handleRowClick}
+				pageSize={5}
 			/>
 		</div>
 	);
