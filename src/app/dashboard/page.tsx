@@ -66,7 +66,7 @@ export default function DashboardPage() {
 			end.setDate(end.getDate() + 7);
 
 			let paidRevenue = 0;
-			let outstandingRevenue = 0;
+			let totalRevenue = 0;
 
 			invoiceList.forEach((invoice) => {
 				const issuedAt =
@@ -80,10 +80,12 @@ export default function DashboardPage() {
 						: Number(invoice.total);
 
 				if (issuedAt >= start.getTime() && issuedAt < end.getTime()) {
-					if (status === "paid") {
-						paidRevenue += total;
-					} else if (status === "sent" || status === "overdue") {
-						outstandingRevenue += total;
+					// Exclude drafts from total revenue
+					if (status !== "draft") {
+						totalRevenue += total;
+						if (status === "paid") {
+							paidRevenue += total;
+						}
 					}
 				}
 			});
@@ -91,7 +93,7 @@ export default function DashboardPage() {
 			return {
 				week: format(start, "MMM dd"),
 				paid: Number(paidRevenue.toFixed(2)),
-				outstanding: Number(outstandingRevenue.toFixed(2)),
+				total: Number(totalRevenue.toFixed(2)),
 			};
 		});
 	}, [invoiceList]);
@@ -123,13 +125,13 @@ export default function DashboardPage() {
 
 	// Chart configurations
 	const revenueChartConfig = {
+		total: {
+			label: "Total",
+			color: "hsl(221 83% 53%)", // Blue (blue-500)
+		},
 		paid: {
 			label: "Paid",
 			color: "hsl(142 71% 45%)", // Green (green-500)
-		},
-		outstanding: {
-			label: "Outstanding",
-			color: "hsl(221 83% 53%)", // Blue (blue-500)
 		},
 	} satisfies ChartConfig;
 
@@ -251,7 +253,7 @@ export default function DashboardPage() {
 								<CardHeader>
 									<CardTitle>Revenue (last 12 weeks)</CardTitle>
 									<p className="text-sm text-muted-foreground">
-										Paid and outstanding revenue by issue date
+										Total and paid revenue by issue date
 									</p>
 								</CardHeader>
 								<CardContent className="h-[240px] sm:h-[320px]">
@@ -291,8 +293,8 @@ export default function DashboardPage() {
 													}
 												/>
 												<Bar
-													dataKey="outstanding"
-													fill="var(--color-outstanding)"
+													dataKey="total"
+													fill="var(--color-total)"
 													radius={[6, 6, 0, 0]}
 												/>
 												<Bar
