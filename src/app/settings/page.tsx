@@ -214,9 +214,12 @@ export default function SettingsPage() {
 							<div className="border-t pt-4 space-y-4">
 								<div className="flex items-center justify-between">
 									<div className="space-y-0.5">
-										<Label htmlFor="enableRounding">Enable Invoice Rounding</Label>
+										<Label htmlFor="enableRounding">
+											Enable Invoice Rounding
+										</Label>
 										<p className="text-xs text-muted-foreground">
-											Round invoice totals to nearest increment for cleaner amounts
+											Round invoice totals to nearest increment for cleaner
+											amounts
 										</p>
 									</div>
 									<Switch
@@ -228,27 +231,44 @@ export default function SettingsPage() {
 
 								{enableRounding && (
 									<div className="space-y-2">
-										<Label htmlFor="roundingIncrement">Rounding Increment</Label>
+										<Label htmlFor="roundingIncrement">
+											Rounding Increment
+										</Label>
 										<Select
 											value={roundingIncrement.toString()}
-											onValueChange={(value) => setRoundingIncrement(parseFloat(value))}
+											onValueChange={(value) =>
+												setRoundingIncrement(parseFloat(value))
+											}
 										>
 											<SelectTrigger id="roundingIncrement">
 												<SelectValue placeholder="Select rounding increment" />
 											</SelectTrigger>
 											<SelectContent>
-												<SelectItem value="0.01">$0.01 (Nearest cent)</SelectItem>
-												<SelectItem value="0.05">$0.05 (Nearest nickel)</SelectItem>
-												<SelectItem value="0.1">$0.10 (Nearest dime)</SelectItem>
-												<SelectItem value="0.25">$0.25 (Nearest quarter)</SelectItem>
-												<SelectItem value="0.5">$0.50 (Nearest 50 cents)</SelectItem>
-												<SelectItem value="1">$1.00 (Nearest dollar)</SelectItem>
+												<SelectItem value="0.01">
+													$0.01 (Nearest cent)
+												</SelectItem>
+												<SelectItem value="0.05">
+													$0.05 (Nearest nickel)
+												</SelectItem>
+												<SelectItem value="0.1">
+													$0.10 (Nearest dime)
+												</SelectItem>
+												<SelectItem value="0.25">
+													$0.25 (Nearest quarter)
+												</SelectItem>
+												<SelectItem value="0.5">
+													$0.50 (Nearest 50 cents)
+												</SelectItem>
+												<SelectItem value="1">
+													$1.00 (Nearest dollar)
+												</SelectItem>
 												<SelectItem value="5">$5.00 (Nearest $5)</SelectItem>
 												<SelectItem value="10">$10.00 (Nearest $10)</SelectItem>
 											</SelectContent>
 										</Select>
 										<p className="text-xs text-muted-foreground">
-											Example: $123.47 → ${roundToIncrement(123.47, roundingIncrement).toFixed(2)}
+											Example: $123.47 → $
+											{roundToIncrement(123.47, roundingIncrement).toFixed(2)}
 										</p>
 									</div>
 								)}

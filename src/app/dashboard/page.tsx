@@ -24,6 +24,7 @@ import {
 	ChartTooltipContent,
 	type ChartConfig,
 } from "@/components/ui/chart";
+import { RecentInvoicesTable } from "@/components/recent-invoices-table";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
@@ -54,25 +55,15 @@ export default function DashboardPage() {
 
 	const invoiceList = useMemo(() => invoices ?? [], [invoices]);
 
-	const monthlyRevenueData = useMemo(() => {
+	const weeklyRevenueData = useMemo(() => {
 		const now = new Date();
-		return Array.from({ length: 6 }).map((_, index) => {
-			const monthOffset = 5 - index;
-			const current = new Date(
-				now.getFullYear(),
-				now.getMonth() - monthOffset,
-				1
-			);
-			const start = new Date(
-				current.getFullYear(),
-				current.getMonth(),
-				1
-			).getTime();
-			const end = new Date(
-				current.getFullYear(),
-				current.getMonth() + 1,
-				1
-			).getTime();
+		return Array.from({ length: 12 }).map((_, index) => {
+			const weekOffset = 11 - index;
+			const start = new Date(now);
+			start.setDate(start.getDate() - start.getDay() - weekOffset * 7);
+			start.setHours(0, 0, 0, 0);
+			const end = new Date(start);
+			end.setDate(end.getDate() + 7);
 
 			const revenue = invoiceList.reduce((sum, invoice) => {
 				const issuedAt =
@@ -81,7 +72,11 @@ export default function DashboardPage() {
 						: new Date(invoice.issueDate).getTime();
 				const status = invoice.status as InvoiceStatus;
 
-				if (status === "paid" && issuedAt >= start && issuedAt < end) {
+				if (
+					status === "paid" &&
+					issuedAt >= start.getTime() &&
+					issuedAt < end.getTime()
+				) {
 					return (
 						sum +
 						(typeof invoice.total === "number"
@@ -94,7 +89,7 @@ export default function DashboardPage() {
 			}, 0);
 
 			return {
-				month: format(current, "MMM yyyy"),
+				week: format(start, "MMM dd"),
 				revenue: Number(revenue.toFixed(2)),
 			};
 		});
@@ -125,29 +120,6 @@ export default function DashboardPage() {
 			.filter((item) => item.count > 0);
 	}, [invoiceList]);
 
-	const topClientsData = useMemo(() => {
-		const totals = new Map<string, { name: string; value: number }>();
-		invoiceList.forEach((invoice) => {
-			const key = (invoice.clientId as string | undefined) ?? invoice._id;
-			const name = invoice.client?.name ?? "Unnamed Client";
-			const value =
-				typeof invoice.total === "number"
-					? invoice.total
-					: Number(invoice.total);
-			const current = totals.get(key) ?? { name, value: 0 };
-			current.value += value;
-			totals.set(key, current);
-		});
-
-		return Array.from(totals.values())
-			.sort((a, b) => b.value - a.value)
-			.slice(0, 5)
-			.map((item) => ({
-				name: item.name,
-				value: Number(item.value.toFixed(2)),
-			}));
-	}, [invoiceList]);
-
 	// Chart configurations
 	const revenueChartConfig = {
 		revenue: {
@@ -172,13 +144,6 @@ export default function DashboardPage() {
 		overdue: {
 			label: "Overdue",
 			color: "hsl(0 84% 60%)", // Red (red-500)
-		},
-	} satisfies ChartConfig;
-
-	const clientsChartConfig = {
-		value: {
-			label: "Billed",
-			color: "hsl(var(--chart-1))",
 		},
 	} satisfies ChartConfig;
 
@@ -264,10 +229,22 @@ export default function DashboardPage() {
 							</div>
 						)}
 
+						<Card>
+							<CardHeader>
+								<CardTitle>Recent invoices</CardTitle>
+								<p className="text-sm text-muted-foreground">
+									Your latest invoices
+								</p>
+							</CardHeader>
+							<CardContent>
+								<RecentInvoicesTable invoices={invoiceList} />
+							</CardContent>
+						</Card>
+
 						<div className="grid gap-4 lg:grid-cols-3">
 							<Card className="lg:col-span-2">
 								<CardHeader>
-									<CardTitle>Revenue (last 6 months)</CardTitle>
+									<CardTitle>Revenue (last 12 weeks)</CardTitle>
 									<p className="text-sm text-muted-foreground">
 										Paid invoices by issue date
 									</p>
@@ -280,12 +257,12 @@ export default function DashboardPage() {
 										>
 											<BarChart
 												accessibilityLayer
-												data={monthlyRevenueData}
+												data={weeklyRevenueData}
 												margin={{ top: 16, right: 16, left: 8, bottom: 16 }}
 											>
 												<CartesianGrid vertical={false} />
 												<XAxis
-													dataKey="month"
+													dataKey="week"
 													tickLine={false}
 													tickMargin={10}
 													axisLine={false}
@@ -337,7 +314,9 @@ export default function DashboardPage() {
 											className="h-full w-full"
 										>
 											<PieChart>
-												<ChartTooltip content={<ChartTooltipContent hideLabel />} />
+												<ChartTooltip
+													content={<ChartTooltipContent hideLabel />}
+												/>
 												<Pie
 													data={statusData}
 													dataKey="count"
@@ -366,68 +345,6 @@ export default function DashboardPage() {
 								</CardContent>
 							</Card>
 						</div>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>Top clients by billed amount</CardTitle>
-								<p className="text-sm text-muted-foreground">
-									Based on all invoices
-								</p>
-							</CardHeader>
-							<CardContent className="h-[240px] sm:h-[320px]">
-								{topClientsData.length ? (
-									<ChartContainer
-										config={clientsChartConfig}
-										className="h-full w-full"
-									>
-										<BarChart
-											accessibilityLayer
-											data={topClientsData}
-											layout="vertical"
-											margin={{ top: 16, right: 16, left: 32, bottom: 16 }}
-										>
-											<CartesianGrid horizontal={false} />
-											<XAxis
-												type="number"
-												tickLine={false}
-												axisLine={false}
-												tickMargin={8}
-												tickFormatter={(value) => `$${value}`}
-											/>
-											<YAxis
-												dataKey="name"
-												type="category"
-												tickLine={false}
-												axisLine={false}
-												width={140}
-												tickMargin={8}
-											/>
-											<ChartTooltip
-												content={
-													<ChartTooltipContent
-														formatter={(value) =>
-															`$${Number(value).toLocaleString(undefined, {
-																maximumFractionDigits: 2,
-															})}`
-														}
-													/>
-												}
-											/>
-											<Bar
-												dataKey="value"
-												fill="var(--color-value)"
-												radius={[0, 6, 6, 0]}
-												maxBarSize={32}
-											/>
-										</BarChart>
-									</ChartContainer>
-								) : (
-									<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-										No client billing data yet.
-									</div>
-								)}
-							</CardContent>
-						</Card>
 					</div>
 				)}
 			</main>
