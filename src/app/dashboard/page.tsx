@@ -65,32 +65,33 @@ export default function DashboardPage() {
 			const end = new Date(start);
 			end.setDate(end.getDate() + 7);
 
-			const revenue = invoiceList.reduce((sum, invoice) => {
+			let paidRevenue = 0;
+			let outstandingRevenue = 0;
+
+			invoiceList.forEach((invoice) => {
 				const issuedAt =
 					typeof invoice.issueDate === "number"
 						? invoice.issueDate
 						: new Date(invoice.issueDate).getTime();
 				const status = invoice.status as InvoiceStatus;
+				const total =
+					typeof invoice.total === "number"
+						? invoice.total
+						: Number(invoice.total);
 
-				if (
-					status === "paid" &&
-					issuedAt >= start.getTime() &&
-					issuedAt < end.getTime()
-				) {
-					return (
-						sum +
-						(typeof invoice.total === "number"
-							? invoice.total
-							: Number(invoice.total))
-					);
+				if (issuedAt >= start.getTime() && issuedAt < end.getTime()) {
+					if (status === "paid") {
+						paidRevenue += total;
+					} else if (status === "sent" || status === "overdue") {
+						outstandingRevenue += total;
+					}
 				}
-
-				return sum;
-			}, 0);
+			});
 
 			return {
 				week: format(start, "MMM dd"),
-				revenue: Number(revenue.toFixed(2)),
+				paid: Number(paidRevenue.toFixed(2)),
+				outstanding: Number(outstandingRevenue.toFixed(2)),
 			};
 		});
 	}, [invoiceList]);
@@ -122,9 +123,13 @@ export default function DashboardPage() {
 
 	// Chart configurations
 	const revenueChartConfig = {
-		revenue: {
-			label: "Revenue",
-			color: "hsl(var(--chart-1))",
+		paid: {
+			label: "Paid",
+			color: "hsl(142 71% 45%)", // Green (green-500)
+		},
+		outstanding: {
+			label: "Outstanding",
+			color: "hsl(221 83% 53%)", // Blue (blue-500)
 		},
 	} satisfies ChartConfig;
 
@@ -246,7 +251,7 @@ export default function DashboardPage() {
 								<CardHeader>
 									<CardTitle>Revenue (last 12 weeks)</CardTitle>
 									<p className="text-sm text-muted-foreground">
-										Paid invoices by issue date
+										Paid and outstanding revenue by issue date
 									</p>
 								</CardHeader>
 								<CardContent className="h-[240px] sm:h-[320px]">
@@ -286,8 +291,13 @@ export default function DashboardPage() {
 													}
 												/>
 												<Bar
-													dataKey="revenue"
-													fill="var(--color-revenue)"
+													dataKey="outstanding"
+													fill="var(--color-outstanding)"
+													radius={[6, 6, 0, 0]}
+												/>
+												<Bar
+													dataKey="paid"
+													fill="var(--color-paid)"
 													radius={[6, 6, 0, 0]}
 												/>
 											</BarChart>
