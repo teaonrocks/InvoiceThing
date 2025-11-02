@@ -1,8 +1,7 @@
-"use client";
-
 import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { api } from "@/../convex/_generated/api";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { Navigation } from "@/components/navigation";
 import { Button } from "@/components/ui/button";
@@ -34,7 +33,11 @@ function roundToIncrement(value: number, increment: number): number {
 	return Math.round(value / increment) * increment;
 }
 
-export default function SettingsPage() {
+export const Route = createFileRoute("/settings/")({
+	component: SettingsPage,
+});
+
+function SettingsPage() {
 	useStoreUser();
 	const { toast } = useToast();
 	const { clerkUser: user, currentUser } = useAppData();
@@ -42,7 +45,7 @@ export default function SettingsPage() {
 	const settings = useQuery(
 		api.settings.get,
 		currentUser ? { userId: currentUser._id } : "skip"
-	);
+	)
 	const upsertSettings = useMutation(api.settings.upsert);
 
 	const [invoicePrefix, setInvoicePrefix] = useState("INV");
@@ -77,8 +80,8 @@ export default function SettingsPage() {
 				title: "Error",
 				description: "User not found",
 				variant: "destructive",
-			});
-			return;
+			})
+			return
 		}
 
 		setIsSubmitting(true);
@@ -93,30 +96,30 @@ export default function SettingsPage() {
 				paymentInstructions: paymentInstructions.trim() || undefined,
 				enableRounding,
 				roundingIncrement,
-			});
+			})
 
 			toast({
 				title: "Success",
 				description: "Settings saved successfully",
-			});
+			})
 		} catch (error) {
 			console.error("Error saving settings:", error);
 			toast({
 				title: "Error",
 				description: "Failed to save settings. Please try again.",
 				variant: "destructive",
-			});
+			})
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
+	}
 
 	if (!user || !currentUser) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -324,5 +327,5 @@ export default function SettingsPage() {
 				</form>
 			</main>
 		</div>
-	);
+	)
 }

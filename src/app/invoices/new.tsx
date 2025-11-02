@@ -1,10 +1,8 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "@/../convex/_generated/api";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,9 +36,12 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import Link from "next/link";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import type { Id } from "@/../convex/_generated/dataModel";
 import { useAppData } from "@/context/app-data-provider";
+
+export const Route = createFileRoute("/invoices/new")({
+	component: NewInvoicePage,
+});
 
 type LineItem = {
 	id: string;
@@ -58,8 +59,8 @@ type Claim = {
 	imageUrl?: string;
 };
 
-export default function NewInvoicePage() {
-	const router = useRouter();
+function NewInvoicePage() {
+	const navigate = useNavigate();
 	const { user } = useUser();
 	const { toast } = useToast();
 	useStoreUser();
@@ -358,7 +359,7 @@ export default function NewInvoicePage() {
 						: undefined,
 			});
 
-			router.push(`/invoices/${invoiceId}`);
+			navigate({ to: "/invoices/$id", params: { id: invoiceId } });
 		} catch (error) {
 			console.error("Error creating invoice:", error);
 			alert("Failed to create invoice. Please try again.");
@@ -378,7 +379,7 @@ export default function NewInvoicePage() {
 	return (
 		<div className="container max-w-4xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			<div className="mb-6">
-				<Link href="/invoices">
+				<Link to="/invoices">
 					<Button variant="ghost" size="sm">
 						<ArrowLeft className="h-4 w-4 mr-2" />
 						Back to Invoices
@@ -809,7 +810,7 @@ export default function NewInvoicePage() {
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => router.push("/invoices")}
+								onClick={() => navigate({ to: "/invoices" })}
 								disabled={isSubmitting}
 							>
 								Cancel
@@ -943,3 +944,4 @@ export default function NewInvoicePage() {
 		</div>
 	);
 }
+

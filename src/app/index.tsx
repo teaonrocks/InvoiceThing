@@ -1,13 +1,17 @@
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import { useAuth } from "@clerk/clerk-react";
 
-export default async function Home() {
-	const { userId } = await auth();
+export const Route = createFileRoute("/")({
+	component: Home,
+});
 
-	if (userId) {
-		redirect("/dashboard");
+function Home() {
+	const { isSignedIn } = useAuth();
+
+	if (isSignedIn) {
+		return <Navigate to="/dashboard" replace />;
 	}
 
 	return (
@@ -22,12 +26,12 @@ export default async function Home() {
 					in one place.
 				</p>
 				<div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row sm:gap-4">
-					<Link href="/sign-up">
+					<Link to="/sign-up">
 						<Button size="lg" className="w-48 sm:w-auto">
 							Get Started
 						</Button>
 					</Link>
-					<Link href="/sign-in">
+					<Link to="/sign-in">
 						<Button variant="outline" size="lg" className="w-48 sm:w-auto">
 							Sign In
 						</Button>
@@ -37,3 +41,4 @@ export default async function Home() {
 		</div>
 	);
 }
+

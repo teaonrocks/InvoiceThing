@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
 import type { Id } from "@/../convex/_generated/dataModel";
@@ -146,10 +144,16 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-44">
 							<DropdownMenuItem asChild data-no-row-click>
-								<Link href={`/clients/${row.original._id}`}>View details</Link>
+								<Link to="/clients/$id" params={{ id: row.original._id }}>
+									View details
+								</Link>
 							</DropdownMenuItem>
 							<DropdownMenuItem asChild data-no-row-click>
-								<Link href={`/clients/${row.original._id}?mode=edit`}>
+								<Link
+									to="/clients/$id"
+									params={{ id: row.original._id }}
+									search={{ mode: "edit" }}
+								>
 									Edit client
 								</Link>
 							</DropdownMenuItem>

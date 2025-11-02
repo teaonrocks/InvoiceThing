@@ -1,10 +1,9 @@
-"use client";
-
-import { use, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import type { Id } from "../../../../convex/_generated/dataModel";
+import { api } from "@/../convex/_generated/api";
+import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,22 +17,22 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { ArrowLeft, Loader2, Trash2, Save } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useToast } from "@/hooks/use-toast";
 import { formatAddressParts } from "@/lib/utils";
 
-export default function ClientDetailPage({
-	params,
-}: {
-	params: Promise<{ id: string }>;
-}) {
-	const router = useRouter();
-	const { id } = use(params);
+export const Route = createFileRoute("/clients/$id")({
+	component: ClientDetailPage,
+});
+
+function ClientDetailPage() {
+	const navigate = useNavigate();
+	const { id } = Route.useParams();
 	const { toast } = useToast();
 
 	const client = useQuery(api.clients.get, {
 		clientId: id as Id<"clients">,
-	});
+	})
 	const updateClient = useMutation(api.clients.update);
 	const deleteClient = useMutation(api.clients.remove);
 
@@ -72,8 +71,8 @@ export default function ClientDetailPage({
 				title: "Error",
 				description: "Name is required",
 				variant: "destructive",
-			});
-			return;
+			})
+			return
 		}
 
 		setIsSubmitting(true);
@@ -88,12 +87,12 @@ export default function ClientDetailPage({
 				unitNumber: unitNumber.trim() || undefined,
 				postalCode: postalCode.trim() || undefined,
 				contactPerson: contactPerson || undefined,
-			});
+			})
 
 			toast({
 				title: "Success",
 				description: "Client updated successfully",
-			});
+			})
 
 			setIsEditing(false);
 		} catch (error) {
@@ -102,11 +101,11 @@ export default function ClientDetailPage({
 				title: "Error",
 				description: "Failed to update client. Please try again.",
 				variant: "destructive",
-			});
+			})
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
+	}
 
 	const handleDelete = async () => {
 		setIsDeleting(true);
@@ -117,27 +116,27 @@ export default function ClientDetailPage({
 			toast({
 				title: "Success",
 				description: "Client deleted successfully",
-			});
+			})
 
-			router.push("/clients");
+			navigate({ to: "/clients" });
 		} catch (error) {
 			console.error("Error deleting client:", error);
 			toast({
 				title: "Error",
 				description: "Failed to delete client. Please try again.",
 				variant: "destructive",
-			});
+			})
 			setIsDeleting(false);
 			setShowDeleteDialog(false);
 		}
-	};
+	}
 
 	if (!client) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 			</div>
-		);
+		)
 	}
 
 	const formattedAddress = formatAddressParts({
@@ -145,12 +144,12 @@ export default function ClientDetailPage({
 		buildingName: client.buildingName,
 		unitNumber: client.unitNumber,
 		postalCode: client.postalCode,
-	});
+	})
 
 	return (
 		<div className="container max-w-3xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			<div className="mb-6">
-				<Link href="/clients">
+				<Link to="/clients">
 					<Button variant="ghost" size="sm">
 						<ArrowLeft className="h-4 w-4 mr-2" />
 						Back to Clients
@@ -261,11 +260,11 @@ export default function ClientDetailPage({
 									type="button"
 									variant="outline"
 									onClick={() => {
-										setIsEditing(false);
+										setIsEditing(false)
 										// Reset to original values
 										if (client) {
-											setName(client.name);
-											setEmail(client.email || "");
+											setName(client.name)
+											setEmail(client.email || "")
 											setStreetName(client.streetName || "");
 											setBuildingName(client.buildingName || "");
 											setUnitNumber(client.unitNumber || "");
@@ -365,5 +364,5 @@ export default function ClientDetailPage({
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
+	)
 }

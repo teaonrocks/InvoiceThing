@@ -1,12 +1,11 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
-import type { ClientRow } from "./columns";
+import type { ClientRow } from "./-columns";
 
 import { Navigation } from "@/components/navigation";
 import { DataTable } from "@/components/data-table/data-table";
@@ -41,11 +40,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { clientColumns } from "./columns";
+import { clientColumns } from "./-columns";
 import { useAppData } from "@/context/app-data-provider";
 import { formatAddressParts } from "@/lib/utils";
 
-export default function ClientsPage() {
+export const Route = createFileRoute("/clients/")({
+	component: ClientsPage,
+});
+
+function ClientsPage() {
 	const { toast } = useToast();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
@@ -59,7 +62,7 @@ export default function ClientsPage() {
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [previewClientId, setPreviewClientId] = useState<Id<"clients"> | null>(
 		null
-	);
+	)
 	const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
 	const { currentUser: convexUser, clients } = useAppData();
@@ -69,7 +72,7 @@ export default function ClientsPage() {
 	const previewClient = useQuery(
 		api.clients.get,
 		previewClientId ? { clientId: previewClientId } : "skip"
-	);
+	)
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -84,7 +87,7 @@ export default function ClientsPage() {
 			unitNumber: unitNumber.trim() || undefined,
 			postalCode: postalCode.trim() || undefined,
 			contactPerson: contactPerson || undefined,
-		});
+		})
 
 		setName("");
 		setEmail("");
@@ -94,7 +97,7 @@ export default function ClientsPage() {
 		setPostalCode("");
 		setContactPerson("");
 		setOpen(false);
-	};
+	}
 
 	const clientList = useMemo(() => clients ?? [], [clients]);
 
@@ -105,7 +108,7 @@ export default function ClientsPage() {
 				buildingName: client.buildingName ?? undefined,
 				unitNumber: client.unitNumber ?? undefined,
 				postalCode: client.postalCode ?? undefined,
-			});
+			})
 			const invoiceCount = (client as { invoiceCount?: number }).invoiceCount;
 			return {
 				_id: client._id,
@@ -118,8 +121,8 @@ export default function ClientsPage() {
 					typeof invoiceCount === "number" && !Number.isNaN(invoiceCount)
 						? invoiceCount
 						: undefined,
-			};
-		});
+			}
+		})
 	}, [clientList]);
 
 	const fallbackPreviewClient = useMemo(() => {
@@ -135,7 +138,7 @@ export default function ClientsPage() {
 			buildingName: (clientForPreview as { buildingName?: string }).buildingName,
 			unitNumber: (clientForPreview as { unitNumber?: string }).unitNumber,
 			postalCode: (clientForPreview as { postalCode?: string }).postalCode,
-		});
+		})
 	}, [clientForPreview]);
 
 	const previewInvoiceCount = useMemo(() => {
@@ -149,7 +152,7 @@ export default function ClientsPage() {
 	const selectedIds = useMemo(
 		() => selectedClients.map((client) => client._id),
 		[selectedClients]
-	);
+	)
 	const selectedCount = selectedIds.length;
 
 	const handlePreviewClose = useCallback(() => {
@@ -169,11 +172,11 @@ export default function ClientsPage() {
 				await deleteClient({ clientId: client._id });
 				setSelectedClients((current) =>
 					current.filter((item) => item._id !== client._id)
-				);
+				)
 				toast({
 					title: "Client removed",
 					description: `${client.name} has been deleted.`,
-				});
+				})
 				if (previewClientId === client._id) {
 					handlePreviewClose();
 				}
@@ -183,13 +186,13 @@ export default function ClientsPage() {
 					title: "Unable to delete",
 					description: "We couldn't delete the client. Please try again.",
 					variant: "destructive",
-				});
+				})
 			} finally {
 				setIsDeleting(false);
 			}
 		},
 		[deleteClient, handlePreviewClose, previewClientId, toast]
-	);
+	)
 
 	const handleBulkDelete = useCallback(async () => {
 		if (!selectedIds.length) return;
@@ -205,14 +208,14 @@ export default function ClientsPage() {
 			toast({
 				title: "Clients deleted",
 				description: `Removed ${selectedIds.length} client(s).`,
-			});
+			})
 		} catch (error) {
 			console.error(error);
 			toast({
 				title: "Unable to delete",
 				description: "We couldn't delete one or more clients.",
 				variant: "destructive",
-			});
+			})
 		} finally {
 			setIsDeleting(false);
 		}
@@ -222,7 +225,7 @@ export default function ClientsPage() {
 		if (!previewClientId) return;
 		const stillExists = clientList.some(
 			(client) => client._id === previewClientId
-		);
+		)
 		if (!stillExists) {
 			handlePreviewClose();
 		}
@@ -472,7 +475,7 @@ export default function ClientsPage() {
 										Close
 									</Button>
 									<Button asChild>
-										<Link href={`/clients/${clientForPreview._id}`}>
+										<Link to="/clients/$id" params={{ id: clientForPreview._id }}>
 											Open full profile
 										</Link>
 									</Button>
@@ -487,5 +490,5 @@ export default function ClientsPage() {
 				) : null}
 			</Dialog>
 		</div>
-	);
+	)
 }

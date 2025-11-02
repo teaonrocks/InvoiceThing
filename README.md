@@ -1,6 +1,6 @@
 # InvoiceThing
 
-A modern, full-featured invoice management system for freelancers and small businesses. Built with Next.js 15, Convex, Clerk, and a polished UI powered by Tailwind CSS and Shadcn/UI.
+A modern, full-featured invoice management system for freelancers and small businesses. Built with TanStack Start, Convex, Clerk, and a polished UI powered by Tailwind CSS v4 and Shadcn/UI.
 
 ## ✨ Highlights
 
@@ -26,13 +26,15 @@ A modern, full-featured invoice management system for freelancers and small busi
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Next.js 15 (App Router) + React 19 + TypeScript
-- **Styling**: Tailwind CSS 3, Shadcn/UI, clsx, class-variance-authority
+- **Frontend**: TanStack Start + TanStack Router + React 19 + TypeScript
+- **Bundler**: Vite 7
+- **Styling**: Tailwind CSS v4, Shadcn/UI, clsx, class-variance-authority
 - **State & Data**: Convex mutations/queries with end-to-end type safety
 - **Auth**: Clerk (JWT template integration for Convex)
 - **Forms & Validation**: React Hook Form + Zod
 - **PDF Generation**: @react-pdf/renderer
-- **Tooling**: pnpm, ESLint, Prettier, TypeScript strict mode
+- **Routing**: TanStack Router (file-based routing)
+- **Tooling**: pnpm, ESLint, TypeScript strict mode
 
 ## 📋 Prerequisites
 
@@ -68,16 +70,18 @@ Follow the prompt to create a new Convex project. When complete, copy the deploy
 
 ### 4. Configure environment variables
 
-Create `.env.local` in the project root:
+Create `.env` in the project root:
 
 ```env
 # Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+# Note: Clerk secret key is not needed for client-side usage
 
 # Convex Backend
-NEXT_PUBLIC_CONVEX_URL=https://<your-deployment>.convex.cloud
+VITE_CONVEX_URL=https://<your-deployment>.convex.cloud
 ```
+
+**Note**: TanStack Start uses Vite, which requires the `VITE_` prefix for environment variables. The app also supports `NEXT_PUBLIC_` prefix for backwards compatibility.
 
 ### 5. Configure the Clerk JWT template
 
@@ -95,7 +99,7 @@ NEXT_PUBLIC_CONVEX_URL=https://<your-deployment>.convex.cloud
 
 ### 6. Run the app locally
 
-#### Terminal 1 – Next.js
+#### Terminal 1 – TanStack Start (Vite)
 
 ```bash
 pnpm dev
@@ -114,31 +118,46 @@ Visit [http://localhost:3000](http://localhost:3000) and sign in with your Clerk
 ```text
 invoicething/
 ├── src/
-│   ├── app/
-│   │   ├── dashboard/            # Revenue + status overview
-│   │   ├── clients/              # Client CRUD UI
-│   │   ├── invoices/             # Invoice list + detail pages
-│   │   │   ├── new/              # Create invoice flow
-│   │   │   ├── [id]/             # Invoice read-only view
-│   │   │   └── [id]/edit/        # Invoice edit form
-│   │   ├── settings/             # User-specific defaults
-│   │   ├── sign-in/              # Clerk sign-in page
-│   │   └── sign-up/              # Clerk sign-up page
+│   ├── app/                        # TanStack Router file-based routes
+│   │   ├── __root.tsx              # Root layout route
+│   │   ├── index.tsx               # Home page (/)
+│   │   ├── dashboard/              # Dashboard routes
+│   │   │   └── index.tsx           # /dashboard
+│   │   ├── clients/                # Client routes
+│   │   │   ├── -columns.tsx        # Helper file (excluded from routes)
+│   │   │   ├── index.tsx           # /clients
+│   │   │   └── $id.tsx             # /clients/$id
+│   │   ├── invoices/               # Invoice routes
+│   │   │   ├── -columns.tsx        # Helper file (excluded from routes)
+│   │   │   ├── index.tsx           # /invoices
+│   │   │   ├── $id.tsx             # /invoices/$id
+│   │   │   ├── $id.edit.tsx        # /invoices/$id/edit
+│   │   │   └── new.tsx             # /invoices/new
+│   │   ├── settings/               # Settings routes
+│   │   │   └── index.tsx           # /settings
+│   │   ├── sign-in/                # Sign-in routes
+│   │   │   └── $.tsx               # /sign-in/$ (splat route)
+│   │   └── sign-up/                # Sign-up routes
+│   │       └── $.tsx               # /sign-up/$ (splat route)
 │   ├── components/
-│   │   ├── ui/                   # Shadcn/UI primitives
-│   │   ├── invoice-pdf.tsx       # PDF renderer template
-│   │   ├── invoice-table.tsx     # Invoice list table + bulk actions
-│   │   └── providers.tsx         # Top-level providers
-│   └── lib/                      # Utilities, helpers, constants
-├── convex/                       # Convex backend functions + schema
-│   ├── schema.ts                 # Convex data model
-│   ├── invoices.ts               # Invoice queries + mutations
-│   ├── clients.ts                # Client endpoints
-│   ├── files.ts                  # File storage helpers
-│   └── users.ts                  # User bootstrap + metadata
-├── public/                       # Static assets
-├── tailwind.config.ts            # Tailwind configuration
-└── README.md                     # Project documentation (this file)
+│   │   ├── ui/                     # Shadcn/UI primitives
+│   │   ├── invoice-pdf.tsx          # PDF renderer template
+│   │   ├── invoice-table.tsx       # Invoice list table + bulk actions
+│   │   └── providers.tsx           # Top-level providers (Clerk, Convex, Theme)
+│   ├── hooks/                      # Custom React hooks
+│   ├── lib/                        # Utilities, helpers, constants
+│   ├── router.tsx                   # TanStack Router configuration
+│   └── routeTree.gen.ts            # Auto-generated route tree (do not edit)
+├── convex/                         # Convex backend functions + schema
+│   ├── schema.ts                   # Convex data model
+│   ├── invoices.ts                 # Invoice queries + mutations
+│   ├── clients.ts                  # Client endpoints
+│   ├── files.ts                    # File storage helpers
+│   └── users.ts                    # User bootstrap + metadata
+├── public/                         # Static assets
+├── vite.config.ts                  # Vite configuration
+├── tailwind.config.ts              # Tailwind CSS v4 configuration
+└── README.md                       # Project documentation (this file)
 ```
 
 ## 🗄️ Data Model Overview
@@ -180,7 +199,7 @@ invoicething/
 
 - Toggle via navigation switch (light, dark, system)
 - Persists using `next-themes`
-- Smooth transitions via Tailwind animations
+- Smooth transitions via Tailwind CSS v4 animations
 
 ### Tax & Numbering Settings
 
@@ -202,7 +221,7 @@ invoicething/
 ## 📜 Available Scripts
 
 ```bash
-pnpm dev              # Run Next.js in development mode
+pnpm dev              # Run TanStack Start (Vite) in development mode
 pnpm build            # Create a production build
 pnpm start            # Serve the production build
 pnpm lint             # Run ESLint + TypeScript checks
@@ -219,33 +238,31 @@ pnpm convex deploy    # Deploy Convex backend
 - **Due Date Offset** – Default days until payment is due
 - **Tax Rate** – Default percentage added to invoices (0 disables tax)
 
-### Next.js Image Domains
+### Environment Variables
 
-Add Convex storage domains in `next.config.ts`:
+TanStack Start uses Vite, which requires the `VITE_` prefix for environment variables to be exposed to the client. The app supports both `VITE_` and `NEXT_PUBLIC_` prefixes for compatibility.
 
-```typescript
-images: {
-  remotePatterns: [
-    {
-      protocol: "https",
-      hostname: "*.convex.cloud",
-    },
-  ],
-}
-```
+### Routing
+
+Routes are organized using TanStack Router's file-based routing system:
+
+- Files in `src/app/` become routes automatically
+- Use `-` prefix to exclude files from route generation (e.g., `-columns.tsx`)
+- Dynamic routes use `$` prefix (e.g., `$id.tsx` for `/invoices/$id`)
+- Splat routes use `$.tsx` (e.g., `$.tsx` for `/sign-in/$`)
 
 ## 🐛 Troubleshooting
 
 ### Authentication Issues
 
-- Double-check Clerk keys in `.env.local`
+- Double-check Clerk keys in `.env` (use `VITE_CLERK_PUBLISHABLE_KEY`)
 - Ensure the JWT template is named `convex`
 - Confirm the `userId` claim is present
 
 ### Convex Connection Issues
 
 - Run `pnpm convex dev` in its own terminal
-- Verify `NEXT_PUBLIC_CONVEX_URL` matches your deployment
+- Verify `VITE_CONVEX_URL` matches your deployment
 - Make sure your Convex project is deployed if testing production builds
 
 ### Image Upload Problems
@@ -261,46 +278,12 @@ images: {
 
 ## 📚 Helpful Links
 
-- [Next.js Documentation](https://nextjs.org/docs)
+- [TanStack Start Documentation](https://tanstack.com/start/latest)
+- [TanStack Router Documentation](https://tanstack.com/router/latest)
 - [Convex Documentation](https://docs.convex.dev)
 - [Clerk Documentation](https://clerk.com/docs)
 - [Shadcn/UI Docs](https://ui.shadcn.com)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
+- [Tailwind CSS v4 Docs](https://tailwindcss.com/docs)
+- [Vite Documentation](https://vitejs.dev)
 
-## 🚦 Roadmap
-
-### Completed ✅
-
-- [x] User authentication
-- [x] Client CRUD
-- [x] Invoice creation & editing
-- [x] Dashboard metrics
-- [x] PDF generation with embedded receipts
-- [x] Expense/claims tracking
-- [x] Configurable tax & numbering
-- [x] Dark mode
-- [x] Bulk invoice actions
-
-### Upcoming 🔮
-
-- [ ] Payment tracking
-- [ ] Recurring invoices
-- [ ] Multi-currency support
-- [ ] Reporting & analytics
-- [ ] Invoice templates
-- [ ] Expense categories
-- [ ] Email customization
-- [ ] Client portal
-- [ ] CSV/Excel exports
-
-## 📄 License
-
-Released under the MIT License. Use it freely for personal or commercial projects.
-
-## 🤝 Contributing
-
-Contributions are welcome! Open an issue or submit a pull request with your improvements.
-
----
-
-Crafted with ❤️ using Next.js, Convex, and Clerk.
+Crafted with ❤️ using TanStack Start, Convex, and Clerk.
