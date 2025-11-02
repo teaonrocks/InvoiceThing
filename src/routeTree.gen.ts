@@ -32,9 +32,9 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvoicesIndexRoute = InvoicesIndexRouteImport.update({
-  id: '/invoices/',
-  path: '/invoices/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => InvoicesRoute,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/dashboard/',
@@ -57,14 +57,14 @@ const SignInSplatRoute = SignInSplatRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvoicesNewRoute = InvoicesNewRouteImport.update({
-  id: '/invoices/new',
-  path: '/invoices/new',
-  getParentRoute: () => rootRouteImport,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => InvoicesRoute,
 } as any)
 const InvoicesIdRoute = InvoicesIdRouteImport.update({
-  id: '/invoices/$id',
-  path: '/invoices/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => InvoicesRoute,
 } as any)
 const ClientsIdRoute = ClientsIdRouteImport.update({
   id: '/clients/$id',
@@ -86,7 +86,7 @@ export interface FileRoutesByFullPath {
   '/sign-up/$': typeof SignUpSplatRoute
   '/clients': typeof ClientsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/invoices': typeof InvoicesIndexRoute
+  '/invoices/': typeof InvoicesIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
 }
@@ -128,7 +128,7 @@ export interface FileRouteTypes {
     | '/sign-up/$'
     | '/clients'
     | '/dashboard'
-    | '/invoices'
+    | '/invoices/'
     | '/settings'
     | '/invoices/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -162,13 +162,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClientsIdRoute: typeof ClientsIdRoute
-  InvoicesIdRoute: typeof InvoicesIdRouteWithChildren
-  InvoicesNewRoute: typeof InvoicesNewRoute
   SignInSplatRoute: typeof SignInSplatRoute
   SignUpSplatRoute: typeof SignUpSplatRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  InvoicesIndexRoute: typeof InvoicesIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
@@ -190,10 +187,10 @@ declare module '@tanstack/react-router' {
     }
     '/invoices/': {
       id: '/invoices/'
-      path: '/invoices'
-      fullPath: '/invoices'
+      path: '/'
+      fullPath: '/invoices/'
       preLoaderRoute: typeof InvoicesIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof InvoicesRoute
     }
     '/dashboard/': {
       id: '/dashboard/'
@@ -225,17 +222,17 @@ declare module '@tanstack/react-router' {
     }
     '/invoices/new': {
       id: '/invoices/new'
-      path: '/invoices/new'
+      path: '/new'
       fullPath: '/invoices/new'
       preLoaderRoute: typeof InvoicesNewRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof InvoicesRoute
     }
     '/invoices/$id': {
       id: '/invoices/$id'
-      path: '/invoices/$id'
+      path: '/$id'
       fullPath: '/invoices/$id'
       preLoaderRoute: typeof InvoicesIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof InvoicesRoute
     }
     '/clients/$id': {
       id: '/clients/$id'
@@ -254,28 +251,13 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface InvoicesIdRouteChildren {
-  InvoicesIdEditRoute: typeof InvoicesIdEditRoute
-}
-
-const InvoicesIdRouteChildren: InvoicesIdRouteChildren = {
-  InvoicesIdEditRoute: InvoicesIdEditRoute,
-}
-
-const InvoicesIdRouteWithChildren = InvoicesIdRoute._addFileChildren(
-  InvoicesIdRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClientsIdRoute: ClientsIdRoute,
-  InvoicesIdRoute: InvoicesIdRouteWithChildren,
-  InvoicesNewRoute: InvoicesNewRoute,
   SignInSplatRoute: SignInSplatRoute,
   SignUpSplatRoute: SignUpSplatRoute,
   ClientsIndexRoute: ClientsIndexRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  InvoicesIndexRoute: InvoicesIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 }
 export const routeTree = rootRouteImport
