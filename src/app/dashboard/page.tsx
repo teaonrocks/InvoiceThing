@@ -36,10 +36,10 @@ const STATUS_LABELS: Record<InvoiceStatus, string> = {
 };
 
 const STATUS_COLORS: Record<InvoiceStatus, string> = {
-	draft: "hsl(var(--chart-1))",
-	sent: "hsl(var(--chart-2))",
-	paid: "hsl(var(--chart-3))",
-	overdue: "hsl(var(--chart-4))",
+	draft: "var(--chart-1)",
+	sent: "var(--chart-2)",
+	paid: "var(--chart-3)",
+	overdue: "var(--chart-4)",
 };
 
 export default function DashboardPage() {
@@ -138,7 +138,7 @@ export default function DashboardPage() {
 	const statusChartConfig = {
 		draft: {
 			label: "Draft",
-			color: "hsl(var(--muted-foreground))", // Gray
+			color: "var(--muted-foreground)", // Gray
 		},
 		sent: {
 			label: "Sent",
