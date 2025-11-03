@@ -194,15 +194,15 @@ function DashboardPage() {
 
 				<div className="space-y-8">
 					{finalStats ? (
-						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+						<div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
+									<CardTitle className="text-xs font-medium sm:text-sm">
 										Total Earnings
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="text-xl font-bold sm:text-2xl">
 										${finalStats.totalEarnings.toFixed(2)}
 									</div>
 									<p className="text-xs text-muted-foreground">
@@ -213,12 +213,12 @@ function DashboardPage() {
 
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
+									<CardTitle className="text-xs font-medium sm:text-sm">
 										Outstanding
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="text-xl font-bold sm:text-2xl">
 										${finalStats.totalOutstanding.toFixed(2)}
 									</div>
 									<p className="text-xs text-muted-foreground">
@@ -229,12 +229,12 @@ function DashboardPage() {
 
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
+									<CardTitle className="text-xs font-medium sm:text-sm">
 										Total Invoices
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="text-xl font-bold sm:text-2xl">
 										{finalStats.totalInvoices}
 									</div>
 									<p className="text-xs text-muted-foreground">All time</p>
@@ -243,12 +243,12 @@ function DashboardPage() {
 
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">
+									<CardTitle className="text-xs font-medium sm:text-sm">
 										Active Clients
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="text-xl font-bold sm:text-2xl">
 										{finalStats.activeClients}
 									</div>
 									<p className="text-xs text-muted-foreground">Total clients</p>
@@ -256,7 +256,7 @@ function DashboardPage() {
 							</Card>
 						</div>
 					) : (
-						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+						<div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 									<Skeleton className="h-4 w-24" />
@@ -324,8 +324,8 @@ function DashboardPage() {
 											Total and paid revenue by issue date
 										</p>
 									</CardHeader>
-									<CardContent className="h-[240px] sm:h-[320px]">
-										<div className="flex h-full items-end justify-between gap-1 px-4 pb-4">
+									<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
+										<div className="flex h-full items-end justify-between gap-1 px-2 sm:px-4 pb-4">
 											{Array.from({ length: 12 }).map((_, i) => {
 												// Use index-based heights for consistent rendering
 												const heights = [
@@ -363,9 +363,9 @@ function DashboardPage() {
 											All invoices grouped by status
 										</p>
 									</CardHeader>
-									<CardContent className="h-[240px] sm:h-[320px]">
+									<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
 										<div className="flex h-full items-center justify-center">
-											<Skeleton className="h-48 w-48 rounded-full" />
+											<Skeleton className="h-32 w-32 sm:h-48 sm:w-48 rounded-full" />
 										</div>
 									</CardContent>
 								</Card>
