@@ -319,20 +319,20 @@ function DashboardPage() {
 							<div className="grid gap-4 lg:grid-cols-3">
 								<Card className="lg:col-span-2">
 									<CardHeader>
-										<CardTitle>Revenue (last 12 weeks)</CardTitle>
+										<CardTitle>Revenue (last 8 weeks)</CardTitle>
 										<p className="text-sm text-muted-foreground">
 											Total and paid revenue by issue date
 										</p>
 									</CardHeader>
-									<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
+									<CardContent className="h-[200px] sm:h-[240px] md:h-[320px]">
 										<div className="flex h-full items-end justify-between gap-1 px-2 sm:px-4 pb-4">
-											{Array.from({ length: 12 }).map((_, i) => {
+											{Array.from({ length: 8 }).map((_, i) => {
 												// Use index-based heights for consistent rendering
 												const heights = [
-													45, 52, 38, 60, 48, 55, 42, 58, 50, 45, 48, 52,
+													45, 52, 38, 60, 48, 55, 42, 58,
 												];
 												const paidHeights = [
-													30, 35, 25, 40, 32, 38, 28, 42, 34, 30, 32, 35,
+													30, 35, 25, 40, 32, 38, 28, 42,
 												];
 												return (
 													<div

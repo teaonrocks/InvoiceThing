@@ -14,6 +14,8 @@ import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
+	ChartLegend,
+	ChartLegendContent,
 	type ChartConfig,
 } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,8 +51,8 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 	const weeklyRevenueData = useMemo(() => {
 		if (!invoices || invoices.length === 0) return [];
 		const now = new Date();
-		return Array.from({ length: 12 }).map((_, index) => {
-			const weekOffset = 11 - index;
+		return Array.from({ length: 8 }).map((_, index) => {
+			const weekOffset = 7 - index;
 			const start = new Date(now);
 			start.setDate(start.getDate() - start.getDay() - weekOffset * 7);
 			start.setHours(0, 0, 0, 0);
@@ -153,26 +155,26 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 			<div className="grid gap-4 lg:grid-cols-3">
 				<Card className="lg:col-span-2">
 					<CardHeader>
-						<CardTitle>Revenue (last 12 weeks)</CardTitle>
+						<CardTitle>Revenue (last 8 weeks)</CardTitle>
 						<p className="text-sm text-muted-foreground">
 							Total and paid revenue by issue date
 						</p>
 					</CardHeader>
-					<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
+					<CardContent className="h-[200px] sm:h-[240px] md:h-[320px]">
 						<div className="flex h-full items-end justify-between gap-1 px-2 sm:px-4 pb-4">
-							{Array.from({ length: 12 }).map((_, i) => {
-								const heights = [45, 52, 38, 60, 48, 55, 42, 58, 50, 45, 48, 52];
-								const paidHeights = [30, 35, 25, 40, 32, 38, 28, 42, 34, 30, 32, 35];
-								return (
-									<div key={i} className="flex flex-1 flex-col items-center gap-1">
-										<div className="flex w-full flex-col gap-1">
-											<Skeleton className="w-full" style={{ height: `${heights[i] || 50}%` }} />
-											<Skeleton className="w-full" style={{ height: `${paidHeights[i] || 35}%` }} />
+							{Array.from({ length: 8 }).map((_, i) => {
+									const heights = [45, 52, 38, 60, 48, 55, 42, 58];
+									const paidHeights = [30, 35, 25, 40, 32, 38, 28, 42];
+									return (
+										<div key={i} className="flex flex-1 flex-col items-center gap-1">
+											<div className="flex w-full flex-col gap-1">
+												<Skeleton className="w-full" style={{ height: `${heights[i] || 50}%` }} />
+												<Skeleton className="w-full" style={{ height: `${paidHeights[i] || 35}%` }} />
+											</div>
+											<Skeleton className="h-3 w-8" />
 										</div>
-										<Skeleton className="h-3 w-8" />
-									</div>
-								);
-							})}
+									);
+								})}
 						</div>
 					</CardContent>
 				</Card>
@@ -197,22 +199,21 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 		<div className="grid gap-4 lg:grid-cols-3">
 			<Card className="lg:col-span-2">
 				<CardHeader>
-					<CardTitle>Revenue (last 12 weeks)</CardTitle>
+					<CardTitle>Revenue (last 8 weeks)</CardTitle>
 					<p className="text-sm text-muted-foreground">
 						Total and paid revenue by issue date
 					</p>
 				</CardHeader>
-				<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
+				<CardContent className="h-[200px] sm:h-[240px] md:h-[320px]">
 					{invoiceList.length ? (
 						<ChartContainer
 							config={revenueChartConfig}
-							className="h-full w-full min-w-0"
+							className="h-full w-full"
 						>
 							<BarChart
 								accessibilityLayer
 								data={weeklyRevenueData}
 								margin={{ top: 8, right: 4, left: 0, bottom: 8 }}
-								className="sm:!w-full"
 							>
 								<CartesianGrid vertical={false} />
 								<XAxis
@@ -244,6 +245,10 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 										/>
 									}
 								/>
+								<ChartLegend
+									content={<ChartLegendContent nameKey="dataKey" />}
+									className="-translate-y-2"
+								/>
 								<Bar
 									dataKey="total"
 									fill="var(--color-total)"
@@ -255,7 +260,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 									radius={[4, 4, 0, 0]}
 								/>
 							</BarChart>
-						</ChartContainer>
+								</ChartContainer>
 					) : (
 						<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 							Create an invoice to see revenue trends.
@@ -271,38 +276,40 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 						All invoices grouped by status
 					</p>
 				</CardHeader>
-				<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
+				<CardContent className="h-[200px] sm:h-[240px] md:h-[320px]">
 					{invoiceList.length ? (
-						<div className="flex h-full items-center justify-center scale-90 sm:scale-100 md:scale-110">
-							<ChartContainer
-								config={statusChartConfig}
-								className="h-full w-full min-w-0"
-							>
-								<PieChart>
-									<ChartTooltip
-										content={<ChartTooltipContent hideLabel />}
-									/>
-									<Pie
-										data={statusData}
-										dataKey="count"
-										nameKey="status"
-										innerRadius={30}
-										outerRadius={60}
-										paddingAngle={statusData.length > 1 ? 4 : 0}
-										startAngle={0}
-										endAngle={360}
-										label
-									>
-										{statusData.map((entry) => (
-											<Cell
-												key={entry.status}
-												fill={`var(--color-${entry.status})`}
-											/>
-										))}
-									</Pie>
-								</PieChart>
-							</ChartContainer>
-						</div>
+						<ChartContainer
+							config={statusChartConfig}
+							className="h-full w-full"
+						>
+							<PieChart>
+								<ChartTooltip
+									content={<ChartTooltipContent hideLabel />}
+								/>
+								<ChartLegend
+									content={<ChartLegendContent nameKey="status" />}
+									className="-translate-y-2"
+								/>
+								<Pie
+									data={statusData}
+									dataKey="count"
+									nameKey="status"
+									innerRadius={25}
+									outerRadius={50}
+									paddingAngle={statusData.length > 1 ? 4 : 0}
+									startAngle={0}
+									endAngle={360}
+									label
+								>
+									{statusData.map((entry) => (
+										<Cell
+											key={entry.status}
+											fill={`var(--color-${entry.status})`}
+										/>
+									))}
+								</Pie>
+							</PieChart>
+						</ChartContainer>
 					) : (
 						<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 							No invoices yet.
