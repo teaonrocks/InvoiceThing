@@ -282,7 +282,7 @@ function DashboardPage() {
 													tickLine={false}
 													axisLine={false}
 													tickMargin={8}
-													tickFormatter={(value) => "$${value}"}
+													tickFormatter={(value) => `$${value}`}
 												/>
 												<ChartTooltip
 													content={
@@ -346,7 +346,7 @@ function DashboardPage() {
 													{statusData.map((entry) => (
 														<Cell
 															key={entry.status}
-															fill={"var(--color-${entry.status})"}
+															fill={`var(--color-${entry.status})`}
 														/>
 													))}
 												</Pie>
