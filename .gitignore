@@ -37,3 +37,7 @@ yarn-error.log*
 .tanstack
 dist/
 src/routeTree.gen.ts
+
+# Nitro build artifacts
+.nitro/
+.vercel/

@@ -85,8 +85,7 @@ export function Providers({ children }: { children: ReactNode }) {
 			{...(clerkDomain && { domain: clerkDomain })}
 			signInUrl={signInUrl}
 			signUpUrl={signUpUrl}
-			afterSignInUrl={afterSignInUrl}
-			afterSignUpUrl={afterSignUpUrl}
+			fallbackRedirectUrl={afterSignInUrl}
 		>
 			<ConvexProviderWithClerk client={convex} useAuth={useAuth}>
 				<UserSync />

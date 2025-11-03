@@ -37,6 +37,13 @@ async function getClerkBackend() {
 			"";
 		
 		if (!secretKey) {
+			if (process.env.NODE_ENV === "development") {
+				console.warn("[Server Auth] CLERK_SECRET_KEY not found. Available env vars:", {
+					hasCLERK_SECRET_KEY: !!process.env.CLERK_SECRET_KEY,
+					hasVITE_CLERK_SECRET_KEY: !!process.env.VITE_CLERK_SECRET_KEY,
+					nodeEnv: process.env.NODE_ENV,
+				});
+			}
 			return null;
 		}
 
@@ -64,7 +71,13 @@ export async function getServerAuth(request?: Request) {
 			};
 		}
 	} catch (error) {
-		console.error("Error authenticating request:", error);
+		if (process.env.NODE_ENV === "development") {
+			console.error("[Server Auth] Error authenticating request:", error);
+		}
+		// In production, only log if it's a critical error
+		if (process.env.NODE_ENV === "production") {
+			console.error("[Server Auth] Authentication failed");
+		}
 	}
 
 	return null;
@@ -93,7 +106,9 @@ export async function getClerkToken(request?: Request): Promise<string | null> {
 			return sessionToken;
 		}
 	} catch (error) {
-		console.error("Error getting Clerk token:", error);
+		if (process.env.NODE_ENV === "development") {
+			console.error("[Server Auth] Error getting Clerk token:", error);
+		}
 	}
 
 	return null;

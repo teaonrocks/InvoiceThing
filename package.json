@@ -47,6 +47,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/vite": "^4.1.16",
+    "@tanstack/nitro-v2-vite-plugin": "1.133.19",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

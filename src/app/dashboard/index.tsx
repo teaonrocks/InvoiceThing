@@ -20,21 +20,72 @@ export const Route = createFileRoute("/dashboard/")({
 	// Loader runs on server during SSR and on client during navigation
 	loader: async ({ context }) => {
 		// Try to get request from context (if available in SSR)
-		// @ts-expect-error - Request may be available in SSR context
-		const request = context?.request as Request | undefined;
+		// Nitro passes request as event.request in some setups
+		let request: Request | undefined;
+
+		// Check context.request (standard TanStack Start)
+		if (context && typeof context === "object" && "request" in context) {
+			request = (context as any).request as Request | undefined;
+		}
+
+		// Check context.event.request (Nitro format)
+		if (
+			!request &&
+			context &&
+			typeof context === "object" &&
+			"event" in context
+		) {
+			const event = (context as any).event;
+			if (event && typeof event === "object" && "request" in event) {
+				request = event.request as Request | undefined;
+			}
+		}
+
+		// Fallback: check globalThis (for some SSR setups)
+		if (!request && typeof globalThis !== "undefined") {
+			const globalRequest = (globalThis as any).request;
+			if (globalRequest instanceof Request) {
+				request = globalRequest;
+			}
+		}
 
 		// Check if we're on the server
-		if (typeof window === "undefined" && request) {
+		if (typeof window === "undefined") {
 			try {
 				// Import server-side utilities
 				const { getClerkToken, callConvexHttp } = await import(
 					"@/lib/server-auth"
 				);
 
+				// Debug: Log if we're on server and if request is available
+				if (process.env.NODE_ENV === "development") {
+					console.log("[SSR Loader] Running on server");
+					console.log("[SSR Loader] Request available:", !!request);
+					console.log(
+						"[SSR Loader] CLERK_SECRET_KEY set:",
+						!!process.env.CLERK_SECRET_KEY
+					);
+				}
+
+				// If no request, we can't authenticate - fall back to client-side
+				if (!request) {
+					if (process.env.NODE_ENV === "development") {
+						console.log(
+							"[SSR Loader] No request available, falling back to client-side hooks"
+						);
+					}
+					return null;
+				}
+
 				// Get Clerk user ID and JWT token
 				const clerkToken = await getClerkToken(request);
 				if (!clerkToken) {
 					// Not authenticated, return null to use client-side hooks
+					if (process.env.NODE_ENV === "development") {
+						console.log(
+							"[SSR Loader] No Clerk token available, falling back to client-side hooks"
+						);
+					}
 					return null;
 				}
 
