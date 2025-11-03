@@ -1,9 +1,6 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { Link, useLocation } from "@tanstack/react-router";
+import { UserButton } from "@clerk/clerk-react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -28,7 +25,8 @@ const routes = [
 ];
 
 export function Navigation() {
-	const pathname = usePathname();
+	const location = useLocation();
+	const pathname = location.pathname;
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 	useEffect(() => {
@@ -44,14 +42,14 @@ export function Navigation() {
 			<div className="container mx-auto px-4 py-4">
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex flex-1 items-center gap-6">
-						<Link href="/dashboard" className="text-2xl font-bold">
+						<Link to="/dashboard" className="text-2xl font-bold">
 							InvoiceThing
 						</Link>
 						<nav className="hidden items-center gap-6 md:flex">
 							{routes.map((route) => (
 								<Link
 									key={route.href}
-									href={route.href}
+									to={route.href}
 									className={cn(
 										"text-sm font-medium transition-colors hover:text-primary",
 										pathname === route.href
@@ -88,7 +86,7 @@ export function Navigation() {
 							{routes.map((route) => (
 								<Link
 									key={route.href}
-									href={route.href}
+									to={route.href}
 									className={cn(
 										"rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
 										pathname === route.href

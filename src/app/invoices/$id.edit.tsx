@@ -1,10 +1,8 @@
-"use client";
-
-import { use, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../../convex/_generated/api";
-import type { Id } from "../../../../../convex/_generated/dataModel";
+import { api } from "@/../convex/_generated/api";
+import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,11 +27,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/clerk-react";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/context/app-data-provider";
+
+export const Route = createFileRoute("/invoices/$id/edit")({
+	component: EditInvoicePage,
+});
 
 type LineItem = {
 	id: string;
@@ -50,13 +51,9 @@ type Claim = {
 	imageStorageId?: Id<"_storage">;
 };
 
-export default function EditInvoicePage({
-	params,
-}: {
-	params: Promise<{ id: string }>;
-}) {
-	const router = useRouter();
-	const { id } = use(params);
+function EditInvoicePage() {
+	const navigate = useNavigate();
+	const { id } = Route.useParams();
 	const { user } = useUser();
 	useStoreUser();
 	const { toast } = useToast();
@@ -318,7 +315,7 @@ export default function EditInvoicePage({
 						: undefined,
 			});
 
-			router.push(`/invoices/${id}`);
+			navigate({ to: "/invoices/$id", params: { id } });
 		} catch (error) {
 			console.error("Error updating invoice:", error);
 			alert("Failed to update invoice. Please try again.");
@@ -338,7 +335,7 @@ export default function EditInvoicePage({
 	return (
 		<div className="container max-w-4xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 			<div className="mb-6">
-				<Link href={`/invoices/${id}`}>
+				<Link to="/invoices/$id" params={{ id }}>
 					<Button variant="ghost" size="sm">
 						<ArrowLeft className="h-4 w-4 mr-2" />
 						Back to Invoice
@@ -765,7 +762,7 @@ export default function EditInvoicePage({
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => router.push(`/invoices/${id}`)}
+								onClick={() => navigate({ to: "/invoices/$id", params: { id } })}
 								disabled={isSubmitting}
 							>
 								Cancel
@@ -787,3 +784,4 @@ export default function EditInvoicePage({
 		</div>
 	);
 }
+

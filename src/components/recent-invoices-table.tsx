@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -81,7 +79,7 @@ const SortableHeader = ({
 };
 
 export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
-	const router = useRouter();
+	const navigate = useNavigate();
 	const { toast } = useToast();
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const [isUpdating, setIsUpdating] = useState(false);
@@ -227,7 +225,7 @@ export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
 	}
 
 	const handleRowClick = (row: InvoiceRow) => {
-		router.push(`/invoices/${row._id}`);
+		navigate({ to: "/invoices/$id", params: { id: row._id } });
 	};
 
 	return (

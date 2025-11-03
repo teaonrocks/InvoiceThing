@@ -2,14 +2,15 @@
   "name": "invoicething",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs",
     "lint": "eslint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.33.2",
+    "@clerk/clerk-react": "^5.24.2",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-checkbox": "^1.3.3",
@@ -23,6 +24,8 @@
     "@radix-ui/react-toast": "^1.2.15",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-pdf/renderer": "^4.3.1",
+    "@tanstack/react-router": "^1.134.9",
+    "@tanstack/react-start": "^1.134.9",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -31,7 +34,6 @@
     "convex-helpers": "^0.1.104",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.544.0",
-    "next": "15.5.4",
     "next-themes": "^0.4.6",
     "react": "19.1.0",
     "react-day-picker": "^9.11.0",
@@ -43,16 +45,18 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/vite": "^4.1.16",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.0",
     "eslint": "^9",
-    "eslint-config-next": "15.5.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "packageManager": "pnpm@10.9.0+sha512.0486e394640d3c1fb3c9d43d49cf92879ff74f8516959c235308f5a8f62e2e19528a65cdc2a3058f587cde71eba3d5b56327c8c33a97e4c4051ca48a10ca2d5f"
 }

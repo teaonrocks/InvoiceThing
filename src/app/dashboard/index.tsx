@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/../convex/_generated/api";
@@ -25,6 +23,7 @@ import {
 	type ChartConfig,
 } from "@/components/ui/chart";
 import { RecentInvoicesTable } from "@/components/recent-invoices-table";
+import { createFileRoute } from "@tanstack/react-router";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
@@ -42,7 +41,11 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 	overdue: "var(--chart-4)",
 };
 
-export default function DashboardPage() {
+export const Route = createFileRoute("/dashboard/")({
+	component: DashboardPage,
+});
+
+function DashboardPage() {
 	// Sync user with Convex on mount
 	useStoreUser();
 
@@ -51,7 +54,7 @@ export default function DashboardPage() {
 	const stats = useQuery(
 		api.invoices.getStats,
 		convexUser?._id ? { userId: convexUser._id } : "skip"
-	);
+	)
 
 	const invoiceList = useMemo(() => invoices ?? [], [invoices]);
 
@@ -84,18 +87,18 @@ export default function DashboardPage() {
 					if (status !== "draft") {
 						totalRevenue += total;
 						if (status === "paid") {
-							paidRevenue += total;
+							paidRevenue += total
 						}
 					}
 				}
-			});
+			})
 
 			return {
 				week: format(start, "MMM dd"),
 				paid: Number(paidRevenue.toFixed(2)),
 				total: Number(totalRevenue.toFixed(2)),
-			};
-		});
+			}
+		})
 	}, [invoiceList]);
 
 	const statusData = useMemo(() => {
@@ -104,14 +107,14 @@ export default function DashboardPage() {
 			sent: 0,
 			paid: 0,
 			overdue: 0,
-		};
+		}
 
 		invoiceList.forEach((invoice) => {
 			const status = invoice.status as InvoiceStatus;
 			if (counts[status] !== undefined) {
 				counts[status] += 1;
 			}
-		});
+		})
 
 		return (Object.keys(counts) as InvoiceStatus[])
 			.map((status) => ({
@@ -361,5 +364,6 @@ export default function DashboardPage() {
 				)}
 			</main>
 		</div>
-	);
+	)
 }
+

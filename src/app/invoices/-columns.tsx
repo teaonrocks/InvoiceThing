@@ -1,7 +1,5 @@
-"use client";
-
 import { useMemo } from "react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
 import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
 
@@ -230,12 +228,18 @@ export const useInvoiceColumns = ({
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="w-44">
 									<DropdownMenuItem asChild data-no-row-click>
-										<Link href={`/invoices/${row.original._id}`}>
+										<Link
+											to="/invoices/$id"
+											params={{ id: row.original._id }}
+										>
 											View details
 										</Link>
 									</DropdownMenuItem>
 									<DropdownMenuItem asChild data-no-row-click>
-										<Link href={`/invoices/${row.original._id}/edit`}>
+										<Link
+											to="/invoices/$id/edit"
+											params={{ id: row.original._id }}
+										>
 											Edit invoice
 										</Link>
 									</DropdownMenuItem>
