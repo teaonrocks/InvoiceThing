@@ -70,16 +70,77 @@ export async function getServerAuth(request?: Request) {
 	return null;
 }
 
-// Note: Convex HTTP API usage requires proper setup
-// For now, this is a placeholder that can be implemented when needed
-export async function callConvexHttp(
-	convexUrl: string,
-	query: string,
-	args: Record<string, unknown>,
-	authToken?: string
-) {
-	// TODO: Implement Convex HTTP API calls
-	// This requires understanding Convex's HTTP API structure
-	throw new Error("Convex HTTP API not yet implemented");
+/**
+ * Get Clerk JWT token for Convex authentication
+ */
+export async function getClerkToken(request?: Request): Promise<string | null> {
+	if (!request) {
+		return null;
+	}
+
+	const clerk = await getClerkBackend();
+	if (!clerk) {
+		return null;
+	}
+
+	try {
+		const authState = await clerk.authenticateRequest(request);
+		if (authState.isSignedIn) {
+			// Get the session token from Clerk using the "convex" template
+			const sessionToken = await authState.toAuth().getToken({
+				template: "convex",
+			});
+			return sessionToken;
+		}
+	} catch (error) {
+		console.error("Error getting Clerk token:", error);
+	}
+
+	return null;
 }
 
+/**
+ * Call Convex HTTP API to execute a query
+ */
+export async function callConvexHttp(
+	convexUrl: string,
+	queryPath: string,
+	args: Record<string, unknown>,
+	authToken?: string | null
+): Promise<any> {
+	if (!authToken) {
+		throw new Error("Authentication token required for Convex HTTP calls");
+	}
+
+	try {
+		// Convex HTTP API endpoint format: {convexUrl}/api/query
+		const url = `${convexUrl.replace(/\/$/, "")}/api/query`;
+		
+		const response = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${authToken}`,
+			},
+			body: JSON.stringify({
+				path: queryPath,
+				args,
+				format: "json",
+			}),
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(
+				`Convex query failed: ${response.status} ${response.statusText} - ${errorText}`
+			);
+		}
+
+		const result = await response.json();
+		// Convex returns { value: ... } for queries
+		return result.value;
+	} catch (error) {
+		console.error("Error calling Convex HTTP:", error);
+		throw error;
+	}
+}

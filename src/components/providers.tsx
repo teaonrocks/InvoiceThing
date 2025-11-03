@@ -20,7 +20,12 @@ if (!convexUrl) {
 	);
 }
 
-const convex = new ConvexReactClient(convexUrl);
+// Initialize Convex client with optimizations
+// - Set logLevel to "error" to reduce console noise in production
+// - Enable automatic reconnection for better reliability
+const convex = new ConvexReactClient(convexUrl, {
+	logLevel: import.meta.env.PROD ? "error" : "warn",
+});
 
 // Get Clerk publishable key from environment variables
 const clerkPubKey =

@@ -26,21 +26,78 @@ export const Route = createFileRoute("/dashboard/")({
 		// Check if we're on the server
 		if (typeof window === "undefined" && request) {
 			try {
-				// Try server-side auth and data fetching
-				const { getServerAuth } = await import("@/lib/server-auth");
-				const auth = await getServerAuth(request);
+				// Import server-side utilities
+				const { getClerkToken, callConvexHttp } = await import(
+					"@/lib/server-auth"
+				);
 
-				if (auth?.userId) {
-					// TODO: Implement Convex HTTP API calls here
-					// For now, return null to let hooks handle it
-					// This requires Convex HTTP API setup
+				// Get Clerk user ID and JWT token
+				const clerkToken = await getClerkToken(request);
+				if (!clerkToken) {
+					// Not authenticated, return null to use client-side hooks
 					return null;
 				}
+
+				// Get Convex URL from environment
+				const convexUrl =
+					process.env.VITE_CONVEX_URL ||
+					process.env.VITE_PUBLIC_CONVEX_URL ||
+					process.env.NEXT_PUBLIC_CONVEX_URL ||
+					"";
+
+				if (!convexUrl) {
+					console.warn("Convex URL not found in environment variables");
+					return null;
+				}
+
+				// Get Clerk user ID for Convex queries
+				const { getServerAuth } = await import("@/lib/server-auth");
+				const auth = await getServerAuth(request);
+				if (!auth?.userId) {
+					return null;
+				}
+
+				// Fetch Convex user by Clerk ID
+				const convexUser = await callConvexHttp(
+					convexUrl,
+					"users/getCurrentUser",
+					{ clerkId: auth.userId },
+					clerkToken
+				);
+
+				if (!convexUser?._id) {
+					// User not found in Convex, return null
+					return null;
+				}
+
+				// Fetch stats and invoices in parallel
+				const [stats, invoices] = await Promise.all([
+					callConvexHttp(
+						convexUrl,
+						"invoices/getStats",
+						{ userId: convexUser._id },
+						clerkToken
+					),
+					callConvexHttp(
+						convexUrl,
+						"invoices/getByUser",
+						{ userId: convexUser._id },
+						clerkToken
+					),
+				]);
+
+				// Return pre-fetched data
+				return {
+					stats,
+					invoices: invoices || [],
+					convexUser,
+				};
 			} catch (error) {
-				// Server-side auth not available (e.g., @clerk/backend not installed)
+				// Server-side auth/data fetching failed
 				// Fall back to client-side hooks
 				console.debug(
-					"Server-side auth not available, using client-side hooks"
+					"Server-side data fetching failed, using client-side hooks:",
+					error
 				);
 			}
 		}
@@ -53,14 +110,30 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardPage() {
-	const { currentUser: convexUser, invoices } = useAppData();
+	// Try to get pre-fetched data from loader
+	const loaderData = Route.useLoaderData();
 
-	const stats = useQuery(
+	// Use loader data if available (SSR), otherwise fall back to hooks
+	const { currentUser: convexUser, invoices: contextInvoices } = useAppData();
+
+	// Prefer SSR data if available
+	const stats = loaderData?.stats;
+	const invoices = loaderData?.invoices ?? contextInvoices;
+	const convexUserFromLoader = loaderData?.convexUser;
+
+	// Use loader data or fall back to hooks
+	const finalConvexUser = convexUserFromLoader ?? convexUser;
+	const finalInvoices = invoices;
+
+	// Fetch stats from hook if not available from loader
+	const statsFromHook = useQuery(
 		api.invoices.getStats,
-		convexUser?._id ? { userId: convexUser._id } : "skip"
+		finalConvexUser?._id && !stats ? { userId: finalConvexUser._id } : "skip"
 	);
 
-	const invoiceList = invoices ?? [];
+	// Use stats from loader or hook
+	const finalStats = stats ?? statsFromHook;
+	const invoiceList = finalInvoices ?? [];
 
 	return (
 		<div className="min-h-screen">
@@ -69,7 +142,7 @@ function DashboardPage() {
 				<h1 className="mb-8 text-3xl font-bold sm:text-4xl">Dashboard</h1>
 
 				<div className="space-y-8">
-					{stats ? (
+					{finalStats ? (
 						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 							<Card>
 								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -79,10 +152,10 @@ function DashboardPage() {
 								</CardHeader>
 								<CardContent>
 									<div className="text-2xl font-bold">
-										${stats.totalEarnings.toFixed(2)}
+										${finalStats.totalEarnings.toFixed(2)}
 									</div>
 									<p className="text-xs text-muted-foreground">
-										From {stats.paidInvoices} paid invoices
+										From {finalStats.paidInvoices} paid invoices
 									</p>
 								</CardContent>
 							</Card>
@@ -95,7 +168,7 @@ function DashboardPage() {
 								</CardHeader>
 								<CardContent>
 									<div className="text-2xl font-bold">
-										${stats.totalOutstanding.toFixed(2)}
+										${finalStats.totalOutstanding.toFixed(2)}
 									</div>
 									<p className="text-xs text-muted-foreground">
 										Awaiting payment
@@ -111,7 +184,7 @@ function DashboardPage() {
 								</CardHeader>
 								<CardContent>
 									<div className="text-2xl font-bold">
-										{stats.totalInvoices}
+										{finalStats.totalInvoices}
 									</div>
 									<p className="text-xs text-muted-foreground">All time</p>
 								</CardContent>
@@ -125,7 +198,7 @@ function DashboardPage() {
 								</CardHeader>
 								<CardContent>
 									<div className="text-2xl font-bold">
-										{stats.activeClients}
+										{finalStats.activeClients}
 									</div>
 									<p className="text-xs text-muted-foreground">Total clients</p>
 								</CardContent>
@@ -185,7 +258,7 @@ function DashboardPage() {
 						<CardContent>
 							<RecentInvoicesTable
 								invoices={invoiceList}
-								isLoading={invoices === undefined}
+								isLoading={finalInvoices === undefined}
 							/>
 						</CardContent>
 					</Card>
@@ -250,7 +323,7 @@ function DashboardPage() {
 					>
 						<DashboardCharts
 							invoices={invoiceList}
-							isLoading={invoices === undefined}
+							isLoading={finalInvoices === undefined}
 						/>
 					</Suspense>
 				</div>
