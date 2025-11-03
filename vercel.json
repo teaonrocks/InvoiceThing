@@ -1,6 +1,6 @@
 {
 	"buildCommand": "pnpm build",
-	"outputDirectory": ".output/public",
+	"outputDirectory": "dist/client",
 	"framework": null,
 	"rewrites": [
 		{
