@@ -1,0 +1,12 @@
+{
+	"buildCommand": "pnpm build",
+	"outputDirectory": ".output/public",
+	"framework": null,
+	"rewrites": [
+		{
+			"source": "/(.*)",
+			"destination": "/api/index"
+		}
+	]
+}
+
