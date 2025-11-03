@@ -35,3 +35,5 @@ yarn-error.log*
 
 # TanStack Router generated artifacts
 .tanstack
+dist/
+src/routeTree.gen.ts
