@@ -40,6 +40,7 @@ import {
 import { Navigation } from "@/components/navigation";
 import { DownloadInvoicePDF } from "@/components/download-invoice-pdf";
 import { formatAddressParts } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/invoices/$id")({
 	component: InvoiceDetailPage,
@@ -51,7 +52,7 @@ function ClaimImageViewer({ storageId }: { storageId: Id<"_storage"> }) {
 	const imageUrl = useQuery(api.files.getFileUrl, { storageId });
 
 	if (!imageUrl) {
-		return <span className="text-muted-foreground text-sm">Loading...</span>;
+		return <Skeleton className="h-8 w-20" />;
 	}
 
 	return (
@@ -75,8 +76,8 @@ function ClaimImageViewer({ storageId }: { storageId: Id<"_storage"> }) {
 							/>
 						</div>
 					) : (
-						<div className="flex items-center justify-center h-64 text-muted-foreground">
-							Loading image...
+						<div className="flex items-center justify-center h-64">
+							<Skeleton className="h-64 w-full max-w-md" />
 						</div>
 					)}
 					<DialogFooter>
@@ -151,8 +152,50 @@ function InvoiceDetailPage() {
 		return (
 			<div className="min-h-screen">
 				<Navigation />
-				<div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-					<p>Loading invoice...</p>
+				<div className="container max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+					<div className="mb-6">
+						<Skeleton className="h-10 w-32" />
+					</div>
+					<Card>
+						<CardHeader>
+							<Skeleton className="h-8 w-48 mb-4" />
+							<Skeleton className="h-6 w-32" />
+						</CardHeader>
+						<CardContent className="space-y-8">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								<div>
+									<Skeleton className="h-6 w-24 mb-3" />
+									<Skeleton className="h-5 w-32 mb-2" />
+									<Skeleton className="h-4 w-48 mb-2" />
+									<Skeleton className="h-4 w-40" />
+								</div>
+								<div className="space-y-3">
+									<div className="flex justify-between">
+										<Skeleton className="h-4 w-24" />
+										<Skeleton className="h-4 w-32" />
+									</div>
+									<div className="flex justify-between">
+										<Skeleton className="h-4 w-24" />
+										<Skeleton className="h-4 w-32" />
+									</div>
+									<div className="flex justify-between">
+										<Skeleton className="h-4 w-24" />
+										<Skeleton className="h-4 w-20" />
+									</div>
+								</div>
+							</div>
+							<div>
+								<Skeleton className="h-6 w-24 mb-3" />
+								<Skeleton className="h-24 w-full" />
+							</div>
+							<div>
+								<Skeleton className="h-6 w-40 mb-3" />
+								<div className="flex justify-end">
+									<Skeleton className="h-20 w-80" />
+								</div>
+							</div>
+						</CardContent>
+					</Card>
 				</div>
 			</div>
 		);

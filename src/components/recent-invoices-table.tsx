@@ -8,6 +8,7 @@ import { api } from "@/../convex/_generated/api";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/table-skeleton";
 import {
 	Select,
 	SelectContent,
@@ -78,7 +79,13 @@ const SortableHeader = ({
 	);
 };
 
-export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
+export function RecentInvoicesTable({ 
+	invoices,
+	isLoading 
+}: { 
+	invoices?: Invoice[];
+	isLoading?: boolean;
+}) {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const updateStatus = useMutation(api.invoices.updateStatus);
@@ -86,8 +93,9 @@ export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
 
 	// Get all invoices sorted by issue date (most recent first)
 	const recentInvoices = useMemo(
-		() =>
-			invoices
+		() => {
+			if (!invoices || invoices.length === 0) return [];
+			return invoices
 				.sort((a, b) => b.issueDate - a.issueDate)
 				.map((invoice) => ({
 					_id: invoice._id as Id<"invoices">,
@@ -100,7 +108,8 @@ export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
 					clientName: invoice.client?.name ?? "Unknown client",
 					clientEmail: invoice.client?.email ?? undefined,
 					clientContact: invoice.client?.contactPerson ?? undefined,
-				})),
+				}));
+		},
 		[invoices]
 	);
 
@@ -215,6 +224,15 @@ export function RecentInvoicesTable({ invoices }: { invoices: Invoice[] }) {
 		],
 		[isUpdating, handleStatusChange]
 	);
+
+	// Show skeleton while loading - AFTER all hooks are called
+	if (isLoading || invoices === undefined) {
+		return (
+			<div className="-mx-6 px-6 md:mx-0 md:px-0">
+				<TableSkeleton columns={5} rows={5} />
+			</div>
+		);
+	}
 
 	if (recentInvoices.length === 0) {
 		return (

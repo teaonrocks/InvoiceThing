@@ -4,6 +4,7 @@ import { ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppDataProvider } from "@/context/app-data-provider";
+import { useStoreUser } from "@/hooks/use-store-user";
 
 // Get Convex URL from environment variables
 // Vite uses VITE_ prefix, but we support multiple naming conventions
@@ -66,6 +67,12 @@ const afterSignUpUrl =
 	import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL ||
 	"/dashboard";
 
+// Component to sync user with Convex - must be inside ConvexProviderWithClerk
+function UserSync() {
+	useStoreUser();
+	return null;
+}
+
 export function Providers({ children }: { children: ReactNode }) {
 	return (
 		<ClerkProvider
@@ -77,6 +84,7 @@ export function Providers({ children }: { children: ReactNode }) {
 			afterSignUpUrl={afterSignUpUrl}
 		>
 			<ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+				<UserSync />
 				<AppDataProvider>
 					<ThemeProvider
 						attribute="class"

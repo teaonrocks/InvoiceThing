@@ -9,7 +9,9 @@ import type { ClientRow } from "./-columns";
 
 import { Navigation } from "@/components/navigation";
 import { DataTable } from "@/components/data-table/data-table";
+import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -324,7 +326,13 @@ function ClientsPage() {
 				</div>
 
 				{!clients && (
-					<div className="text-muted-foreground">Loading clients...</div>
+					<div className="space-y-4">
+						<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+							<Skeleton className="h-10 w-full max-w-sm" />
+							<Skeleton className="h-10 w-32" />
+						</div>
+						<TableSkeleton columns={5} rows={5} />
+					</div>
 				)}
 
 				{clients && clients.length === 0 && (

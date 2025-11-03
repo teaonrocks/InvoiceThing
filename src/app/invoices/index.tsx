@@ -19,6 +19,8 @@ import { DataTable } from "@/components/data-table/data-table";
 import { InvoicePDF } from "@/components/invoice-pdf";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TableSkeleton } from "@/components/table-skeleton";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -549,7 +551,13 @@ function InvoicesPage() {
 				</div>
 
 				{!invoices && (
-					<div className="text-muted-foreground">Loading invoices...</div>
+					<div className="space-y-4">
+						<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+							<Skeleton className="h-10 w-full max-w-sm" />
+							<Skeleton className="h-10 w-32" />
+						</div>
+						<TableSkeleton columns={7} rows={5} />
+					</div>
 				)}
 
 				{invoiceList.length === 0 && invoices && (

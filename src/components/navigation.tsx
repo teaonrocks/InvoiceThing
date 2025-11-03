@@ -50,6 +50,7 @@ export function Navigation() {
 								<Link
 									key={route.href}
 									to={route.href}
+									preload={route.href === "/dashboard" ? "intent" : undefined}
 									className={cn(
 										"text-sm font-medium transition-colors hover:text-primary",
 										pathname === route.href
@@ -87,6 +88,7 @@ export function Navigation() {
 								<Link
 									key={route.href}
 									to={route.href}
+									preload={route.href === "/dashboard" ? "intent" : undefined}
 									className={cn(
 										"rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
 										pathname === route.href
