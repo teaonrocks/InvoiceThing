@@ -34,9 +34,33 @@ if (!clerkPubKey) {
 	);
 }
 
+// Get Clerk URLs from environment variables (optional, defaults provided)
+const signInUrl =
+	import.meta.env.VITE_PUBLIC_CLERK_SIGN_IN_URL ||
+	import.meta.env.VITE_CLERK_SIGN_IN_URL ||
+	"/sign-in";
+const signUpUrl =
+	import.meta.env.VITE_PUBLIC_CLERK_SIGN_UP_URL ||
+	import.meta.env.VITE_CLERK_SIGN_UP_URL ||
+	"/sign-up";
+const afterSignInUrl =
+	import.meta.env.VITE_PUBLIC_CLERK_AFTER_SIGN_IN_URL ||
+	import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL ||
+	"/dashboard";
+const afterSignUpUrl =
+	import.meta.env.VITE_PUBLIC_CLERK_AFTER_SIGN_UP_URL ||
+	import.meta.env.VITE_CLERK_AFTER_SIGN_UP_URL ||
+	"/dashboard";
+
 export function Providers({ children }: { children: ReactNode }) {
 	return (
-		<ClerkProvider publishableKey={clerkPubKey}>
+		<ClerkProvider
+			publishableKey={clerkPubKey}
+			signInUrl={signInUrl}
+			signUpUrl={signUpUrl}
+			afterSignInUrl={afterSignInUrl}
+			afterSignUpUrl={afterSignUpUrl}
+		>
 			<ConvexProviderWithClerk client={convex} useAuth={useAuth}>
 				<AppDataProvider>
 					<ThemeProvider
