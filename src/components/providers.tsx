@@ -34,6 +34,20 @@ if (!clerkPubKey) {
 	);
 }
 
+// Get Clerk domain from environment variables (optional, for custom domains)
+// If not set, Clerk will use the default CDN from the publishable key
+// Domain should be just the domain name (e.g., "clerk.invoicething.archerchua.com")
+// not a full URL
+const clerkDomainRaw =
+	import.meta.env.VITE_PUBLIC_CLERK_DOMAIN ||
+	import.meta.env.VITE_CLERK_DOMAIN ||
+	undefined;
+
+// Extract domain from URL if a full URL was provided
+const clerkDomain = clerkDomainRaw
+	? clerkDomainRaw.replace(/^https?:\/\//, "").split("/")[0]
+	: undefined;
+
 // Get Clerk URLs from environment variables (optional, defaults provided)
 const signInUrl =
 	import.meta.env.VITE_PUBLIC_CLERK_SIGN_IN_URL ||
@@ -56,6 +70,7 @@ export function Providers({ children }: { children: ReactNode }) {
 	return (
 		<ClerkProvider
 			publishableKey={clerkPubKey}
+			{...(clerkDomain && { domain: clerkDomain })}
 			signInUrl={signInUrl}
 			signUpUrl={signUpUrl}
 			afterSignInUrl={afterSignInUrl}
