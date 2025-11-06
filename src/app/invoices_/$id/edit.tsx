@@ -32,7 +32,7 @@ import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/context/app-data-provider";
 
-export const Route = createFileRoute("/invoices/$id/edit")({
+export const Route = createFileRoute("/invoices_/$id/edit")({
 	component: EditInvoicePage,
 });
 
@@ -60,12 +60,12 @@ function EditInvoicePage() {
 
 	const invoice = useQuery(api.invoices.get, {
 		invoiceId: id as Id<"invoices">,
-	});
+	})
 	const { currentUser, clients } = useAppData();
 	const settings = useQuery(
 		api.settings.get,
 		currentUser ? { userId: currentUser._id } : "skip"
-	);
+	)
 
 	// Update mutation
 	const updateInvoice = useMutation(api.invoices.update);
@@ -78,7 +78,7 @@ function EditInvoicePage() {
 	const [notes, setNotes] = useState("");
 	const [lineItems, setLineItems] = useState<LineItem[]>([
 		{ id: "1", description: "", quantity: 1, rate: 0 },
-	]);
+	])
 	const [claims, setClaims] = useState<Claim[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
@@ -100,7 +100,7 @@ function EditInvoicePage() {
 						quantity: item.quantity,
 						rate: item.unitPrice,
 					}))
-				);
+				)
 			}
 
 			setClaims(
@@ -111,7 +111,7 @@ function EditInvoicePage() {
 					date: new Date(claim.date),
 					imageStorageId: claim.imageStorageId ?? undefined,
 				}))
-			);
+			)
 
 			setIsLoaded(true);
 		}
@@ -126,14 +126,14 @@ function EditInvoicePage() {
 				quantity: 1,
 				rate: 0,
 			},
-		]);
-	};
+		])
+	}
 
 	const removeLineItem = (id: string) => {
 		if (lineItems.length > 1) {
 			setLineItems(lineItems.filter((item) => item.id !== id));
 		}
-	};
+	}
 
 	const updateLineItem = (
 		id: string,
@@ -144,12 +144,12 @@ function EditInvoicePage() {
 			lineItems.map((item) =>
 				item.id === id ? { ...item, [field]: value } : item
 			)
-		);
-	};
+		)
+	}
 
 	const calculateSubtotal = () => {
 		return lineItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
-	};
+	}
 
 	const addClaim = () => {
 		setClaims((current) => [
@@ -160,12 +160,12 @@ function EditInvoicePage() {
 				amount: 0,
 				date: new Date(),
 			},
-		]);
-	};
+		])
+	}
 
 	const removeClaim = (claimId: string) => {
 		setClaims((current) => current.filter((claim) => claim.id !== claimId));
-	};
+	}
 
 	const updateClaim = (
 		claimId: string,
@@ -181,8 +181,8 @@ function EditInvoicePage() {
 						}
 					: claim
 			)
-		);
-	};
+		)
+	}
 
 	const handleClaimImageUpload = async (claimId: string, file: File) => {
 		try {
@@ -191,8 +191,8 @@ function EditInvoicePage() {
 					title: "Invalid file",
 					description: "Please upload an image file.",
 					variant: "destructive",
-				});
-				return;
+				})
+				return
 			}
 
 			if (file.size > 5 * 1024 * 1024) {
@@ -200,8 +200,8 @@ function EditInvoicePage() {
 					title: "File too large",
 					description: "Images must be 5MB or smaller.",
 					variant: "destructive",
-				});
-				return;
+				})
+				return
 			}
 
 			const uploadUrl = await generateUploadUrl();
@@ -210,7 +210,7 @@ function EditInvoicePage() {
 				method: "POST",
 				headers: { "Content-Type": file.type },
 				body: file,
-			});
+			})
 
 			const { storageId } = await response.json();
 
@@ -218,33 +218,33 @@ function EditInvoicePage() {
 				current.map((claim) =>
 					claim.id === claimId ? { ...claim, imageStorageId: storageId } : claim
 				)
-			);
+			)
 
 			toast({
 				title: "Receipt uploaded",
 				description: "The receipt image has been attached.",
-			});
+			})
 		} catch (error) {
 			console.error("Error uploading receipt:", error);
 			toast({
 				title: "Upload failed",
 				description: "We couldn't upload that image. Please try again.",
 				variant: "destructive",
-			});
+			})
 		}
-	};
+	}
 
 	const removeClaimImage = (claimId: string) => {
 		setClaims((current) =>
 			current.map((claim) =>
 				claim.id === claimId ? { ...claim, imageStorageId: undefined } : claim
 			)
-		);
-	};
+		)
+	}
 
 	const calculateClaimsTotal = () => {
 		return claims.reduce((sum, claim) => sum + (claim.amount || 0), 0);
-	};
+	}
 
 	const getTaxRate = () => {
 		if (settings?.taxRate !== undefined) {
@@ -255,16 +255,16 @@ function EditInvoicePage() {
 			return Number.isFinite(inferred) ? inferred : 0;
 		}
 		return 0;
-	};
+	}
 
 	const calculateTax = () => {
 		const taxRate = getTaxRate();
 		return (calculateSubtotal() + calculateClaimsTotal()) * taxRate;
-	};
+	}
 
 	const calculateTotal = () => {
 		return calculateSubtotal() + calculateClaimsTotal() + calculateTax();
-	};
+	}
 
 	const taxRate = getTaxRate();
 
@@ -279,12 +279,12 @@ function EditInvoicePage() {
 			!dueDate
 		) {
 			alert("Please fill in all required fields");
-			return;
+			return
 		}
 
 		if (lineItems.some((item) => !item.description || item.rate <= 0)) {
 			alert("Please complete all line items");
-			return;
+			return
 		}
 
 		setIsSubmitting(true);
@@ -313,7 +313,7 @@ function EditInvoicePage() {
 								imageStorageId: claim.imageStorageId,
 							}))
 						: undefined,
-			});
+			})
 
 			navigate({ to: "/invoices/$id", params: { id } });
 		} catch (error) {
@@ -322,14 +322,14 @@ function EditInvoicePage() {
 		} finally {
 			setIsSubmitting(false);
 		}
-	};
+	}
 
 	if (!user || !currentUser || !invoice) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -459,7 +459,7 @@ function EditInvoicePage() {
 												Description {index === 0 && "*"}
 											</Label>
 											<Input
-												id={`desc-${item.id}`}
+												id={"desc-${item.id}"}
 												placeholder="Service or product description"
 												value={item.description}
 												onChange={(e) =>
@@ -472,7 +472,7 @@ function EditInvoicePage() {
 										<div className="col-span-5 md:col-span-2 space-y-2">
 											<Label htmlFor={`qty-${item.id}`}>Qty</Label>
 											<Input
-												id={`qty-${item.id}`}
+												id={"qty-${item.id}"}
 												type="number"
 												min="1"
 												value={item.quantity}
@@ -490,7 +490,7 @@ function EditInvoicePage() {
 										<div className="col-span-5 md:col-span-2 space-y-2">
 											<Label htmlFor={`rate-${item.id}`}>Rate</Label>
 											<Input
-												id={`rate-${item.id}`}
+												id={"rate-${item.id}"}
 												type="number"
 												min="0"
 												step="0.01"
@@ -562,7 +562,7 @@ function EditInvoicePage() {
 														Description
 													</Label>
 													<Input
-														id={`claim-desc-${claim.id}`}
+														id={"claim-desc-${claim.id}"}
 														placeholder="Travel, materials, etc."
 														value={claim.description}
 														onChange={(event) =>
@@ -613,7 +613,7 @@ function EditInvoicePage() {
 														Amount
 													</Label>
 													<Input
-														id={`claim-amount-${claim.id}`}
+														id={"claim-amount-${claim.id}"}
 														type="number"
 														min="0"
 														step="0.01"
@@ -652,7 +652,7 @@ function EditInvoicePage() {
 
 											<div className="flex flex-wrap items-center gap-3">
 												<Label
-													htmlFor={`claim-image-${claim.id}`}
+													htmlFor={"claim-image-${claim.id}"}
 													className="cursor-pointer"
 												>
 													<div className="flex items-center gap-2 rounded-md border px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground">
@@ -669,14 +669,14 @@ function EditInvoicePage() {
 														)}
 													</div>
 													<input
-														id={`claim-image-${claim.id}`}
+														id={"claim-image-${claim.id}"}
 														type="file"
 														accept="image/*"
 														className="hidden"
 														onChange={(event) => {
-															const file = event.target.files?.[0];
+															const file = event.target.files?.[0]
 															if (file) {
-																handleClaimImageUpload(claim.id, file);
+																handleClaimImageUpload(claim.id, file)
 															}
 														}}
 													/>
@@ -782,6 +782,6 @@ function EditInvoicePage() {
 				</CardContent>
 			</Card>
 		</div>
-	);
+	)
 }
 

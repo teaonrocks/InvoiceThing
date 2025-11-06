@@ -91,7 +91,7 @@ VITE_CONVEX_URL=https://<your-deployment>.convex.cloud
 
    ```json
    {
-   	"userId": "{{user.id}}"
+     "userId": "{{user.id}}"
    }
    ```
 
@@ -131,8 +131,10 @@ invoicething/
 │   │   │   ├── -columns.tsx        # Helper file (excluded from routes)
 │   │   │   ├── index.tsx           # /invoices
 │   │   │   ├── $id.tsx             # /invoices/$id
-│   │   │   ├── $id.edit.tsx        # /invoices/$id/edit
 │   │   │   └── new.tsx             # /invoices/new
+│   │   ├── invoices_/              # Pathless route group for nested invoice routes
+│   │   │   └── $id/
+│   │   │       └── edit.tsx        # /invoices/$id/edit
 │   │   ├── settings/               # Settings routes
 │   │   │   └── index.tsx           # /settings
 │   │   ├── sign-in/                # Sign-in routes
