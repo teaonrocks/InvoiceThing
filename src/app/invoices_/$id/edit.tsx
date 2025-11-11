@@ -19,7 +19,6 @@ import {
 	Plus,
 	Trash2,
 	ArrowLeft,
-	Loader2,
 	CalendarIcon,
 	Upload,
 	X,
@@ -27,6 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { Spinner } from "@/components/ui/spinner";
 import { useUser } from "@clerk/clerk-react";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
@@ -82,6 +82,9 @@ function EditInvoicePage() {
 	const [claims, setClaims] = useState<Claim[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
+	const [uploadingClaimIds, setUploadingClaimIds] = useState<Set<string>>(
+		new Set()
+	);
 
 	// Load invoice data when available
 	useEffect(() => {
@@ -204,6 +207,9 @@ function EditInvoicePage() {
 				return
 			}
 
+			// Set loading state
+			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
+
 			const uploadUrl = await generateUploadUrl();
 
 			const response = await fetch(uploadUrl, {
@@ -231,6 +237,13 @@ function EditInvoicePage() {
 				description: "We couldn't upload that image. Please try again.",
 				variant: "destructive",
 			})
+		} finally {
+			// Clear loading state
+			setUploadingClaimIds((prev) => {
+				const next = new Set(prev);
+				next.delete(claimId);
+				return next;
+			});
 		}
 	}
 
@@ -327,7 +340,7 @@ function EditInvoicePage() {
 	if (!user || !currentUser || !invoice) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+				<Spinner className="h-8 w-8 text-muted-foreground" />
 			</div>
 		)
 	}
@@ -652,11 +665,19 @@ function EditInvoicePage() {
 
 											<div className="flex flex-wrap items-center gap-3">
 												<Label
-													htmlFor={"claim-image-${claim.id}"}
-													className="cursor-pointer"
+													htmlFor={`claim-image-${claim.id}`}
+													className={cn(
+														"cursor-pointer",
+														uploadingClaimIds.has(claim.id) && "pointer-events-none opacity-50"
+													)}
 												>
 													<div className="flex items-center gap-2 rounded-md border px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground">
-														{claim.imageStorageId ? (
+														{uploadingClaimIds.has(claim.id) ? (
+															<>
+																<Spinner className="h-4 w-4" />
+																<span className="text-sm">Uploading...</span>
+															</>
+														) : claim.imageStorageId ? (
 															<>
 																<ImageIcon className="h-4 w-4" />
 																<span className="text-sm">Change Receipt</span>
@@ -669,10 +690,11 @@ function EditInvoicePage() {
 														)}
 													</div>
 													<input
-														id={"claim-image-${claim.id}"}
+														id={`claim-image-${claim.id}`}
 														type="file"
 														accept="image/*"
 														className="hidden"
+														disabled={uploadingClaimIds.has(claim.id)}
 														onChange={(event) => {
 															const file = event.target.files?.[0]
 															if (file) {
@@ -682,7 +704,7 @@ function EditInvoicePage() {
 													/>
 												</Label>
 
-												{claim.imageStorageId ? (
+												{claim.imageStorageId && !uploadingClaimIds.has(claim.id) ? (
 													<>
 														<Button
 															type="button"
@@ -770,7 +792,7 @@ function EditInvoicePage() {
 							<Button type="submit" disabled={isSubmitting}>
 								{isSubmitting ? (
 									<>
-										<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+										<Spinner className="h-4 w-4 mr-2" />
 										Updating...
 									</>
 								) : (

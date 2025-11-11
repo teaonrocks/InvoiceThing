@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Spinner } from "@/components/ui/spinner";
 import { format } from "date-fns";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { useAppData } from "@/context/app-data-provider";
@@ -88,6 +89,9 @@ function NewInvoicePage() {
 	]);
 	const [claims, setClaims] = useState<Claim[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [uploadingClaimIds, setUploadingClaimIds] = useState<Set<string>>(
+		new Set()
+	);
 
 	// New client modal state
 	const [showNewClientModal, setShowNewClientModal] = useState(false);
@@ -254,6 +258,9 @@ function NewInvoicePage() {
 				return;
 			}
 
+			// Set loading state
+			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
+
 			// Get upload URL
 			const uploadUrl = await generateUploadUrl();
 
@@ -283,6 +290,13 @@ function NewInvoicePage() {
 				title: "Error",
 				description: "Failed to upload image",
 				variant: "destructive",
+			});
+		} finally {
+			// Clear loading state
+			setUploadingClaimIds((prev) => {
+				const next = new Set(prev);
+				next.delete(claimId);
+				return next;
 			});
 		}
 	};
@@ -704,10 +718,18 @@ function NewInvoicePage() {
 											<div className="flex items-center gap-3">
 												<Label
 													htmlFor={`claim-image-${claim.id}`}
-													className="cursor-pointer"
+													className={cn(
+														"cursor-pointer",
+														uploadingClaimIds.has(claim.id) && "pointer-events-none opacity-50"
+													)}
 												>
 													<div className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-														{claim.imageStorageId ? (
+														{uploadingClaimIds.has(claim.id) ? (
+															<>
+																<Spinner className="h-4 w-4" />
+																<span className="text-sm">Uploading...</span>
+															</>
+														) : claim.imageStorageId ? (
 															<>
 																<ImageIcon className="h-4 w-4" />
 																<span className="text-sm">Change Receipt</span>
@@ -724,6 +746,7 @@ function NewInvoicePage() {
 														type="file"
 														accept="image/*"
 														className="hidden"
+														disabled={uploadingClaimIds.has(claim.id)}
 														onChange={(e) => {
 															const file = e.target.files?.[0];
 															if (file) {
@@ -733,7 +756,7 @@ function NewInvoicePage() {
 													/>
 												</Label>
 
-												{claim.imageStorageId && (
+												{claim.imageStorageId && !uploadingClaimIds.has(claim.id) && (
 													<Button
 														type="button"
 														variant="ghost"
@@ -745,7 +768,7 @@ function NewInvoicePage() {
 													</Button>
 												)}
 
-												{claim.imageStorageId && (
+												{claim.imageStorageId && !uploadingClaimIds.has(claim.id) && (
 													<span className="text-sm text-muted-foreground">
 														✓ Receipt attached
 													</span>
