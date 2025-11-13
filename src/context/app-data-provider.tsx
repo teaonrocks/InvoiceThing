@@ -14,6 +14,15 @@ interface AppDataContextValue {
 		| (Doc<"invoices"> & { client?: Doc<"clients"> | null })[]
 		| undefined;
 	clients: Doc<"clients">[] | undefined;
+	stats:
+		| {
+				totalEarnings: number;
+				totalOutstanding: number;
+				totalInvoices: number;
+				paidInvoices: number;
+				activeClients: number;
+		  }
+		| undefined;
 	isReady: boolean;
 }
 
@@ -39,6 +48,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 		currentUser?._id ? { userId: currentUser._id } : "skip"
 	);
 
+	const stats = useQuery(
+		api.invoices.getStats,
+		currentUser?._id ? { userId: currentUser._id } : "skip"
+	);
+
 	const value = useMemo<AppDataContextValue>(
 		() => ({
 			clerkUser: user ?? null,
@@ -46,9 +60,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 			currentUser: currentUser ?? undefined,
 			invoices: invoices ?? undefined,
 			clients: clients ?? undefined,
+			stats: stats ?? undefined,
 			isReady: Boolean(currentUser?._id),
 		}),
-		[clients, currentUser, invoices, isLoaded, user]
+		[clients, currentUser, invoices, isLoaded, stats, user]
 	);
 
 	return (

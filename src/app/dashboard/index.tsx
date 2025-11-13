@@ -1,6 +1,4 @@
 import { Suspense, lazy } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/../convex/_generated/api";
 import { Navigation } from "@/components/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -161,29 +159,24 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardPage() {
-	// Try to get pre-fetched data from loader
+	// Try to get pre-fetched data from loader (for SSR)
 	const loaderData = Route.useLoaderData();
 
-	// Use loader data if available (SSR), otherwise fall back to hooks
-	const { currentUser: convexUser, invoices: contextInvoices } = useAppData();
+	// Get data from context - this persists across navigation and uses Convex cache
+	const {
+		currentUser: convexUser,
+		invoices: contextInvoices,
+		stats: contextStats,
+	} = useAppData();
 
-	// Prefer SSR data if available
-	const stats = loaderData?.stats;
+	// Prefer SSR loader data if available, otherwise use context data
+	// Context data persists across navigation and prevents loading flash
+	const stats = loaderData?.stats ?? contextStats;
 	const invoices = loaderData?.invoices ?? contextInvoices;
 	const convexUserFromLoader = loaderData?.convexUser;
-
-	// Use loader data or fall back to hooks
 	const finalConvexUser = convexUserFromLoader ?? convexUser;
 	const finalInvoices = invoices;
-
-	// Fetch stats from hook if not available from loader
-	const statsFromHook = useQuery(
-		api.invoices.getStats,
-		finalConvexUser?._id && !stats ? { userId: finalConvexUser._id } : "skip"
-	);
-
-	// Use stats from loader or hook
-	const finalStats = stats ?? statsFromHook;
+	const finalStats = stats;
 	const invoiceList = finalInvoices ?? [];
 
 	return (
@@ -328,12 +321,8 @@ function DashboardPage() {
 										<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full flex items-end justify-between gap-1 pb-4">
 											{Array.from({ length: 8 }).map((_, i) => {
 												// Use index-based heights for consistent rendering
-												const heights = [
-													45, 52, 38, 60, 48, 55, 42, 58,
-												];
-												const paidHeights = [
-													30, 35, 25, 40, 32, 38, 28, 42,
-												];
+												const heights = [45, 52, 38, 60, 48, 55, 42, 58];
+												const paidHeights = [30, 35, 25, 40, 32, 38, 28, 42];
 												return (
 													<div
 														key={i}
