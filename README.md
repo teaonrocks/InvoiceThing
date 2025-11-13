@@ -91,7 +91,7 @@ VITE_CONVEX_URL=https://<your-deployment>.convex.cloud
 
    ```json
    {
-     "userId": "{{user.id}}"
+   	"userId": "{{user.id}}"
    }
    ```
 

@@ -8,6 +8,8 @@ import appCss from "./globals.css?url";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
+import { useAppData } from "@/context/app-data-provider";
+import { Spinner } from "@/components/ui/spinner";
 
 export const Route = createRootRoute({
 	head: () => {
@@ -108,11 +110,56 @@ function RootLayout() {
 			</head>
 			<body>
 				<Providers>
-					<Outlet />
+					<AuthGate>
+						<Outlet />
+					</AuthGate>
 					<Toaster />
 				</Providers>
 				<Scripts />
 			</body>
 		</html>
+	);
+}
+
+// Gate component that waits for Clerk and Convex user to be ready
+// This prevents flashing before user information is available
+function AuthGate({ children }: { children: React.ReactNode }) {
+	const { isClerkLoaded, isReady, clerkUser } = useAppData();
+
+	// Wait until Clerk is loaded
+	if (!isClerkLoaded) {
+		return <LoadingScreen />;
+	}
+
+	// If user is authenticated (has Clerk user), wait for Convex user to be ready
+	// If user is not authenticated, we can proceed immediately
+	if (clerkUser && !isReady) {
+		return <LoadingScreen />;
+	}
+
+	return <>{children}</>;
+}
+
+// Improved loading screen with better styling
+function LoadingScreen() {
+	return (
+		<div className="flex min-h-screen items-center justify-center bg-background">
+			<div className="flex flex-col items-center gap-6 px-4">
+				<div className="flex flex-col items-center gap-3">
+					<div className="relative">
+						<Spinner className="size-10 text-primary" />
+						<div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
+					</div>
+					<div className="text-center space-y-1">
+						<h2 className="text-xl font-semibold tracking-tight">
+							InvoiceThing
+						</h2>
+						<p className="text-sm text-muted-foreground animate-pulse">
+							Loading...
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }
