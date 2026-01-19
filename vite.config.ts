@@ -10,6 +10,10 @@ export default defineConfig({
 	server: {
 		port: 3000,
 	},
+	assetsInclude: ["**/*.wasm"],
+	optimizeDeps: {
+		include: ["heic2any", "heic-to"],
+	},
 	plugins: [
 		tailwindcss(),
 		// Enables Vite to resolve imports using path aliases.

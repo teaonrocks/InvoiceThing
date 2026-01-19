@@ -31,6 +31,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/context/app-data-provider";
+import { compressImageFile } from "@/lib/image";
 
 export const Route = createFileRoute("/invoices_/$id/edit")({
 	component: EditInvoicePage,
@@ -189,7 +190,12 @@ function EditInvoicePage() {
 
 	const handleClaimImageUpload = async (claimId: string, file: File) => {
 		try {
-			if (!file.type.startsWith("image/")) {
+			const isHeic =
+				file.type === "image/heic" ||
+				file.type === "image/heif" ||
+				/\.hei[cf]$/i.test(file.name);
+
+			if (!file.type.startsWith("image/") && !isHeic) {
 				toast({
 					title: "Invalid file",
 					description: "Please upload an image file.",
@@ -198,10 +204,10 @@ function EditInvoicePage() {
 				return
 			}
 
-			if (file.size > 5 * 1024 * 1024) {
+			if (file.size > 20 * 1024 * 1024) {
 				toast({
 					title: "File too large",
-					description: "Images must be 5MB or smaller.",
+					description: "Images must be 20MB or smaller.",
 					variant: "destructive",
 				})
 				return
@@ -210,13 +216,42 @@ function EditInvoicePage() {
 			// Set loading state
 			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
 
+			let compressedFile: File;
+			try {
+				compressedFile = await compressImageFile(file);
+			} catch (error) {
+				const message =
+					error instanceof Error
+						? error.message
+						: typeof error === "string"
+							? error
+							: "Failed to convert image.";
+				toast({
+					title: "Upload failed",
+					description: message,
+					variant: "destructive",
+				})
+				return
+			}
+			if (compressedFile.size > 5 * 1024 * 1024) {
+				toast({
+					title: "File too large",
+					description: "Compressed image must be 5MB or smaller.",
+					variant: "destructive",
+				})
+				return
+			}
+
 			const uploadUrl = await generateUploadUrl();
 
 			const response = await fetch(uploadUrl, {
 				method: "POST",
-				headers: { "Content-Type": file.type },
-				body: file,
+				headers: { "Content-Type": compressedFile.type },
+				body: compressedFile,
 			})
+			if (!response.ok) {
+				throw new Error("Upload failed. Please try again.");
+			}
 
 			const { storageId } = await response.json();
 
@@ -692,7 +727,7 @@ function EditInvoicePage() {
 													<input
 														id={`claim-image-${claim.id}`}
 														type="file"
-														accept="image/*"
+														accept="image/*,.heic,.heif"
 														className="hidden"
 														disabled={uploadingClaimIds.has(claim.id)}
 														onChange={(event) => {

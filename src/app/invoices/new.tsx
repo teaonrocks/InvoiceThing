@@ -39,6 +39,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { format } from "date-fns";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { useAppData } from "@/context/app-data-provider";
+import { compressImageFile } from "@/lib/image";
 
 export const Route = createFileRoute("/invoices/new")({
 	component: NewInvoicePage,
@@ -238,8 +239,13 @@ function NewInvoicePage() {
 
 	const handleClaimImageUpload = async (claimId: string, file: File) => {
 		try {
+			const isHeic =
+				file.type === "image/heic" ||
+				file.type === "image/heif" ||
+				/\.hei[cf]$/i.test(file.name);
+
 			// Validate file type
-			if (!file.type.startsWith("image/")) {
+			if (!file.type.startsWith("image/") && !isHeic) {
 				toast({
 					title: "Error",
 					description: "Please upload an image file",
@@ -248,11 +254,11 @@ function NewInvoicePage() {
 				return;
 			}
 
-			// Validate file size (max 5MB)
-			if (file.size > 5 * 1024 * 1024) {
+			// Limit original size to avoid huge uploads in memory
+			if (file.size > 20 * 1024 * 1024) {
 				toast({
 					title: "Error",
-					description: "Image must be smaller than 5MB",
+					description: "Image must be smaller than 20MB",
 					variant: "destructive",
 				});
 				return;
@@ -261,15 +267,44 @@ function NewInvoicePage() {
 			// Set loading state
 			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
 
+			let compressedFile: File;
+			try {
+				compressedFile = await compressImageFile(file);
+			} catch (error) {
+				const message =
+					error instanceof Error
+						? error.message
+						: typeof error === "string"
+							? error
+							: "Failed to convert image.";
+				toast({
+					title: "Error",
+					description: message,
+					variant: "destructive",
+				});
+				return;
+			}
+			if (compressedFile.size > 5 * 1024 * 1024) {
+				toast({
+					title: "Error",
+					description: "Compressed image must be smaller than 5MB",
+					variant: "destructive",
+				});
+				return;
+			}
+
 			// Get upload URL
 			const uploadUrl = await generateUploadUrl();
 
 			// Upload the file
 			const result = await fetch(uploadUrl, {
 				method: "POST",
-				headers: { "Content-Type": file.type },
-				body: file,
+				headers: { "Content-Type": compressedFile.type },
+				body: compressedFile,
 			});
+			if (!result.ok) {
+				throw new Error("Upload failed. Please try again.");
+			}
 
 			const { storageId } = await result.json();
 
@@ -744,7 +779,7 @@ function NewInvoicePage() {
 													<input
 														id={`claim-image-${claim.id}`}
 														type="file"
-														accept="image/*"
+														accept="image/*,.heic,.heif"
 														className="hidden"
 														disabled={uploadingClaimIds.has(claim.id)}
 														onChange={(e) => {
