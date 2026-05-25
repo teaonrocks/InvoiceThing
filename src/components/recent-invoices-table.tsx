@@ -10,6 +10,10 @@ import { DataTable } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/table-skeleton";
 import {
+	InvoicePreviewDialog,
+	type InvoicePreviewFallback,
+} from "@/components/invoice-preview-dialog";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -115,6 +119,9 @@ export function RecentInvoicesTable({
 	const { toast } = useToast();
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const [isUpdating, setIsUpdating] = useState(false);
+	const [previewInvoiceId, setPreviewInvoiceId] =
+		useState<Id<"invoices"> | null>(null);
+	const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
 	const recentInvoices = useMemo(() => {
 		if (!invoices || invoices.length === 0) return [];
@@ -158,6 +165,25 @@ export function RecentInvoicesTable({
 		},
 		[updateStatus, toast],
 	);
+
+	const handleRowClick = useCallback(
+		(row: InvoiceRow) => {
+			navigate({ to: "/invoices/$id", params: { id: row._id } });
+		},
+		[navigate],
+	);
+
+	const handlePreviewOpen = useCallback((row: InvoiceRow) => {
+		setPreviewInvoiceId(row._id);
+		setIsPreviewOpen(true);
+	}, []);
+
+	const handlePreviewClose = useCallback((open: boolean) => {
+		setIsPreviewOpen(open);
+		if (!open) {
+			setPreviewInvoiceId(null);
+		}
+	}, []);
 
 	const columns: ColumnDef<InvoiceRow>[] = useMemo(
 		() => [
@@ -260,14 +286,11 @@ export function RecentInvoicesTable({
 		);
 	}
 
-	const handleRowClick = (row: InvoiceRow) => {
-		navigate({ to: "/invoices/$id", params: { id: row._id } });
-	};
-
 	if (variant === "dashboard") {
 		return (
-			<Table>
-				<TableHeader>
+			<>
+				<Table>
+					<TableHeader>
 					<TableRow className="hover:bg-transparent">
 						<TableHead className="text-muted-foreground font-medium">
 							Invoice
@@ -291,7 +314,7 @@ export function RecentInvoicesTable({
 						<TableRow
 							key={invoice._id}
 							className="cursor-pointer"
-							onClick={() => handleRowClick(invoice)}
+							onClick={() => handlePreviewOpen(invoice)}
 						>
 							<TableCell className="font-medium py-4">
 								#{invoice.invoiceNumber}
@@ -312,7 +335,14 @@ export function RecentInvoicesTable({
 						</TableRow>
 					))}
 				</TableBody>
-			</Table>
+				</Table>
+				<InvoicePreviewDialog
+					invoiceId={previewInvoiceId}
+					open={isPreviewOpen}
+					onOpenChange={handlePreviewClose}
+					fallbackInvoices={(invoices ?? []) as InvoicePreviewFallback[]}
+				/>
+			</>
 		);
 	}
 
