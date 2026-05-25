@@ -8,11 +8,16 @@ import { api } from "@/../convex/_generated/api";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/table-skeleton";
 import {
 	InvoicePreviewDialog,
 	type InvoicePreviewFallback,
 } from "@/components/invoice-preview-dialog";
+import {
+	InvoiceStatusBadge,
+	type InvoiceStatus,
+} from "@/components/invoice-status-badge";
 import {
 	Select,
 	SelectContent,
@@ -31,8 +36,6 @@ import {
 import { ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-
-export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
 type InvoiceRow = {
 	_id: Id<"invoices">;
@@ -62,27 +65,12 @@ type Invoice = {
 	} | null;
 };
 
-const STATUS_LABELS: Record<InvoiceStatus, string> = {
-	draft: "Draft",
-	sent: "Sent",
-	paid: "Paid",
-	overdue: "Overdue",
-};
-
 const STATUS_OPTIONS = [
-	{ value: "draft" as InvoiceStatus, label: "Draft", color: "bg-gray-500" },
-	{ value: "sent" as InvoiceStatus, label: "Sent", color: "bg-blue-500" },
-	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-green-500" },
-	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-red-500" },
+	{ value: "draft" as InvoiceStatus, label: "Draft", color: "bg-status-draft" },
+	{ value: "sent" as InvoiceStatus, label: "Sent", color: "bg-status-sent" },
+	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-status-paid" },
+	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-status-overdue" },
 ];
-
-function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
-	return (
-		<span className={cn("invoice-status-badge", `invoice-status-badge--${status}`)}>
-			{STATUS_LABELS[status]}
-		</span>
-	);
-}
 
 const SortableHeader = ({
 	title,
@@ -96,7 +84,7 @@ const SortableHeader = ({
 }) => {
 	return (
 		<Button
-			variant="ghost"
+			variant="tableHeader"
 			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 			className="-ml-3"
 		>
@@ -279,11 +267,7 @@ export function RecentInvoicesTable({
 	}
 
 	if (recentInvoices.length === 0) {
-		return (
-			<div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
-				No invoices yet.
-			</div>
-		);
+		return <EmptyState message="No invoices yet." />;
 	}
 
 	if (variant === "dashboard") {

@@ -244,7 +244,7 @@ function DashboardPage() {
 				<div className="space-y-6">
 					{displayStats ? (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-							<Card className="dashboard-stat-card rounded-none">
+							<Card variant="stat">
 								<CardHeader className="pb-0">
 									<CardTitle className="text-sm font-medium text-muted-foreground">
 										Outstanding
@@ -262,7 +262,7 @@ function DashboardPage() {
 								</CardContent>
 							</Card>
 
-							<Card className="dashboard-stat-card rounded-none">
+							<Card variant="stat">
 								<CardHeader className="pb-0">
 									<CardTitle className="text-sm font-medium text-muted-foreground">
 										Overdue
@@ -280,7 +280,7 @@ function DashboardPage() {
 								</CardContent>
 							</Card>
 
-							<Card className="dashboard-stat-card rounded-none">
+							<Card variant="stat">
 								<CardHeader className="pb-0">
 									<CardTitle className="text-sm font-medium text-muted-foreground">
 										Average Invoice Value
@@ -301,7 +301,7 @@ function DashboardPage() {
 					) : (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 							{Array.from({ length: 3 }).map((_, i) => (
-								<Card key={i} className="dashboard-stat-card rounded-none">
+								<Card key={i} variant="stat">
 									<CardHeader className="pb-0">
 										<Skeleton className="h-4 w-24" />
 									</CardHeader>
@@ -317,7 +317,7 @@ function DashboardPage() {
 					<Suspense
 						fallback={
 							<div className="grid gap-4 lg:grid-cols-3">
-								<Card className="dashboard-card rounded-none lg:col-span-2">
+								<Card variant="panel" className="lg:col-span-2">
 									<CardHeader>
 										<CardTitle>Revenue (last 8 weeks)</CardTitle>
 										<p className="text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ function DashboardPage() {
 										<Skeleton className="h-full w-full" />
 									</CardContent>
 								</Card>
-								<Card className="dashboard-card rounded-none">
+								<Card variant="panel">
 									<CardHeader>
 										<CardTitle>Invoice status mix</CardTitle>
 										<p className="text-sm text-muted-foreground">
@@ -348,7 +348,7 @@ function DashboardPage() {
 						/>
 					</Suspense>
 
-					<Card className="dashboard-card rounded-none">
+					<Card variant="panel">
 						<CardHeader>
 							<CardTitle>Recent invoices</CardTitle>
 							<p className="text-sm text-muted-foreground">

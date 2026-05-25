@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, tableShellClassName } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface TableSkeletonProps {
@@ -8,7 +8,7 @@ interface TableSkeletonProps {
 
 export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
 	return (
-		<div className="overflow-hidden rounded-md border">
+		<div className={tableShellClassName}>
 			<Table>
 				<TableHeader>
 					<TableRow>

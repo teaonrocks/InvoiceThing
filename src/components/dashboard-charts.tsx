@@ -50,7 +50,7 @@ const STATUS_CHART_COLORS: Record<InvoiceStatus, string> = {
 function ChartSkeleton() {
 	return (
 		<div className="grid gap-4 lg:grid-cols-3">
-			<Card className="dashboard-card rounded-none lg:col-span-2">
+			<Card variant="panel" className="lg:col-span-2">
 				<CardHeader>
 					<CardTitle>Revenue (last 8 weeks)</CardTitle>
 					<p className="text-sm text-muted-foreground">
@@ -79,7 +79,7 @@ function ChartSkeleton() {
 					</div>
 				</CardContent>
 			</Card>
-			<Card className="dashboard-card rounded-none">
+			<Card variant="panel">
 				<CardHeader>
 					<CardTitle>Invoice status mix</CardTitle>
 					<p className="text-sm text-muted-foreground">
@@ -179,7 +179,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 
 	return (
 		<div className="grid gap-4 lg:grid-cols-3">
-			<Card className="dashboard-card rounded-none lg:col-span-2">
+			<Card variant="panel" className="lg:col-span-2">
 				<CardHeader>
 					<CardTitle>Revenue (last 8 weeks)</CardTitle>
 					<p className="text-sm text-muted-foreground">
@@ -265,7 +265,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 				</CardContent>
 			</Card>
 
-			<Card className="dashboard-card rounded-none">
+			<Card variant="panel">
 				<CardHeader>
 					<CardTitle>Invoice status mix</CardTitle>
 					<p className="text-sm text-muted-foreground">

@@ -40,7 +40,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 				<header className="flex h-14 items-center gap-2 border-b px-4 md:hidden">
 					<SidebarTrigger />
 					<span className="font-instrument text-lg">
-						Invoice<span style={{ color: "#e63946" }}>Thing</span>
+						Invoice<span className="text-brand">Thing</span>
 					</span>
 				</header>
 				{children}
@@ -60,14 +60,11 @@ function SidebarNav() {
 					to="/dashboard"
 					className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center"
 				>
-					<div
-						className="flex h-7 w-7 shrink-0 items-center justify-center rounded-none text-xs font-bold text-white"
-						style={{ backgroundColor: "#e63946" }}
-					>
+					<div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-none bg-brand text-xs font-bold text-brand-foreground">
 						IT
 					</div>
-					<span className="font-instrument text-lg truncate group-data-[collapsible=icon]:hidden">
-						Invoice<span style={{ color: "#e63946" }}>Thing</span>
+					<span className="font-instrument truncate text-lg group-data-[collapsible=icon]:hidden">
+						Invoice<span className="text-brand">Thing</span>
 					</span>
 				</Link>
 			</SidebarHeader>
@@ -92,7 +89,7 @@ function SidebarNav() {
 											asChild
 											isActive={isActive}
 											tooltip={item.label}
-											className="font-dm rounded-none"
+											className="rounded-none font-dm"
 										>
 											<Link
 												to={item.href}
@@ -103,12 +100,7 @@ function SidebarNav() {
 												}
 											>
 												<item.icon
-													className="shrink-0"
-													style={
-														isActive
-															? { color: "#e63946" }
-															: undefined
-													}
+													className={isActive ? "shrink-0 text-brand" : "shrink-0"}
 													strokeWidth={isActive ? 2 : 1.5}
 												/>
 												<span>{item.label}</span>

@@ -330,8 +330,8 @@ function ClientsPage() {
 				{!clients && (
 					<div className="space-y-4">
 						<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-							<Skeleton className="h-10 w-full max-w-sm" />
-							<Skeleton className="h-10 w-32" />
+							<Skeleton className="h-10 w-full max-w-sm rounded-sm border border-border bg-card" />
+							<Skeleton className="h-10 w-32 rounded-sm border border-border bg-card" />
 						</div>
 						<TableSkeleton columns={5} rows={5} />
 					</div>

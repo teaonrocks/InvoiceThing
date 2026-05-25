@@ -5,7 +5,9 @@ import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+	InvoiceStatusBadge,
+} from "@/components/invoice-status-badge";
 import {
 	Select,
 	SelectContent,
@@ -133,21 +135,6 @@ function InvoiceDetailPage() {
 		}
 	};
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "paid":
-				return "bg-green-500";
-			case "sent":
-				return "bg-blue-500";
-			case "overdue":
-				return "bg-red-500";
-			case "draft":
-				return "bg-gray-500";
-			default:
-				return "bg-gray-500";
-		}
-	};
-
 	if (!invoice) {
 		return (
 			<AppSidebar>
@@ -228,9 +215,7 @@ function InvoiceDetailPage() {
 									Invoice #{invoice.invoiceNumber}
 								</CardTitle>
 								<div className="mt-2 flex items-center gap-3 flex-wrap">
-									<Badge className={getStatusColor(invoice.status)}>
-										{invoice.status}
-									</Badge>
+									<InvoiceStatusBadge status={invoice.status} />
 									<Select
 										value={invoice.status}
 										onValueChange={handleStatusChange}
@@ -313,9 +298,7 @@ function InvoiceDetailPage() {
 								</div>
 								<div className="flex justify-between">
 									<span className="text-muted-foreground">Status:</span>
-									<Badge className={getStatusColor(invoice.status)}>
-										{invoice.status}
-									</Badge>
+									<InvoiceStatusBadge status={invoice.status} />
 								</div>
 							</div>
 						</div>

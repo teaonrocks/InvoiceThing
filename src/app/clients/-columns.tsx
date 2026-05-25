@@ -41,7 +41,7 @@ const SortableHeader = ({
 	column: HeaderContext<ClientRow, unknown>["column"];
 }) => (
 	<Button
-		variant="ghost"
+		variant="tableHeader"
 		onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 		className="-ml-3"
 	>

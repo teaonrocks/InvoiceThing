@@ -18,7 +18,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table/data-table";
 import { InvoicePDF } from "@/components/invoice-pdf";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableSkeleton } from "@/components/table-skeleton";
 import {
@@ -552,8 +552,8 @@ function InvoicesPage() {
 				{!invoices && (
 					<div className="space-y-4">
 						<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-							<Skeleton className="h-10 w-full max-w-sm" />
-							<Skeleton className="h-10 w-32" />
+							<Skeleton className="h-10 w-full max-w-sm rounded-sm border border-border bg-card" />
+							<Skeleton className="h-10 w-32 rounded-sm border border-border bg-card" />
 						</div>
 						<TableSkeleton columns={7} rows={5} />
 					</div>
@@ -699,10 +699,8 @@ function InvoicesPage() {
 									<DialogHeader>
 										<DialogTitle className="flex flex-wrap items-center gap-3 text-2xl">
 											Invoice #{invoiceForPreview.invoiceNumber}
-											{previewStatusOption ? (
-												<Badge variant="outline" className="capitalize">
-													{previewStatusOption.label}
-												</Badge>
+											{invoiceForPreview ? (
+												<InvoiceStatusBadge status={invoiceForPreview.status} />
 											) : null}
 										</DialogTitle>
 										<DialogDescription>

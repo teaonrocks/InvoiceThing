@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import {
 	Dialog,
 	DialogContent,
@@ -222,10 +222,8 @@ export function InvoicePreviewDialog({
 								<DialogHeader>
 									<DialogTitle className="flex flex-wrap items-center gap-3 text-2xl">
 										Invoice #{invoiceForPreview.invoiceNumber}
-										{previewStatusOption ? (
-											<Badge variant="outline" className="capitalize">
-												{previewStatusOption.label}
-											</Badge>
+										{invoiceForPreview ? (
+											<InvoiceStatusBadge status={invoiceForPreview.status} />
 										) : null}
 									</DialogTitle>
 									<DialogDescription>

@@ -147,30 +147,20 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 function LoadingScreen() {
 	return (
-		<div
-			className="swiss-grid flex min-h-screen flex-col items-center justify-center"
-			style={{ color: "#111" }}
-		>
+		<div className="swiss-grid flex min-h-screen flex-col items-center justify-center text-foreground">
 			<div className="text-center">
-				<h2 className="font-instrument text-3xl mb-8">
-					Invoice<span style={{ color: "#e63946" }}>Thing</span>
+				<h2 className="font-instrument mb-8 text-3xl">
+					Invoice<span className="text-brand">Thing</span>
 				</h2>
-				<div
-					className="mx-auto w-48 overflow-hidden"
-					style={{ height: "2px", backgroundColor: "#eee" }}
-				>
+				<div className="mx-auto h-0.5 w-48 overflow-hidden bg-muted">
 					<div
-						className="h-full w-full"
+						className="h-full w-full bg-brand"
 						style={{
-							backgroundColor: "#e63946",
 							animation: "loading-line 1.4s ease-in-out infinite",
 						}}
 					/>
 				</div>
-				<p
-					className="font-dm text-[11px] tracking-[0.25em] uppercase mt-5"
-					style={{ color: "#999" }}
-				>
+				<p className="font-dm mt-5 text-[11px] tracking-[0.25em] uppercase text-muted-foreground">
 					Loading
 				</p>
 			</div>
@@ -180,46 +170,35 @@ function LoadingScreen() {
 
 function NotFoundPage() {
 	return (
-		<div
-			className="swiss-grid flex min-h-screen flex-col items-center justify-center px-6"
-			style={{ color: "#111" }}
-		>
+		<div className="swiss-grid flex min-h-screen flex-col items-center justify-center px-6 text-foreground">
 			<div className="relative text-center">
 				<div
-					className="font-instrument select-none pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+					className="font-instrument pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-brand opacity-[0.06]"
 					style={{
 						fontSize: "clamp(12rem, 30vw, 20rem)",
 						lineHeight: 0.85,
-						color: "#e63946",
-						opacity: 0.06,
 					}}
 				>
 					404
 				</div>
 				<div className="relative z-10">
-					<p
-						className="font-dm text-xs font-600 tracking-[0.25em] uppercase mb-6"
-						style={{ color: "#e63946" }}
-					>
+					<p className="font-dm mb-6 text-xs font-600 tracking-[0.25em] uppercase text-brand">
 						Page Not Found
 					</p>
-					<h1 className="font-instrument text-5xl sm:text-6xl lg:text-7xl leading-[0.95] mb-6">
+					<h1 className="font-instrument mb-6 text-5xl leading-[0.95] sm:text-6xl lg:text-7xl">
 						Nothing
 						<br />
 						<span className="italic">here</span>
-						<span style={{ color: "#e63946" }}>.</span>
+						<span className="text-brand">.</span>
 					</h1>
-					<p
-						className="font-dm text-sm font-300 leading-relaxed max-w-sm mx-auto mb-10"
-						style={{ color: "#777" }}
-					>
+					<p className="font-dm mx-auto mb-10 max-w-sm text-sm font-300 leading-relaxed text-muted-foreground">
 						The page you're looking for doesn't exist or has been moved.
 					</p>
 					<Link to="/">
 						<Button
+							variant="brand"
 							size="lg"
-							className="font-dm text-sm font-600 rounded-none px-8 py-6 group"
-							style={{ backgroundColor: "#e63946", color: "#fff" }}
+							className="group px-8 py-6 font-dm text-sm font-600"
 						>
 							Back to Home
 							<ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />

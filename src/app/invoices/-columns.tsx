@@ -74,7 +74,7 @@ const SortableHeader = ({
 }) => {
 	return (
 		<Button
-			variant="ghost"
+			variant="tableHeader"
 			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 			className="-ml-3"
 		>
