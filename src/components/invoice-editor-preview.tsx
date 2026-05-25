@@ -243,7 +243,7 @@ export function InvoiceEditorPreview({
 				</p>
 			) : null}
 			<div
-				className="flex-1 overflow-hidden rounded-sm border border-border bg-[#fafaf9] text-foreground shadow-md dark:bg-card"
+				className="flex-1 overflow-hidden rounded-sm border border-border bg-[#fafaf9] text-foreground shadow-md dark:bg-card dark:text-card-foreground"
 				aria-live="polite"
 				aria-label="Invoice preview"
 			>
