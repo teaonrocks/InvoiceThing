@@ -79,6 +79,11 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatAddressParts } from "@/lib/utils";
+import {
+	MobileInvoiceCardList,
+	type MobileInvoiceCardRow,
+} from "@/components/mobile-invoice-card-list";
+import { useMobileReceipt } from "@/components/mobile-app-shell";
 
 const STATUS_OPTIONS = INVOICE_STATUS_OPTIONS;
 
@@ -131,6 +136,7 @@ export const Route = createFileRoute("/invoices/")({
 
 function InvoicesPage() {
 	const navigate = useNavigate();
+	const { openReceiptSheet } = useMobileReceipt();
 	const { toast } = useToast();
 	const convex = useConvex();
 	const { invoices: cachedInvoices, currentUser } = useAppData();
@@ -158,6 +164,7 @@ function InvoicesPage() {
 	const [previewCache, setPreviewCache] = useState<
 		Record<string, InvoicePreview>
 	>({});
+	const [mobileFilter, setMobileFilter] = useState("");
 
 	const invoiceList = useMemo(() => invoices ?? [], [invoices]);
 
@@ -316,6 +323,28 @@ function InvoicesPage() {
 				clientName: invoice.client?.name ?? "Unknown client",
 				clientEmail: invoice.client?.email ?? undefined,
 				clientContact: invoice.client?.contactPerson ?? undefined,
+			})),
+		[invoiceList],
+	);
+
+	const mobileCardData: MobileInvoiceCardRow[] = useMemo(
+		() =>
+			invoiceList.map((invoice) => ({
+				_id: invoice._id as Id<"invoices">,
+				invoiceNumber: invoice.invoiceNumber,
+				status: invoice.status as InvoiceStatus,
+				total: invoice.total,
+				issueDate: invoice.issueDate,
+				dueDate: invoice.dueDate,
+				clientName: invoice.client?.name ?? "Unknown client",
+				claimsCount:
+					"claimsCount" in invoice
+						? (invoice.claimsCount as number | undefined)
+						: undefined,
+				claimsMissingReceipt:
+					"claimsMissingReceipt" in invoice
+						? (invoice.claimsMissingReceipt as number | undefined)
+						: undefined,
 			})),
 		[invoiceList],
 	);
@@ -559,6 +588,16 @@ function InvoicesPage() {
 
 				{invoiceList.length > 0 && (
 					<div className="space-y-4">
+						<MobileInvoiceCardList
+							invoices={mobileCardData}
+							filter={mobileFilter}
+							onFilterChange={setMobileFilter}
+							onStatusChange={handleStatusChange}
+							onUploadReceipt={(id) => openReceiptSheet(id)}
+							onRowClick={handleRowPreview}
+							disableActions={isBusy}
+						/>
+						<div className="hidden md:block">
 						<DataTable
 							columns={columns}
 							data={tableData}
@@ -670,6 +709,7 @@ function InvoicesPage() {
 							}
 							onRowClick={handleRowPreview}
 						/>
+						</div>
 					</div>
 				)}
 			</div>

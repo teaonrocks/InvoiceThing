@@ -34,7 +34,7 @@ import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { useAppData } from "@/context/app-data-provider";
-import { compressImageFile } from "@/lib/image";
+import { useReceiptUpload } from "@/hooks/use-receipt-upload";
 
 export const Route = createFileRoute("/invoices/new")({
 	component: NewInvoicePage,
@@ -58,7 +58,7 @@ function NewInvoicePage() {
 	);
 	const createInvoice = useMutation(api.invoices.create);
 	const createClient = useMutation(api.clients.create);
-	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+	const { uploadReceipt } = useReceiptUpload();
 
 	const [selectedClientId, setSelectedClientId] = useState("");
 	const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -218,96 +218,23 @@ function NewInvoicePage() {
 	};
 
 	const handleClaimImageUpload = async (claimId: string, file: File) => {
+		setUploadingClaimIds((prev) => new Set(prev).add(claimId));
 		try {
-			const isHeic =
-				file.type === "image/heic" ||
-				file.type === "image/heif" ||
-				/\.hei[cf]$/i.test(file.name);
-
-			// Validate file type
-			if (!file.type.startsWith("image/") && !isHeic) {
+			const storageId = await uploadReceipt(file);
+			if (storageId) {
+				setClaims((current) =>
+					current.map((claim) =>
+						claim.id === claimId
+							? { ...claim, imageStorageId: storageId }
+							: claim,
+					),
+				);
 				toast({
-					title: "Error",
-					description: "Please upload an image file",
-					variant: "destructive",
+					title: "Receipt uploaded",
+					description: "Image attached to this expense.",
 				});
-				return;
 			}
-
-			// Limit original size to avoid huge uploads in memory
-			if (file.size > 20 * 1024 * 1024) {
-				toast({
-					title: "Error",
-					description: "Image must be smaller than 20MB",
-					variant: "destructive",
-				});
-				return;
-			}
-
-			// Set loading state
-			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
-
-			let compressedFile: File;
-			try {
-				compressedFile = await compressImageFile(file);
-			} catch (error) {
-				const message =
-					error instanceof Error
-						? error.message
-						: typeof error === "string"
-							? error
-							: "Failed to convert image.";
-				toast({
-					title: "Error",
-					description: message,
-					variant: "destructive",
-				});
-				return;
-			}
-			if (compressedFile.size > 5 * 1024 * 1024) {
-				toast({
-					title: "Error",
-					description: "Compressed image must be smaller than 5MB",
-					variant: "destructive",
-				});
-				return;
-			}
-
-			// Get upload URL
-			const uploadUrl = await generateUploadUrl();
-
-			// Upload the file
-			const result = await fetch(uploadUrl, {
-				method: "POST",
-				headers: { "Content-Type": compressedFile.type },
-				body: compressedFile,
-			});
-			if (!result.ok) {
-				throw new Error("Upload failed. Please try again.");
-			}
-
-			const { storageId } = await result.json();
-
-			// Update the claim with the storage ID
-			setClaims(
-				claims.map((claim) =>
-					claim.id === claimId ? { ...claim, imageStorageId: storageId } : claim
-				)
-			);
-
-			toast({
-				title: "Success",
-				description: "Image uploaded successfully",
-			});
-		} catch (error) {
-			console.error("Error uploading image:", error);
-			toast({
-				title: "Error",
-				description: "Failed to upload image",
-				variant: "destructive",
-			});
 		} finally {
-			// Clear loading state
 			setUploadingClaimIds((prev) => {
 				const next = new Set(prev);
 				next.delete(claimId);

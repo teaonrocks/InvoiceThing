@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppData } from "@/context/app-data-provider";
 import { RecentInvoicesTable } from "@/components/recent-invoices-table";
+import { MobileQuickActions } from "@/components/mobile-quick-actions";
+import { useMobileReceipt } from "@/components/mobile-app-shell";
 import { createFileRoute } from "@tanstack/react-router";
 
 const DashboardCharts = lazy(() =>
@@ -212,6 +214,7 @@ function isDashboardStats(stats: unknown): stats is DashboardStats {
 }
 
 function DashboardPage() {
+	const { openReceiptSheet } = useMobileReceipt();
 	// Try to get pre-fetched data from loader (for SSR)
 	const loaderData = Route.useLoaderData();
 
@@ -235,9 +238,14 @@ function DashboardPage() {
 
 	return (
 		<div className="px-4 py-6 sm:px-8 sm:py-8">
-				<h1 className="mb-6 text-2xl font-bold sm:mb-8 sm:text-3xl">
+				<h1 className="mb-4 text-2xl font-bold sm:mb-8 sm:text-3xl">
 					Dashboard
 				</h1>
+
+				<MobileQuickActions
+					onUploadReceipt={() => openReceiptSheet()}
+					className="mb-6"
+				/>
 
 				<div className="space-y-6">
 					{displayStats ? (

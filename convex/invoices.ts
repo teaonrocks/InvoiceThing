@@ -9,6 +9,69 @@ function roundToIncrement(value: number, increment: number): number {
 	return Math.round(value / increment) * increment;
 }
 
+type InvoiceTotals = {
+	subtotal: number;
+	tax: number;
+	roundingAdjustment?: number;
+	total: number;
+};
+
+async function recalculateInvoiceTotals(
+	ctx: MutationCtx,
+	invoiceId: Id<"invoices">,
+	userId: Id<"users">,
+	taxRate?: number,
+): Promise<InvoiceTotals> {
+	const lineItems = await ctx.db
+		.query("lineItems")
+		.withIndex("by_invoice", (q) => q.eq("invoiceId", invoiceId))
+		.collect();
+
+	const claims = await ctx.db
+		.query("claims")
+		.withIndex("by_invoice", (q) => q.eq("invoiceId", invoiceId))
+		.collect();
+
+	const lineSubtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
+	const claimsTotal = claims.reduce((sum, claim) => sum + claim.amount, 0);
+	const subtotal = lineSubtotal + claimsTotal;
+
+	const settings = await ctx.db
+		.query("settings")
+		.withIndex("by_user", (q) => q.eq("userId", userId))
+		.unique();
+
+	const effectiveTaxRate = taxRate ?? settings?.taxRate ?? 0;
+	const tax = subtotal * effectiveTaxRate;
+	const totalBeforeRounding = subtotal + tax;
+	let total = totalBeforeRounding;
+	let roundingAdjustment: number | undefined = undefined;
+
+	if (settings?.enableRounding && settings?.roundingIncrement) {
+		total = roundToIncrement(total, settings.roundingIncrement);
+		roundingAdjustment = total - totalBeforeRounding;
+		if (Math.abs(roundingAdjustment) < 0.001) {
+			roundingAdjustment = undefined;
+		}
+	}
+
+	return { subtotal, tax, roundingAdjustment, total };
+}
+
+async function patchInvoiceTotals(
+	ctx: MutationCtx,
+	invoiceId: Id<"invoices">,
+	userId: Id<"users">,
+	taxRate?: number,
+) {
+	const totals = await recalculateInvoiceTotals(ctx, invoiceId, userId, taxRate);
+	await ctx.db.patch(invoiceId, {
+		...totals,
+		updatedAt: Date.now(),
+	});
+	return totals;
+}
+
 // Create a new invoice with line items
 export const create = mutation({
 	args: {
@@ -143,15 +206,25 @@ export const getByUser = query({
 			.order("desc")
 			.collect();
 
-		// Get client info for each invoice
+		// Get client info and claim summary for each invoice
 		const invoicesWithClients = await Promise.all(
 			invoices.map(async (invoice) => {
 				const client = await ctx.db.get(invoice.clientId);
+				const claims = await ctx.db
+					.query("claims")
+					.withIndex("by_invoice", (q) => q.eq("invoiceId", invoice._id))
+					.collect();
+				const claimsCount = claims.length;
+				const claimsMissingReceipt = claims.filter(
+					(claim) => !claim.imageStorageId,
+				).length;
 				return {
 					...invoice,
 					client,
+					claimsCount,
+					claimsMissingReceipt,
 				};
-			})
+			}),
 		);
 
 		return invoicesWithClients;
@@ -412,6 +485,46 @@ const deleteInvoiceWithRelations = async (
 
 	await ctx.db.delete(invoiceId);
 };
+
+// Add a reimbursable expense (claim) to an existing invoice — for mobile quick capture
+export const addClaimToInvoice = mutation({
+	args: {
+		invoiceId: v.id("invoices"),
+		description: v.string(),
+		amount: v.number(),
+		date: v.number(),
+		imageStorageId: v.optional(v.id("_storage")),
+	},
+	handler: async (ctx, args) => {
+		const invoice = await ctx.db.get(args.invoiceId);
+		if (!invoice) {
+			throw new Error("Invoice not found");
+		}
+
+		const existingClaims = await ctx.db
+			.query("claims")
+			.withIndex("by_invoice", (q) => q.eq("invoiceId", args.invoiceId))
+			.collect();
+
+		const nextOrder =
+			existingClaims.length > 0
+				? Math.max(...existingClaims.map((c) => c.order)) + 1
+				: 0;
+
+		const claimId = await ctx.db.insert("claims", {
+			invoiceId: args.invoiceId,
+			description: args.description,
+			amount: args.amount,
+			date: args.date,
+			order: nextOrder,
+			imageStorageId: args.imageStorageId,
+		});
+
+		await patchInvoiceTotals(ctx, args.invoiceId, invoice.userId);
+
+		return claimId;
+	},
+});
 
 // Get financial stats for dashboard
 export const getStats = query({

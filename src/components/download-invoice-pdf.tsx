@@ -197,9 +197,17 @@ export async function downloadInvoicePdfById(
 export function DownloadInvoicePDF({
 	invoice,
 	paymentInstructions,
+	className,
+	variant = "default",
+	size = "sm",
+	compactLabel,
 }: {
 	invoice: DownloadInvoiceData;
 	paymentInstructions?: string;
+	className?: string;
+	variant?: "default" | "outline" | "ghost";
+	size?: "sm" | "icon" | "default";
+	compactLabel?: boolean;
 }) {
 	const convex = useConvex();
 	const [isGenerating, setIsGenerating] = useState(false);
@@ -220,19 +228,21 @@ export function DownloadInvoicePDF({
 	return (
 		<Button
 			type="button"
-			size="sm"
+			variant={variant}
+			size={size}
+			className={className}
 			onClick={handleDownload}
 			disabled={isGenerating}
+			aria-label="Download PDF"
 		>
 			{isGenerating ? (
-				<>
-					<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-					Generating PDF…
-				</>
+				<Loader2 className="h-4 w-4 animate-spin" />
 			) : (
 				<>
-					<FileDown className="h-4 w-4 mr-2" />
-					Download PDF
+					<FileDown className="h-4 w-4" />
+					{!compactLabel && size !== "icon" ? (
+						<span className="ml-2">Download PDF</span>
+					) : null}
 				</>
 			)}
 		</Button>

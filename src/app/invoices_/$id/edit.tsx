@@ -25,7 +25,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/context/app-data-provider";
-import { compressImageFile } from "@/lib/image";
+import { useReceiptUpload } from "@/hooks/use-receipt-upload";
 
 export const Route = createFileRoute("/invoices_/$id/edit")({
 	component: EditInvoicePage,
@@ -49,7 +49,7 @@ function EditInvoicePage() {
 
 	// Update mutation
 	const updateInvoice = useMutation(api.invoices.update);
-	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+	const { uploadReceipt } = useReceiptUpload();
 
 	const [selectedClientId, setSelectedClientId] = useState("");
 	const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -168,98 +168,30 @@ function EditInvoicePage() {
 	}
 
 	const handleClaimImageUpload = async (claimId: string, file: File) => {
+		setUploadingClaimIds((prev) => new Set(prev).add(claimId));
 		try {
-			const isHeic =
-				file.type === "image/heic" ||
-				file.type === "image/heif" ||
-				/\.hei[cf]$/i.test(file.name);
-
-			if (!file.type.startsWith("image/") && !isHeic) {
+			const storageId = await uploadReceipt(file);
+			if (storageId) {
+				setClaims((current) =>
+					current.map((claim) =>
+						claim.id === claimId
+							? { ...claim, imageStorageId: storageId }
+							: claim,
+					),
+				);
 				toast({
-					title: "Invalid file",
-					description: "Please upload an image file.",
-					variant: "destructive",
-				})
-				return
+					title: "Receipt uploaded",
+					description: "The receipt image has been attached.",
+				});
 			}
-
-			if (file.size > 20 * 1024 * 1024) {
-				toast({
-					title: "File too large",
-					description: "Images must be 20MB or smaller.",
-					variant: "destructive",
-				})
-				return
-			}
-
-			// Set loading state
-			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
-
-			let compressedFile: File;
-			try {
-				compressedFile = await compressImageFile(file);
-			} catch (error) {
-				const message =
-					error instanceof Error
-						? error.message
-						: typeof error === "string"
-							? error
-							: "Failed to convert image.";
-				toast({
-					title: "Upload failed",
-					description: message,
-					variant: "destructive",
-				})
-				return
-			}
-			if (compressedFile.size > 5 * 1024 * 1024) {
-				toast({
-					title: "File too large",
-					description: "Compressed image must be 5MB or smaller.",
-					variant: "destructive",
-				})
-				return
-			}
-
-			const uploadUrl = await generateUploadUrl();
-
-			const response = await fetch(uploadUrl, {
-				method: "POST",
-				headers: { "Content-Type": compressedFile.type },
-				body: compressedFile,
-			})
-			if (!response.ok) {
-				throw new Error("Upload failed. Please try again.");
-			}
-
-			const { storageId } = await response.json();
-
-			setClaims((current) =>
-				current.map((claim) =>
-					claim.id === claimId ? { ...claim, imageStorageId: storageId } : claim
-				)
-			)
-
-			toast({
-				title: "Receipt uploaded",
-				description: "The receipt image has been attached.",
-			})
-		} catch (error) {
-			console.error("Error uploading receipt:", error);
-			toast({
-				title: "Upload failed",
-				description: "We couldn't upload that image. Please try again.",
-				variant: "destructive",
-			})
 		} finally {
-			// Clear loading state
 			setUploadingClaimIds((prev) => {
 				const next = new Set(prev);
 				next.delete(claimId);
 				return next;
 			});
 		}
-	}
+	};
 
 	const removeClaimImage = (claimId: string) => {
 		setClaims((current) =>

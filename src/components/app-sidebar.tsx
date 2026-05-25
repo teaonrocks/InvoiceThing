@@ -7,6 +7,7 @@ import {
 	Settings,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileAppShell } from "@/components/mobile-app-shell";
 import {
 	Sidebar,
 	SidebarContent,
@@ -42,7 +43,7 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 						Invoice<span className="text-brand">Thing</span>
 					</span>
 				</header>
-				{children}
+				<MobileAppShell>{children}</MobileAppShell>
 			</SidebarInset>
 		</SidebarProvider>
 	);

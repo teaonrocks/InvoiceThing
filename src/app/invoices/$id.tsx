@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/../convex/_generated/api";
@@ -6,13 +6,28 @@ import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { InvoiceStatusSelect } from "@/components/invoice-status-select";
 import type { InvoiceStatus } from "@/components/invoice-status-badge";
-import { ArrowLeft, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, Camera, Edit, Trash2 } from "lucide-react";
 import { DownloadInvoicePDF } from "@/components/download-invoice-pdf";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	InvoiceEditorPreview,
 	buildInvoicePreviewDataFromRecord,
 } from "@/components/invoice-editor-preview";
+import { useMobileReceipt } from "@/components/mobile-app-shell";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
+import { formatInvoiceCurrency } from "@/lib/invoice-format";
+import { format } from "date-fns";
 
 export const Route = createFileRoute("/invoices/$id")({
 	component: InvoiceDetailPage,
@@ -35,6 +50,10 @@ function InvoiceDetailSkeleton() {
 function InvoiceDetailPage() {
 	const navigate = useNavigate();
 	const { id } = Route.useParams();
+	const { openReceiptSheet } = useMobileReceipt();
+	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
+
 	const invoice = useQuery(api.invoices.get, {
 		invoiceId: id as Id<"invoices">,
 	});
@@ -56,6 +75,12 @@ function InvoiceDetailPage() {
 		[invoice, settings?.paymentInstructions],
 	);
 
+	const claimsSummary = useMemo(() => {
+		const claims = invoice?.claims ?? [];
+		const missing = claims.filter((c) => !c.imageStorageId).length;
+		return { total: claims.length, missing };
+	}, [invoice?.claims]);
+
 	const handleStatusChange = async (newStatus: InvoiceStatus) => {
 		if (!invoice) return;
 
@@ -68,13 +93,13 @@ function InvoiceDetailPage() {
 	const handleDelete = async () => {
 		if (!invoice) return;
 
-		if (
-			confirm(
-				`Are you sure you want to delete invoice ${invoice.invoiceNumber}? This action cannot be undone.`,
-			)
-		) {
+		setIsDeleting(true);
+		try {
 			await deleteInvoice({ invoiceId: invoice._id });
 			navigate({ to: "/invoices" });
+		} finally {
+			setIsDeleting(false);
+			setDeleteOpen(false);
 		}
 	};
 
@@ -83,45 +108,136 @@ function InvoiceDetailPage() {
 	}
 
 	return (
-		<div className="px-4 py-6 sm:px-8 sm:py-8">
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<Link to="/invoices">
-					<Button variant="ghost" size="sm" className="-ml-2">
-						<ArrowLeft className="h-4 w-4 mr-2" />
-						Back
-					</Button>
-				</Link>
+		<div className="px-4 py-6 pb-28 sm:px-8 sm:py-8 md:pb-8">
+			<Link to="/invoices">
+				<Button variant="ghost" size="sm" className="-ml-2 mb-4">
+					<ArrowLeft className="h-4 w-4 mr-2" />
+					Back
+				</Button>
+			</Link>
 
-				<div className="flex flex-wrap items-center gap-2">
+			{/* Mobile summary header */}
+			<div className="mb-6 border border-border bg-card p-4 md:hidden">
+				<p className="font-dm text-[10px] font-600 tracking-[0.15em] uppercase text-muted-foreground">
+					{invoice.client?.name ?? "Client"}
+				</p>
+				<div className="mt-1 flex items-start justify-between gap-3">
+					<h1 className="font-number text-2xl font-bold">
+						#{invoice.invoiceNumber}
+					</h1>
+					<InvoiceStatusBadge status={invoice.status as InvoiceStatus} />
+				</div>
+				<p className="font-number mt-2 text-xl font-semibold">
+					{formatInvoiceCurrency(invoice.total)}
+				</p>
+				<p className="mt-1 text-xs text-muted-foreground">
+					Due {format(invoice.dueDate, "MMM d, yyyy")}
+					{claimsSummary.total > 0
+						? ` · ${claimsSummary.total} expense${claimsSummary.total === 1 ? "" : "s"}`
+						: ""}
+					{claimsSummary.missing > 0
+						? ` · ${claimsSummary.missing} missing receipt`
+						: ""}
+				</p>
+			</div>
+
+			{/* Desktop actions */}
+			<div className="mb-8 hidden flex-wrap items-center justify-end gap-2 md:flex">
+				<InvoiceStatusSelect
+					value={invoice.status as InvoiceStatus}
+					onValueChange={handleStatusChange}
+					triggerClassName="h-9"
+				/>
+				<Button variant="outline" size="sm" asChild>
+					<Link to="/invoices/$id/edit" params={{ id: invoice._id }}>
+						<Edit className="h-4 w-4 mr-2" />
+						Edit
+					</Link>
+				</Button>
+				<DownloadInvoicePDF
+					invoice={invoice}
+					paymentInstructions={settings?.paymentInstructions}
+				/>
+				<AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+					<AlertDialogTrigger asChild>
+						<Button
+							variant="outline"
+							size="sm"
+							className="text-destructive hover:text-destructive"
+						>
+							<Trash2 className="h-4 w-4 mr-2" />
+							Delete
+						</Button>
+					</AlertDialogTrigger>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>
+								Delete invoice #{invoice.invoiceNumber}?
+							</AlertDialogTitle>
+							<AlertDialogDescription>
+								This action is permanent and cannot be undone.
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel disabled={isDeleting}>
+								Cancel
+							</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => void handleDelete()}
+								disabled={isDeleting}
+								className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+							>
+								Delete
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			</div>
+
+			<div className="mx-auto w-full max-w-4xl">
+				<InvoiceEditorPreview data={previewData} showLabel={false} />
+			</div>
+
+			{/* Mobile sticky action bar */}
+			<div
+				className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-card/95 px-3 py-3 backdrop-blur-sm md:hidden"
+				style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+			>
+				<div className="flex flex-wrap gap-2">
 					<InvoiceStatusSelect
 						value={invoice.status as InvoiceStatus}
 						onValueChange={handleStatusChange}
-						triggerClassName="h-9"
+						triggerClassName="h-10 min-w-0 flex-1 rounded-none"
 					/>
-					<Button variant="outline" size="sm" asChild>
+					<Button
+						type="button"
+						variant="brand"
+						size="sm"
+						className="h-10 flex-1 rounded-none"
+						onClick={() => openReceiptSheet(invoice._id)}
+					>
+						<Camera className="h-4 w-4 mr-1.5" />
+						Receipt
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-10 rounded-none px-3"
+						asChild
+					>
 						<Link to="/invoices/$id/edit" params={{ id: invoice._id }}>
-							<Edit className="h-4 w-4 mr-2" />
-							Edit
+							<Edit className="h-4 w-4" />
 						</Link>
 					</Button>
 					<DownloadInvoicePDF
 						invoice={invoice}
 						paymentInstructions={settings?.paymentInstructions}
-					/>
-					<Button
 						variant="outline"
-						size="sm"
-						onClick={handleDelete}
-						className="text-destructive hover:text-destructive"
-					>
-						<Trash2 className="h-4 w-4 mr-2" />
-						Delete
-					</Button>
+						size="icon"
+						className="h-10 w-10 shrink-0 rounded-none"
+						compactLabel
+					/>
 				</div>
-			</div>
-
-			<div className="mx-auto mt-8 w-full max-w-4xl">
-				<InvoiceEditorPreview data={previewData} showLabel={false} />
 			</div>
 		</div>
 	);

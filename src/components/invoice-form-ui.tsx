@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,17 @@ import {
 	Upload,
 	X,
 	Image as ImageIcon,
-	Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Doc } from "@/../convex/_generated/dataModel";
+import {
+	Sheet,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { formatInvoiceCurrency } from "@/lib/invoice-format";
 
@@ -43,7 +51,7 @@ export function InvoiceFormPage({
 	children: ReactNode;
 }) {
 	return (
-		<div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+		<div className="px-4 py-6 pb-28 sm:px-6 sm:py-8 sm:pb-8 lg:px-8">
 			<div className="-ml-2 mb-2">{backLink}</div>
 			<h1 className="font-heading text-xl font-semibold leading-tight sm:text-2xl">
 				{title}
@@ -65,16 +73,57 @@ export function InvoiceEditorLayout({
 	controls: ReactNode;
 	preview: ReactNode;
 }) {
+	const isMobile = useIsMobile();
+	const [previewOpen, setPreviewOpen] = useState(false);
+
 	return (
-		<form
-			onSubmit={onSubmit}
-			className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start lg:gap-6 xl:gap-8"
-		>
-			<div className="min-w-0 space-y-8 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:pr-1">
-				{controls}
-			</div>
-			<div className="min-w-0 lg:sticky lg:top-6 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto">
-				{preview}
+		<form onSubmit={onSubmit} className="relative mt-6">
+			{isMobile ? (
+				<div className="mb-4 flex justify-end">
+					<Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+						<SheetTrigger asChild>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="rounded-none font-dm text-xs tracking-wide uppercase"
+							>
+								Preview invoice
+							</Button>
+						</SheetTrigger>
+						<SheetContent
+							side="bottom"
+							className="max-h-[85vh] overflow-y-auto rounded-none"
+						>
+							<SheetHeader>
+								<SheetTitle className="font-instrument text-left">
+									Preview
+								</SheetTitle>
+							</SheetHeader>
+							<div className="mt-4">{preview}</div>
+						</SheetContent>
+					</Sheet>
+				</div>
+			) : null}
+
+			<div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start lg:gap-6 xl:gap-8">
+				<div
+					className={cn(
+						"min-w-0 space-y-8",
+						isMobile && "pb-24",
+						!isMobile && "lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto lg:pr-1",
+					)}
+				>
+					{controls}
+				</div>
+				<div
+					className={cn(
+						"min-w-0",
+						isMobile ? "hidden" : "lg:sticky lg:top-6 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto",
+					)}
+				>
+					{preview}
+				</div>
 			</div>
 		</form>
 	);
@@ -249,6 +298,40 @@ export function InvoiceFormActions({
 	submitLabel: string;
 	isSubmitting: boolean;
 }) {
+	const isMobile = useIsMobile();
+
+	if (isMobile) {
+		return (
+			<div className="fixed inset-x-0 bottom-16 z-20 border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm md:static md:z-auto md:border-t md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
+				<div className="flex gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={onCancel}
+						disabled={isSubmitting}
+						className="h-11 flex-1 rounded-none"
+					>
+						{cancelLabel}
+					</Button>
+					<Button
+						type="submit"
+						disabled={isSubmitting}
+						className="h-11 flex-1 rounded-none"
+					>
+						{isSubmitting ? (
+							<>
+								<Spinner className="h-4 w-4 mr-2" />
+								{submitLabel}…
+							</>
+						) : (
+							submitLabel
+						)}
+					</Button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex flex-wrap gap-3 border-t border-border pt-6">
 			<Button
@@ -497,30 +580,37 @@ export function InvoiceClaimsEditor({
 								</div>
 							</div>
 
-							<div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
+							<div className="border-t border-border pt-4">
 								<Label
 									htmlFor={`claim-image-${claim.id}`}
 									className={cn(
-										"cursor-pointer",
+										"block cursor-pointer",
 										uploadingClaimIds.has(claim.id) &&
 											"pointer-events-none opacity-50",
 									)}
 								>
-									<div className="flex items-center gap-2 rounded-none border border-border px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground">
+									<div className="flex min-h-[88px] w-full flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-muted/20 px-4 py-4 transition-colors hover:border-brand hover:bg-muted/40 sm:min-h-0 sm:flex-row sm:justify-start sm:border sm:border-solid sm:bg-transparent sm:px-3 sm:py-2">
 										{uploadingClaimIds.has(claim.id) ? (
 											<>
-												<Spinner className="h-4 w-4" />
+												<Spinner className="h-5 w-5" />
 												<span className="text-sm">Uploading…</span>
 											</>
 										) : claim.imageStorageId ? (
 											<>
-												<ImageIcon className="h-4 w-4" />
-												<span className="text-sm">Change receipt</span>
+												<ImageIcon className="h-5 w-5 text-brand" />
+												<span className="text-sm font-medium">
+													Receipt attached — tap to change
+												</span>
 											</>
 										) : (
 											<>
-												<Upload className="h-4 w-4" />
-												<span className="text-sm">Upload receipt</span>
+												<Upload className="h-5 w-5 text-brand" />
+												<span className="text-sm font-medium">
+													Upload receipt photo
+												</span>
+												<span className="text-xs text-muted-foreground sm:hidden">
+													Camera or gallery
+												</span>
 											</>
 										)}
 									</div>
@@ -528,32 +618,29 @@ export function InvoiceClaimsEditor({
 										id={`claim-image-${claim.id}`}
 										type="file"
 										accept="image/*,.heic,.heif"
+										capture="environment"
 										className="hidden"
 										disabled={uploadingClaimIds.has(claim.id)}
 										onChange={(e) => {
 											const file = e.target.files?.[0];
 											if (file) onImageUpload(claim.id, file);
+											e.target.value = "";
 										}}
 									/>
 								</Label>
 
 								{claim.imageStorageId &&
 									!uploadingClaimIds.has(claim.id) && (
-										<>
-											<Button
-												type="button"
-												variant="ghost"
-												size="sm"
-												onClick={() => onImageRemove(claim.id)}
-											>
-												<X className="h-4 w-4 mr-1" />
-												Remove
-											</Button>
-											<span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-												<Check className="h-4 w-4" aria-hidden="true" />
-												Receipt attached
-											</span>
-										</>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="mt-2 w-full rounded-none sm:w-auto"
+											onClick={() => onImageRemove(claim.id)}
+										>
+											<X className="h-4 w-4 mr-1" />
+											Remove receipt
+										</Button>
 									)}
 							</div>
 						</div>
