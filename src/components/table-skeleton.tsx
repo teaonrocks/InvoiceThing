@@ -11,7 +11,7 @@ export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
 		<div className={tableShellClassName}>
 			<Table>
 				<TableHeader>
-					<TableRow>
+					<TableRow className="hover:bg-transparent">
 						{Array.from({ length: columns }).map((_, i) => (
 							<TableHead key={i}>
 								<Skeleton className="h-4 w-24" />

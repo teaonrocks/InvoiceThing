@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClientSelector } from "@/components/client-selector";
 import {
+	Check,
 	Plus,
 	Trash2,
 	ArrowLeft,
@@ -750,8 +751,9 @@ function EditInvoicePage() {
 															<X className="mr-1 h-4 w-4" />
 															Remove
 														</Button>
-														<span className="text-sm text-muted-foreground">
-															✓ Receipt attached
+														<span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+															<Check className="h-4 w-4" aria-hidden="true" />
+															Receipt attached
 														</span>
 													</>
 												) : null}

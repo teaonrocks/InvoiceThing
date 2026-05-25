@@ -13,7 +13,6 @@ import {
 	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
-	SidebarGroupLabel,
 	SidebarHeader,
 	SidebarInset,
 	SidebarMenu,
@@ -73,9 +72,6 @@ function SidebarNav() {
 
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel className="font-dm text-[10px] tracking-[0.2em] uppercase">
-						Navigation
-					</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{navItems.map((item) => {

@@ -4,9 +4,11 @@ import {
 	HeadContent,
 	Scripts,
 	Link,
+	useLocation,
 } from "@tanstack/react-router";
 import appCss from "./globals.css?url";
 import "./globals.css";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
@@ -116,7 +118,7 @@ function RootLayout() {
 			<body>
 				<Providers>
 					<AuthGate>
-						<Outlet />
+						<AppShell />
 					</AuthGate>
 					<Toaster />
 				</Providers>
@@ -124,6 +126,33 @@ function RootLayout() {
 			</body>
 		</html>
 	);
+}
+
+const SIDEBAR_ROUTE_PREFIXES = [
+	"/dashboard",
+	"/clients",
+	"/invoices",
+	"/settings",
+] as const;
+
+function usesAppSidebar(pathname: string) {
+	return SIDEBAR_ROUTE_PREFIXES.some(
+		(path) => pathname === path || pathname.startsWith(`${path}/`),
+	);
+}
+
+function AppShell() {
+	const { pathname } = useLocation();
+
+	if (usesAppSidebar(pathname)) {
+		return (
+			<AppSidebar>
+				<Outlet />
+			</AppSidebar>
+		);
+	}
+
+	return <Outlet />;
 }
 
 // Gate component that waits for Clerk and Convex user to be ready

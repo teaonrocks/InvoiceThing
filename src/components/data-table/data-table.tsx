@@ -102,6 +102,9 @@ export function DataTable<TData, TValue>({
 	const handleRowClick = React.useCallback(
 		(rowData: TData, event: React.MouseEvent<HTMLTableRowElement>) => {
 			if (!onRowClick) return;
+			if (document.querySelector('[role="alertdialog"][data-state="open"]')) {
+				return;
+			}
 			const target = event.target as HTMLElement;
 			const interactive = target.closest(
 				"button, a, input, textarea, select, [role='menuitem'], [role='checkbox'], [data-no-row-click]"
@@ -141,7 +144,7 @@ export function DataTable<TData, TValue>({
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
+							<TableRow key={headerGroup.id} className="hover:bg-transparent">
 								{headerGroup.headers.map((header) => {
 									return (
 										<TableHead key={header.id}>

@@ -25,6 +25,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+	Check,
 	Plus,
 	Trash2,
 	ArrowLeft,
@@ -804,8 +805,9 @@ function NewInvoicePage() {
 												)}
 
 												{claim.imageStorageId && !uploadingClaimIds.has(claim.id) && (
-													<span className="text-sm text-muted-foreground">
-														✓ Receipt attached
+													<span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+														<Check className="h-4 w-4" aria-hidden="true" />
+														Receipt attached
 													</span>
 												)}
 											</div>

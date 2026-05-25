@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +21,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
+import { ColumnHeader } from "@/components/data-table/column-header";
+import { Loader2, MoreHorizontal, Trash2 } from "lucide-react";
 
 export interface ClientRow {
 	_id: Id<"clients">;
@@ -32,23 +33,6 @@ export interface ClientRow {
 	createdAt: number;
 	invoiceCount?: number;
 }
-
-const SortableHeader = ({
-	title,
-	column,
-}: {
-	title: string;
-	column: HeaderContext<ClientRow, unknown>["column"];
-}) => (
-	<Button
-		variant="tableHeader"
-		onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-		className="-ml-3"
-	>
-		{title}
-		<ArrowUpDown className="ml-2 h-4 w-4" />
-	</Button>
-);
 
 interface ClientColumnMeta {
 	onDeleteClient?: (client: ClientRow) => void;
@@ -80,7 +64,7 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
 	},
 	{
 		accessorKey: "name",
-		header: ({ column }) => <SortableHeader title="Client" column={column} />,
+		header: ({ column }) => <ColumnHeader title="Client" column={column} />,
 		cell: ({ row }) => (
 			<div className="flex flex-col">
 				<span className="font-medium">{row.original.name}</span>
@@ -94,7 +78,7 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
 	},
 	{
 		accessorKey: "email",
-		header: ({ column }) => <SortableHeader title="Email" column={column} />,
+		header: ({ column }) => <ColumnHeader title="Email" column={column} />,
 		cell: ({ row }) => (
 			<span className="text-sm text-muted-foreground">
 				{row.original.email || "Not provided"}
@@ -103,7 +87,7 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
 	},
 	{
 		accessorKey: "address",
-		header: "Address",
+		header: () => <ColumnHeader title="Address" />,
 		cell: ({ row }) => (
 			<span className="max-w-[260px] truncate text-sm text-muted-foreground">
 				{row.original.address || "—"}
@@ -112,7 +96,7 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
 	},
 	{
 		accessorKey: "createdAt",
-		header: ({ column }) => <SortableHeader title="Added" column={column} />,
+		header: ({ column }) => <ColumnHeader title="Added" column={column} />,
 		cell: ({ row }) => (
 			<span className="text-sm">
 				{format(row.original.createdAt, "MMM d, yyyy")}
@@ -161,10 +145,10 @@ export const clientColumns: ColumnDef<ClientRow>[] = [
 								<AlertDialogTrigger asChild>
 									<DropdownMenuItem
 										onSelect={(event) => event.preventDefault()}
-										className="flex items-center gap-2 text-destructive focus:text-destructive"
+										className="text-destructive focus:text-destructive"
 										data-no-row-click
 									>
-										<Trash2 className="h-4 w-4" /> Delete
+										Delete
 									</DropdownMenuItem>
 								</AlertDialogTrigger>
 								<AlertDialogContent>

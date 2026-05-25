@@ -14,12 +14,20 @@ import {
 	Trash2,
 } from "lucide-react";
 
-import { AppSidebar } from "@/components/app-sidebar";
+import { ColumnHeader } from "@/components/data-table/column-header";
 import { DataTable } from "@/components/data-table/data-table";
 import { InvoicePDF } from "@/components/invoice-pdf";
 import { Button } from "@/components/ui/button";
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { TableSkeleton } from "@/components/table-skeleton";
 import {
 	AlertDialog,
@@ -540,7 +548,7 @@ function InvoicesPage() {
 	});
 
 	return (
-		<AppSidebar>
+		<>
 			<div className="px-4 py-4 sm:px-8 sm:py-8">
 				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<h1 className="text-3xl font-bold sm:text-4xl">Invoices</h1>
@@ -779,62 +787,68 @@ function InvoicesPage() {
 												Line items
 											</p>
 											<div className="overflow-hidden rounded-md border">
-												<table className="w-full text-sm">
-													<thead className="bg-muted/50">
-														<tr>
-															<th className="px-4 py-2 text-left font-semibold">
-																Description
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Qty
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Unit
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Total
-															</th>
-														</tr>
-													</thead>
-													<tbody>
+												<Table>
+													<TableHeader>
+														<TableRow className="hover:bg-transparent">
+															<TableHead>
+																<ColumnHeader title="Description" />
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Qty"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Unit"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Total"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+														</TableRow>
+													</TableHeader>
+													<TableBody>
 														{invoiceForPreview.lineItems?.length ? (
 															invoiceForPreview.lineItems.map((item, index) => (
-																<tr
-																	key={"${item.description}-${index}"}
-																	className="border-t"
+																<TableRow
+																	key={`${item.description}-${index}`}
 																>
-																	<td className="px-4 py-2">
-																		{item.description}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	<TableCell>{item.description}</TableCell>
+																	<TableCell className="text-right">
 																		{item.quantity}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	</TableCell>
+																	<TableCell className="text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(item.unitPrice)}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	</TableCell>
+																	<TableCell className="text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(item.total)}
-																	</td>
-																</tr>
+																	</TableCell>
+																</TableRow>
 															))
 														) : (
-															<tr>
-																<td
-																	className="px-4 py-6 text-center text-muted-foreground"
+															<TableRow>
+																<TableCell
+																	className="py-6 text-center text-muted-foreground"
 																	colSpan={4}
 																>
 																	No line items found.
-																</td>
-															</tr>
+																</TableCell>
+															</TableRow>
 														)}
-													</tbody>
-												</table>
+													</TableBody>
+												</Table>
 											</div>
 										</div>
 										{invoiceForPreview.claims &&
@@ -844,47 +858,52 @@ function InvoicesPage() {
 													Reimbursable expenses
 												</p>
 												<div className="overflow-hidden rounded-md border">
-													<table className="w-full text-sm">
-														<thead className="bg-muted/50">
-															<tr>
-																<th className="px-4 py-2 text-left font-semibold">
-																	Description
-																</th>
-																<th className="px-4 py-2 text-left font-semibold">
-																	Date
-																</th>
-																<th className="px-4 py-2 text-right font-semibold">
-																	Amount
-																</th>
-																<th className="px-4 py-2 text-center font-semibold">
-																	Receipt
-																</th>
-															</tr>
-														</thead>
-														<tbody>
+													<Table>
+														<TableHeader>
+															<TableRow className="hover:bg-transparent">
+																<TableHead>
+																	<ColumnHeader title="Description" />
+																</TableHead>
+																<TableHead>
+																	<ColumnHeader title="Date" />
+																</TableHead>
+																<TableHead className="text-right">
+																	<ColumnHeader
+																		title="Amount"
+																		className="w-full justify-end"
+																	/>
+																</TableHead>
+																<TableHead className="text-center">
+																	<ColumnHeader
+																		title="Receipt"
+																		className="w-full justify-center"
+																	/>
+																</TableHead>
+															</TableRow>
+														</TableHeader>
+														<TableBody>
 															{invoiceForPreview.claims.map((claim, index) => (
-																<tr
-																	key={"${claim.description}-${index}"}
-																	className="border-t"
+																<TableRow
+																	key={`${claim.description}-${index}`}
 																>
-																	<td className="px-4 py-2">
+																	<TableCell>
 																		{claim.description}
-																	</td>
-																	<td className="px-4 py-2">
+																	</TableCell>
+																	<TableCell>
 																		{claim.date
 																			? format(
 																					new Date(claim.date),
 																					"MMM d, yyyy",
 																				)
 																			: "—"}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	</TableCell>
+																	<TableCell className="text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(claim.amount)}
-																	</td>
-																	<td className="px-4 py-2 text-center">
+																	</TableCell>
+																	<TableCell className="text-center">
 																		{claim.hasReceipt ? (
 																			<Tooltip>
 																				<TooltipTrigger
@@ -920,11 +939,11 @@ function InvoicesPage() {
 																				</TooltipContent>
 																			</Tooltip>
 																		)}
-																	</td>
-																</tr>
+																	</TableCell>
+																</TableRow>
 															))}
-														</tbody>
-													</table>
+														</TableBody>
+													</Table>
 												</div>
 											</div>
 										) : null}
@@ -966,6 +985,6 @@ function InvoicesPage() {
 					</DialogContent>
 				) : null}
 			</Dialog>
-		</AppSidebar>
+		</>
 	);
 }

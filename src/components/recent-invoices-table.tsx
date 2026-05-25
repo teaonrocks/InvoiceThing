@@ -33,7 +33,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { ArrowUpDown } from "lucide-react";
+import { ColumnHeader } from "@/components/data-table/column-header";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -71,28 +71,6 @@ const STATUS_OPTIONS = [
 	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-status-paid" },
 	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-status-overdue" },
 ];
-
-const SortableHeader = ({
-	title,
-	column,
-}: {
-	title: string;
-	column: {
-		toggleSorting: (desc?: boolean) => void;
-		getIsSorted: () => false | "asc" | "desc";
-	};
-}) => {
-	return (
-		<Button
-			variant="tableHeader"
-			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-			className="-ml-3"
-		>
-			{title}
-			<ArrowUpDown className="ml-2 h-4 w-4" />
-		</Button>
-	);
-};
 
 export function RecentInvoicesTable({
 	invoices,
@@ -178,7 +156,7 @@ export function RecentInvoicesTable({
 			{
 				accessorKey: "invoiceNumber",
 				header: ({ column }) => (
-					<SortableHeader title="Invoice" column={column} />
+					<ColumnHeader title="Invoice" column={column} />
 				),
 				cell: ({ row }) => (
 					<span className="font-medium">
@@ -189,7 +167,7 @@ export function RecentInvoicesTable({
 			{
 				accessorKey: "clientName",
 				header: ({ column }) => (
-					<SortableHeader title="Client" column={column} />
+					<ColumnHeader title="Client" column={column} />
 				),
 				cell: ({ row }) => (
 					<div className="flex flex-col">
@@ -204,7 +182,7 @@ export function RecentInvoicesTable({
 			},
 			{
 				accessorKey: "issueDate",
-				header: ({ column }) => <SortableHeader title="Date" column={column} />,
+				header: ({ column }) => <ColumnHeader title="Date" column={column} />,
 				cell: ({ row }) => (
 					<span>{format(row.original.issueDate, "MMM d, yyyy")}</span>
 				),
@@ -212,7 +190,7 @@ export function RecentInvoicesTable({
 			{
 				accessorKey: "total",
 				header: ({ column }) => (
-					<SortableHeader title="Amount" column={column} />
+					<ColumnHeader title="Amount" column={column} />
 				),
 				cell: ({ row }) => {
 					const amount = Number(row.getValue("total"));
@@ -225,7 +203,7 @@ export function RecentInvoicesTable({
 			},
 			{
 				accessorKey: "status",
-				header: "Status",
+				header: () => <ColumnHeader title="Status" />,
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<Select
@@ -276,20 +254,20 @@ export function RecentInvoicesTable({
 				<Table>
 					<TableHeader>
 					<TableRow className="hover:bg-transparent">
-						<TableHead className="text-muted-foreground font-medium">
-							Invoice
+						<TableHead>
+							<ColumnHeader title="Invoice" />
 						</TableHead>
-						<TableHead className="text-muted-foreground font-medium">
-							Client
+						<TableHead>
+							<ColumnHeader title="Client" />
 						</TableHead>
-						<TableHead className="text-muted-foreground font-medium">
-							Amount
+						<TableHead>
+							<ColumnHeader title="Amount" />
 						</TableHead>
-						<TableHead className="text-muted-foreground font-medium">
-							Status
+						<TableHead>
+							<ColumnHeader title="Status" />
 						</TableHead>
-						<TableHead className="text-muted-foreground font-medium">
-							Date
+						<TableHead>
+							<ColumnHeader title="Date" />
 						</TableHead>
 					</TableRow>
 				</TableHeader>

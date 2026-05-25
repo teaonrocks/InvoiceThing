@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
+import { ColumnHeader } from "@/components/data-table/column-header";
+import { Loader2, MoreHorizontal, Trash2 } from "lucide-react";
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
@@ -64,25 +65,6 @@ interface InvoiceColumnOptions {
 	statusOptions: InvoiceStatusOption[];
 	disableStatusChange?: boolean;
 }
-
-const SortableHeader = ({
-	title,
-	column,
-}: {
-	title: string;
-	column: HeaderContext<InvoiceRow, unknown>["column"];
-}) => {
-	return (
-		<Button
-			variant="tableHeader"
-			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-			className="-ml-3"
-		>
-			{title}
-			<ArrowUpDown className="ml-2 h-4 w-4" />
-		</Button>
-	);
-};
 
 export const useInvoiceColumns = ({
 	onStatusChange,
@@ -118,7 +100,7 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "invoiceNumber",
 				header: ({ column }) => (
-					<SortableHeader title="Invoice" column={column} />
+					<ColumnHeader title="Invoice" column={column} />
 				),
 				cell: ({ row }) => (
 					<div className="font-medium">
@@ -129,7 +111,7 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "clientName",
 				header: ({ column }) => (
-					<SortableHeader title="Client" column={column} />
+					<ColumnHeader title="Client" column={column} />
 				),
 				cell: ({ row }) => (
 					<div className="flex flex-col">
@@ -145,7 +127,7 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "issueDate",
 				header: ({ column }) => (
-					<SortableHeader title="Issued" column={column} />
+					<ColumnHeader title="Issued" column={column} />
 				),
 				cell: ({ row }) => (
 					<span>{format(row.original.issueDate, "MMM d, yyyy")}</span>
@@ -153,7 +135,7 @@ export const useInvoiceColumns = ({
 			},
 			{
 				accessorKey: "dueDate",
-				header: ({ column }) => <SortableHeader title="Due" column={column} />,
+				header: ({ column }) => <ColumnHeader title="Due" column={column} />,
 				cell: ({ row }) => (
 					<span>{format(row.original.dueDate, "MMM d, yyyy")}</span>
 				),
@@ -161,7 +143,7 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "total",
 				header: ({ column }) => (
-					<SortableHeader title="Total" column={column} />
+					<ColumnHeader title="Total" column={column} />
 				),
 				cell: ({ row }) => {
 					const amount = Number(row.getValue("total"));
@@ -174,7 +156,7 @@ export const useInvoiceColumns = ({
 			},
 			{
 				accessorKey: "status",
-				header: "Status",
+				header: () => <ColumnHeader title="Status" />,
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<Select
@@ -247,10 +229,10 @@ export const useInvoiceColumns = ({
 										<AlertDialogTrigger asChild>
 											<DropdownMenuItem
 												onSelect={(event) => event.preventDefault()}
-												className="flex items-center gap-2 text-destructive focus:text-destructive"
+												className="text-destructive focus:text-destructive"
 												data-no-row-click
 											>
-												<Trash2 className="h-4 w-4" /> Delete
+												Delete
 											</DropdownMenuItem>
 										</AlertDialogTrigger>
 										<AlertDialogContent>

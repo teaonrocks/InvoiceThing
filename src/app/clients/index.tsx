@@ -7,7 +7,6 @@ import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import type { ClientRow } from "./-columns";
 
-import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table/data-table";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
@@ -235,7 +234,7 @@ function ClientsPage() {
 	}, [clientList, handlePreviewClose, previewClientId]);
 
 	return (
-		<AppSidebar>
+		<>
 			<div className="px-4 py-4 sm:px-8 sm:py-8">
 				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<h1 className="text-3xl font-bold sm:text-4xl">Clients</h1>
@@ -502,6 +501,6 @@ function ClientsPage() {
 					</DialogContent>
 				) : null}
 			</Dialog>
-		</AppSidebar>
+		</>
 	);
 }

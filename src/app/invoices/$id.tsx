@@ -15,6 +15,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { ColumnHeader } from "@/components/data-table/column-header";
 import {
 	Table,
 	TableBody,
@@ -39,7 +40,6 @@ import {
 	ImageOff,
 	ExternalLink,
 } from "lucide-react";
-import { AppSidebar } from "@/components/app-sidebar";
 import { DownloadInvoicePDF } from "@/components/download-invoice-pdf";
 import { formatAddressParts } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -137,8 +137,7 @@ function InvoiceDetailPage() {
 
 	if (!invoice) {
 		return (
-			<AppSidebar>
-				<div className="max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+			<div className="max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 					<div className="mb-6">
 						<Skeleton className="h-10 w-32" />
 					</div>
@@ -182,8 +181,7 @@ function InvoiceDetailPage() {
 							</div>
 						</CardContent>
 					</Card>
-				</div>
-			</AppSidebar>
+			</div>
 		);
 	}
 
@@ -195,8 +193,7 @@ function InvoiceDetailPage() {
 	});
 
 	return (
-		<AppSidebar>
-			<div className="max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+		<div className="max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 				{/* Header */}
 				<div className="mb-6">
 					<Link to="/invoices">
@@ -309,18 +306,27 @@ function InvoiceDetailPage() {
 							<div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
 								<Table>
 									<TableHeader>
-										<TableRow>
+										<TableRow className="hover:bg-transparent">
 											<TableHead className="min-w-[200px]">
-												Description
+												<ColumnHeader title="Description" />
 											</TableHead>
 											<TableHead className="text-right whitespace-nowrap">
-												Quantity
+												<ColumnHeader
+													title="Quantity"
+													className="w-full justify-end"
+												/>
 											</TableHead>
 											<TableHead className="text-right whitespace-nowrap">
-												Unit Price
+												<ColumnHeader
+													title="Unit price"
+													className="w-full justify-end"
+												/>
 											</TableHead>
 											<TableHead className="text-right whitespace-nowrap">
-												Amount
+												<ColumnHeader
+													title="Amount"
+													className="w-full justify-end"
+												/>
 											</TableHead>
 										</TableRow>
 									</TableHeader>
@@ -351,18 +357,27 @@ function InvoiceDetailPage() {
 								<div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
 									<Table>
 										<TableHeader>
-											<TableRow>
+											<TableRow className="hover:bg-transparent">
 												<TableHead className="min-w-[200px]">
-													Description
+													<ColumnHeader title="Description" />
 												</TableHead>
 												<TableHead className="text-right whitespace-nowrap">
-													Date
+													<ColumnHeader
+														title="Date"
+														className="w-full justify-end"
+													/>
 												</TableHead>
 												<TableHead className="text-right whitespace-nowrap">
-													Amount
+													<ColumnHeader
+														title="Amount"
+														className="w-full justify-end"
+													/>
 												</TableHead>
 												<TableHead className="text-center whitespace-nowrap">
-													Receipt
+													<ColumnHeader
+														title="Receipt"
+														className="w-full justify-center"
+													/>
 												</TableHead>
 											</TableRow>
 										</TableHeader>
@@ -455,7 +470,6 @@ function InvoiceDetailPage() {
 						</div>
 					</CardContent>
 				</Card>
-			</div>
-		</AppSidebar>
+		</div>
 	);
 }

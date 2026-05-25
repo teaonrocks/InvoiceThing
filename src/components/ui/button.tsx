@@ -26,7 +26,7 @@ const buttonVariants = cva(
           "rounded-none bg-transparent font-dm hover:bg-transparent hover:text-brand",
         link: "text-primary underline-offset-4 hover:underline",
         tableHeader:
-          "h-auto rounded-none px-0 font-medium hover:bg-transparent hover:text-foreground",
+          "h-auto rounded-none px-0 text-xs font-medium tracking-wide uppercase hover:bg-transparent hover:text-foreground",
       },
       size: {
         default: "h-9 px-4 py-2",

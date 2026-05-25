@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import { useStoreUser } from "@/hooks/use-store-user";
-import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,8 +122,7 @@ function SettingsPage() {
 	}
 
 	return (
-		<AppSidebar>
-			<div className="max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-8">
+		<div className="max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-8">
 				<div className="flex items-center gap-3 mb-6 sm:mb-8">
 					<SettingsIcon className="h-6 w-6 sm:h-8 sm:w-8" />
 					<h1 className="text-3xl sm:text-4xl font-bold">Settings</h1>
@@ -324,7 +322,6 @@ function SettingsPage() {
 						</Button>
 					</div>
 				</form>
-			</div>
-		</AppSidebar>
+		</div>
 	);
 }

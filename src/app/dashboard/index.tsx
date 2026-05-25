@@ -1,5 +1,4 @@
 import { Suspense, lazy, useMemo } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppData } from "@/context/app-data-provider";
@@ -235,8 +234,7 @@ function DashboardPage() {
 	}, [stats, invoices, invoiceList]);
 
 	return (
-		<AppSidebar>
-			<div className="px-4 py-6 sm:px-8 sm:py-8">
+		<div className="px-4 py-6 sm:px-8 sm:py-8">
 				<h1 className="mb-6 text-2xl font-bold sm:mb-8 sm:text-3xl">
 					Dashboard
 				</h1>
@@ -364,7 +362,6 @@ function DashboardPage() {
 						</CardContent>
 					</Card>
 				</div>
-			</div>
-		</AppSidebar>
+		</div>
 	);
 }

@@ -345,14 +345,14 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 				<View style={styles.table}>
 					<View style={styles.tableHeader}>
 						<Text style={[styles.tableHeaderCell, styles.descriptionCell]}>
-							Description
+							DESCRIPTION
 						</Text>
 						<Text style={[styles.tableHeaderCell, styles.quantityCell]}>
-							Qty
+							QTY
 						</Text>
-						<Text style={[styles.tableHeaderCell, styles.rateCell]}>Rate</Text>
+						<Text style={[styles.tableHeaderCell, styles.rateCell]}>RATE</Text>
 						<Text style={[styles.tableHeaderCell, styles.amountCell]}>
-							Amount
+							AMOUNT
 						</Text>
 					</View>
 
@@ -380,16 +380,16 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 						<Text style={styles.sectionTitle}>Reimbursable Expenses</Text>
 						<View style={styles.tableHeader}>
 							<Text style={[styles.tableHeaderCell, { flex: 2 }]}>
-								Description
+								DESCRIPTION
 							</Text>
-							<Text style={[styles.tableHeaderCell, { flex: 1 }]}>Date</Text>
+							<Text style={[styles.tableHeaderCell, { flex: 1 }]}>DATE</Text>
 							<Text
 								style={[
 									styles.tableHeaderCell,
 									{ flex: 1, textAlign: "right" },
 								]}
 							>
-								Amount
+								AMOUNT
 							</Text>
 						</View>
 

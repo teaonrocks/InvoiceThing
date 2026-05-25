@@ -10,6 +10,7 @@ import {
 	Loader2,
 } from "lucide-react";
 
+import { ColumnHeader } from "@/components/data-table/column-header";
 import { Button } from "@/components/ui/button";
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import {
@@ -26,6 +27,14 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { formatAddressParts } from "@/lib/utils";
 
 type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
@@ -302,62 +311,68 @@ export function InvoicePreviewDialog({
 											Line items
 										</p>
 										<div className="overflow-hidden rounded-md border">
-											<table className="w-full text-sm">
-												<thead className="bg-muted/50">
-													<tr>
-														<th className="px-4 py-2 text-left font-semibold">
-															Description
-														</th>
-														<th className="px-4 py-2 text-right font-semibold">
-															Qty
-														</th>
-														<th className="px-4 py-2 text-right font-semibold">
-															Unit
-														</th>
-														<th className="px-4 py-2 text-right font-semibold">
-															Total
-														</th>
-													</tr>
-												</thead>
-												<tbody>
+											<Table>
+												<TableHeader>
+													<TableRow className="hover:bg-transparent">
+														<TableHead>
+															<ColumnHeader title="Description" />
+														</TableHead>
+														<TableHead className="text-right">
+															<ColumnHeader
+																title="Qty"
+																className="w-full justify-end"
+															/>
+														</TableHead>
+														<TableHead className="text-right">
+															<ColumnHeader
+																title="Unit"
+																className="w-full justify-end"
+															/>
+														</TableHead>
+														<TableHead className="text-right">
+															<ColumnHeader
+																title="Total"
+																className="w-full justify-end"
+															/>
+														</TableHead>
+													</TableRow>
+												</TableHeader>
+												<TableBody>
 													{invoiceForPreview.lineItems?.length ? (
 														invoiceForPreview.lineItems.map((item, index) => (
-															<tr
+															<TableRow
 																key={`${item.description}-${index}`}
-																className="border-t"
 															>
-																<td className="px-4 py-2">
-																	{item.description}
-																</td>
-																<td className="px-4 py-2 text-right">
+																<TableCell>{item.description}</TableCell>
+																<TableCell className="text-right">
 																	{item.quantity}
-																</td>
-																<td className="px-4 py-2 text-right">
+																</TableCell>
+																<TableCell className="text-right">
 																	{new Intl.NumberFormat("en-US", {
 																		style: "currency",
 																		currency: "USD",
 																	}).format(item.unitPrice)}
-																</td>
-																<td className="px-4 py-2 text-right">
+																</TableCell>
+																<TableCell className="text-right">
 																	{new Intl.NumberFormat("en-US", {
 																		style: "currency",
 																		currency: "USD",
 																	}).format(item.total)}
-																</td>
-															</tr>
+																</TableCell>
+															</TableRow>
 														))
 													) : (
-														<tr>
-															<td
-																className="px-4 py-6 text-center text-muted-foreground"
+														<TableRow>
+															<TableCell
+																className="py-6 text-center text-muted-foreground"
 																colSpan={4}
 															>
 																No line items found.
-															</td>
-														</tr>
+															</TableCell>
+														</TableRow>
 													)}
-												</tbody>
-											</table>
+												</TableBody>
+											</Table>
 										</div>
 									</div>
 									{invoiceForPreview.claims &&
@@ -367,47 +382,50 @@ export function InvoicePreviewDialog({
 												Reimbursable expenses
 											</p>
 											<div className="overflow-hidden rounded-md border">
-												<table className="w-full text-sm">
-													<thead className="bg-muted/50">
-														<tr>
-															<th className="px-4 py-2 text-left font-semibold">
-																Description
-															</th>
-															<th className="px-4 py-2 text-left font-semibold">
-																Date
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Amount
-															</th>
-															<th className="px-4 py-2 text-center font-semibold">
-																Receipt
-															</th>
-														</tr>
-													</thead>
-													<tbody>
+												<Table>
+													<TableHeader>
+														<TableRow className="hover:bg-transparent">
+															<TableHead>
+																<ColumnHeader title="Description" />
+															</TableHead>
+															<TableHead>
+																<ColumnHeader title="Date" />
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Amount"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+															<TableHead className="text-center">
+																<ColumnHeader
+																	title="Receipt"
+																	className="w-full justify-center"
+																/>
+															</TableHead>
+														</TableRow>
+													</TableHeader>
+													<TableBody>
 														{invoiceForPreview.claims.map((claim, index) => (
-															<tr
+															<TableRow
 																key={`${claim.description}-${index}`}
-																className="border-t"
 															>
-																<td className="px-4 py-2">
-																	{claim.description}
-																</td>
-																<td className="px-4 py-2">
+																<TableCell>{claim.description}</TableCell>
+																<TableCell>
 																	{claim.date
 																		? format(
 																				new Date(claim.date),
 																				"MMM d, yyyy",
 																			)
 																		: "—"}
-																</td>
-																<td className="px-4 py-2 text-right">
+																</TableCell>
+																<TableCell className="text-right">
 																	{new Intl.NumberFormat("en-US", {
 																		style: "currency",
 																		currency: "USD",
 																	}).format(claim.amount)}
-																</td>
-																<td className="px-4 py-2 text-center">
+																</TableCell>
+																<TableCell className="text-center">
 																	{claim.hasReceipt ? (
 																		<Tooltip>
 																			<TooltipTrigger
@@ -443,11 +461,11 @@ export function InvoicePreviewDialog({
 																			</TooltipContent>
 																		</Tooltip>
 																	)}
-																</td>
-															</tr>
+																</TableCell>
+															</TableRow>
 														))}
-													</tbody>
-												</table>
+													</TableBody>
+												</Table>
 											</div>
 										</div>
 									) : null}
