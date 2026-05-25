@@ -422,25 +422,33 @@ export const getStats = query({
 			.withIndex("by_user", (q) => q.eq("userId", args.userId))
 			.collect();
 
-		const totalEarnings = invoices
-			.filter((inv) => inv.status === "paid")
-			.reduce((sum, inv) => sum + inv.total, 0);
+		const sentInvoices = invoices.filter((inv) => inv.status === "sent");
+		const overdueInvoices = invoices.filter((inv) => inv.status === "overdue");
+		const billableInvoices = invoices.filter((inv) => inv.status !== "draft");
 
-		const totalOutstanding = invoices
-			.filter((inv) => inv.status === "sent" || inv.status === "overdue")
-			.reduce((sum, inv) => sum + inv.total, 0);
+		const totalOutstanding = sentInvoices.reduce(
+			(sum, inv) => sum + inv.total,
+			0,
+		);
 
-		const clients = await ctx.db
-			.query("clients")
-			.withIndex("by_user", (q) => q.eq("userId", args.userId))
-			.collect();
+		const totalOverdue = overdueInvoices.reduce(
+			(sum, inv) => sum + inv.total,
+			0,
+		);
+
+		const averageInvoiceValue =
+			billableInvoices.length > 0
+				? billableInvoices.reduce((sum, inv) => sum + inv.total, 0) /
+					billableInvoices.length
+				: 0;
 
 		return {
-			totalEarnings,
 			totalOutstanding,
-			totalInvoices: invoices.length,
-			paidInvoices: invoices.filter((inv) => inv.status === "paid").length,
-			activeClients: clients.length,
+			totalOverdue,
+			averageInvoiceValue,
+			sentInvoices: sentInvoices.length,
+			overdueInvoices: overdueInvoices.length,
+			totalInvoices: billableInvoices.length,
 		};
 	},
 });

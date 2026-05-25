@@ -7,7 +7,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:mock": "convex run migrations/seedMockDashboardData:seedMockDashboardData"
   },
   "dependencies": {
     "@clerk/backend": "^2.19.1",

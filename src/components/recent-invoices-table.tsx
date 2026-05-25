@@ -16,9 +16,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
@@ -50,12 +58,27 @@ type Invoice = {
 	} | null;
 };
 
+const STATUS_LABELS: Record<InvoiceStatus, string> = {
+	draft: "Draft",
+	sent: "Sent",
+	paid: "Paid",
+	overdue: "Overdue",
+};
+
 const STATUS_OPTIONS = [
 	{ value: "draft" as InvoiceStatus, label: "Draft", color: "bg-gray-500" },
 	{ value: "sent" as InvoiceStatus, label: "Sent", color: "bg-blue-500" },
 	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-green-500" },
 	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-red-500" },
 ];
+
+function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
+	return (
+		<span className={cn("invoice-status-badge", `invoice-status-badge--${status}`)}>
+			{STATUS_LABELS[status]}
+		</span>
+	);
+}
 
 const SortableHeader = ({
 	title,
@@ -79,48 +102,44 @@ const SortableHeader = ({
 	);
 };
 
-export function RecentInvoicesTable({ 
+export function RecentInvoicesTable({
 	invoices,
-	isLoading 
-}: { 
+	isLoading,
+	variant = "default",
+}: {
 	invoices?: Invoice[];
 	isLoading?: boolean;
+	variant?: "default" | "dashboard";
 }) {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const [isUpdating, setIsUpdating] = useState(false);
 
-	// Get all invoices sorted by issue date (most recent first)
-	const recentInvoices = useMemo(
-		() => {
-			if (!invoices || invoices.length === 0) return [];
-			return invoices
-				.sort((a, b) => b.issueDate - a.issueDate)
-				.map((invoice) => ({
-					_id: invoice._id as Id<"invoices">,
-					invoiceNumber: invoice.invoiceNumber,
-					status: invoice.status as InvoiceStatus,
-					total: invoice.total,
-					issueDate: invoice.issueDate,
-					dueDate: invoice.dueDate,
-					clientId: invoice.clientId as Id<"clients"> | undefined,
-					clientName: invoice.client?.name ?? "Unknown client",
-					clientEmail: invoice.client?.email ?? undefined,
-					clientContact: invoice.client?.contactPerson ?? undefined,
-				}));
-		},
-		[invoices]
-	);
+	const recentInvoices = useMemo(() => {
+		if (!invoices || invoices.length === 0) return [];
+		return invoices
+			.sort((a, b) => b.issueDate - a.issueDate)
+			.slice(0, variant === "dashboard" ? 5 : undefined)
+			.map((invoice) => ({
+				_id: invoice._id as Id<"invoices">,
+				invoiceNumber: invoice.invoiceNumber,
+				status: invoice.status as InvoiceStatus,
+				total: invoice.total,
+				issueDate: invoice.issueDate,
+				dueDate: invoice.dueDate,
+				clientId: invoice.clientId as Id<"clients"> | undefined,
+				clientName: invoice.client?.name ?? "Unknown client",
+				clientEmail: invoice.client?.email ?? undefined,
+				clientContact: invoice.client?.contactPerson ?? undefined,
+			}));
+	}, [invoices, variant]);
 
 	const handleStatusChange = useCallback(
 		async (invoiceId: Id<"invoices">, newStatus: InvoiceStatus) => {
 			setIsUpdating(true);
 			try {
-				await updateStatus({
-					invoiceId,
-					status: newStatus,
-				});
+				await updateStatus({ invoiceId, status: newStatus });
 				toast({
 					title: "Status updated",
 					description: `Invoice status changed to ${newStatus}.`,
@@ -137,7 +156,7 @@ export function RecentInvoicesTable({
 				setIsUpdating(false);
 			}
 		},
-		[updateStatus, toast]
+		[updateStatus, toast],
 	);
 
 	const columns: ColumnDef<InvoiceRow>[] = useMemo(
@@ -222,13 +241,12 @@ export function RecentInvoicesTable({
 				),
 			},
 		],
-		[isUpdating, handleStatusChange]
+		[isUpdating, handleStatusChange],
 	);
 
-	// Show skeleton while loading - AFTER all hooks are called
 	if (isLoading || invoices === undefined) {
 		return (
-			<div className="-mx-6 px-6 md:mx-0 md:px-0">
+			<div className={variant === "dashboard" ? "" : "-mx-6 px-6 md:mx-0 md:px-0"}>
 				<TableSkeleton columns={5} rows={5} />
 			</div>
 		);
@@ -236,7 +254,7 @@ export function RecentInvoicesTable({
 
 	if (recentInvoices.length === 0) {
 		return (
-			<div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+			<div className="flex h-24 items-center justify-center text-sm text-muted-foreground">
 				No invoices yet.
 			</div>
 		);
@@ -245,6 +263,58 @@ export function RecentInvoicesTable({
 	const handleRowClick = (row: InvoiceRow) => {
 		navigate({ to: "/invoices/$id", params: { id: row._id } });
 	};
+
+	if (variant === "dashboard") {
+		return (
+			<Table>
+				<TableHeader>
+					<TableRow className="hover:bg-transparent">
+						<TableHead className="text-muted-foreground font-medium">
+							Invoice
+						</TableHead>
+						<TableHead className="text-muted-foreground font-medium">
+							Client
+						</TableHead>
+						<TableHead className="text-muted-foreground font-medium">
+							Amount
+						</TableHead>
+						<TableHead className="text-muted-foreground font-medium">
+							Status
+						</TableHead>
+						<TableHead className="text-muted-foreground font-medium">
+							Date
+						</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{recentInvoices.map((invoice) => (
+						<TableRow
+							key={invoice._id}
+							className="cursor-pointer"
+							onClick={() => handleRowClick(invoice)}
+						>
+							<TableCell className="font-medium py-4">
+								#{invoice.invoiceNumber}
+							</TableCell>
+							<TableCell className="py-4">{invoice.clientName}</TableCell>
+							<TableCell className="py-4 font-medium">
+								{new Intl.NumberFormat("en-US", {
+									style: "currency",
+									currency: "USD",
+								}).format(invoice.total)}
+							</TableCell>
+							<TableCell className="py-4">
+								<InvoiceStatusBadge status={invoice.status} />
+							</TableCell>
+							<TableCell className="py-4 text-muted-foreground">
+								{format(invoice.issueDate, "MMM d, yyyy")}
+							</TableCell>
+						</TableRow>
+					))}
+				</TableBody>
+			</Table>
+		);
+	}
 
 	return (
 		<div className="-mx-6 px-6 md:mx-0 md:px-0">

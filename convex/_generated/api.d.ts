@@ -11,6 +11,7 @@
 import type * as clients from "../clients.js";
 import type * as files from "../files.js";
 import type * as invoices from "../invoices.js";
+import type * as migrations_seedMockDashboardData from "../migrations/seedMockDashboardData.js";
 import type * as settings from "../settings.js";
 import type * as users from "../users.js";
 
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   clients: typeof clients;
   files: typeof files;
   invoices: typeof invoices;
+  "migrations/seedMockDashboardData": typeof migrations_seedMockDashboardData;
   settings: typeof settings;
   users: typeof users;
 }>;

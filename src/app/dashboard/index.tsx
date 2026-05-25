@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useMemo } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -157,13 +157,67 @@ export const Route = createFileRoute("/dashboard/")({
 	component: DashboardPage,
 });
 
+type DashboardStats = {
+	totalOutstanding: number;
+	totalOverdue: number;
+	averageInvoiceValue: number;
+	sentInvoices: number;
+	overdueInvoices: number;
+	totalInvoices: number;
+};
+
+type InvoiceForStats = {
+	status: string;
+	total: number;
+};
+
+function computeStatsFromInvoices(
+	invoices: InvoiceForStats[],
+): DashboardStats {
+	const sentInvoices = invoices.filter((inv) => inv.status === "sent");
+	const overdueInvoices = invoices.filter((inv) => inv.status === "overdue");
+	const billableInvoices = invoices.filter((inv) => inv.status !== "draft");
+
+	const totalOutstanding = sentInvoices.reduce(
+		(sum, inv) => sum + inv.total,
+		0,
+	);
+	const totalOverdue = overdueInvoices.reduce(
+		(sum, inv) => sum + inv.total,
+		0,
+	);
+	const averageInvoiceValue =
+		billableInvoices.length > 0
+			? billableInvoices.reduce((sum, inv) => sum + inv.total, 0) /
+				billableInvoices.length
+			: 0;
+
+	return {
+		totalOutstanding,
+		totalOverdue,
+		averageInvoiceValue,
+		sentInvoices: sentInvoices.length,
+		overdueInvoices: overdueInvoices.length,
+		totalInvoices: billableInvoices.length,
+	};
+}
+
+function isDashboardStats(stats: unknown): stats is DashboardStats {
+	return (
+		typeof stats === "object" &&
+		stats !== null &&
+		typeof (stats as DashboardStats).totalOutstanding === "number" &&
+		typeof (stats as DashboardStats).totalOverdue === "number" &&
+		typeof (stats as DashboardStats).averageInvoiceValue === "number"
+	);
+}
+
 function DashboardPage() {
 	// Try to get pre-fetched data from loader (for SSR)
 	const loaderData = Route.useLoaderData();
 
 	// Get data from context - this persists across navigation and uses Convex cache
 	const {
-		currentUser: convexUser,
 		invoices: contextInvoices,
 		stats: contextStats,
 	} = useAppData();
@@ -172,125 +226,129 @@ function DashboardPage() {
 	// Context data persists across navigation and prevents loading flash
 	const stats = loaderData?.stats ?? contextStats;
 	const invoices = loaderData?.invoices ?? contextInvoices;
-	const convexUserFromLoader = loaderData?.convexUser;
-	const finalConvexUser = convexUserFromLoader ?? convexUser;
-	const finalInvoices = invoices;
-	const finalStats = stats;
-	const invoiceList = finalInvoices ?? [];
+	const invoiceList = invoices ?? [];
+
+	const displayStats = useMemo(() => {
+		if (invoices === undefined) return null;
+		if (isDashboardStats(stats)) return stats;
+		return computeStatsFromInvoices(invoiceList);
+	}, [stats, invoices, invoiceList]);
 
 	return (
 		<AppSidebar>
-			<div className="px-4 py-4 sm:px-8 sm:py-8">
-				<h1 className="mb-8 text-3xl font-bold sm:text-4xl">Dashboard</h1>
+			<div className="px-4 py-6 sm:px-8 sm:py-8">
+				<h1 className="mb-6 text-2xl font-bold sm:mb-8 sm:text-3xl">
+					Dashboard
+				</h1>
 
-				<div className="space-y-8">
-					{finalStats ? (
-						<div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-xs font-medium sm:text-sm">
-										Total Earnings
-									</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<div className="text-xl font-bold sm:text-2xl">
-										${finalStats.totalEarnings.toFixed(2)}
-									</div>
-									<p className="text-xs text-muted-foreground">
-										From {finalStats.paidInvoices} paid invoices
-									</p>
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-xs font-medium sm:text-sm">
+				<div className="space-y-6">
+					{displayStats ? (
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+							<Card className="dashboard-stat-card rounded-none">
+								<CardHeader className="pb-0">
+									<CardTitle className="text-sm font-medium text-muted-foreground">
 										Outstanding
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-xl font-bold sm:text-2xl">
-										${finalStats.totalOutstanding.toFixed(2)}
+									<div className="text-2xl font-bold">
+										${displayStats.totalOutstanding.toFixed(2)}
 									</div>
-									<p className="text-xs text-muted-foreground">
-										Awaiting payment
+									<p className="mt-1 text-xs text-muted-foreground">
+										{displayStats.sentInvoices === 1
+											? "1 sent invoice"
+											: `${displayStats.sentInvoices} sent invoices`}
 									</p>
 								</CardContent>
 							</Card>
 
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-xs font-medium sm:text-sm">
-										Total Invoices
+							<Card className="dashboard-stat-card rounded-none">
+								<CardHeader className="pb-0">
+									<CardTitle className="text-sm font-medium text-muted-foreground">
+										Overdue
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-xl font-bold sm:text-2xl">
-										{finalStats.totalInvoices}
+									<div className="text-2xl font-bold">
+										${displayStats.totalOverdue.toFixed(2)}
 									</div>
-									<p className="text-xs text-muted-foreground">All time</p>
+									<p className="mt-1 text-xs text-muted-foreground">
+										{displayStats.overdueInvoices === 1
+											? "1 overdue invoice"
+											: `${displayStats.overdueInvoices} overdue invoices`}
+									</p>
 								</CardContent>
 							</Card>
 
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-xs font-medium sm:text-sm">
-										Active Clients
+							<Card className="dashboard-stat-card rounded-none">
+								<CardHeader className="pb-0">
+									<CardTitle className="text-sm font-medium text-muted-foreground">
+										Average Invoice Value
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-xl font-bold sm:text-2xl">
-										{finalStats.activeClients}
+									<div className="text-2xl font-bold">
+										${displayStats.averageInvoiceValue.toFixed(2)}
 									</div>
-									<p className="text-xs text-muted-foreground">Total clients</p>
+									<p className="mt-1 text-xs text-muted-foreground">
+										{displayStats.totalInvoices === 1
+											? "Based on 1 invoice"
+											: `Based on ${displayStats.totalInvoices} invoices`}
+									</p>
 								</CardContent>
 							</Card>
 						</div>
 					) : (
-						<div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<Skeleton className="h-4 w-24" />
-								</CardHeader>
-								<CardContent>
-									<Skeleton className="h-8 w-32 mb-2" />
-									<Skeleton className="h-3 w-40" />
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<Skeleton className="h-4 w-20" />
-								</CardHeader>
-								<CardContent>
-									<Skeleton className="h-8 w-32 mb-2" />
-									<Skeleton className="h-3 w-32" />
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<Skeleton className="h-4 w-24" />
-								</CardHeader>
-								<CardContent>
-									<Skeleton className="h-8 w-20 mb-2" />
-									<Skeleton className="h-3 w-24" />
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<Skeleton className="h-4 w-28" />
-								</CardHeader>
-								<CardContent>
-									<Skeleton className="h-8 w-16 mb-2" />
-									<Skeleton className="h-3 w-28" />
-								</CardContent>
-							</Card>
+						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+							{Array.from({ length: 3 }).map((_, i) => (
+								<Card key={i} className="dashboard-stat-card rounded-none">
+									<CardHeader className="pb-0">
+										<Skeleton className="h-4 w-24" />
+									</CardHeader>
+									<CardContent>
+										<Skeleton className="mb-2 h-8 w-28" />
+										<Skeleton className="h-3 w-32" />
+									</CardContent>
+								</Card>
+							))}
 						</div>
 					)}
 
-					<Card>
+					<Suspense
+						fallback={
+							<div className="grid gap-4 lg:grid-cols-3">
+								<Card className="dashboard-card rounded-none lg:col-span-2">
+									<CardHeader>
+										<CardTitle>Revenue (last 8 weeks)</CardTitle>
+										<p className="text-sm text-muted-foreground">
+											Total and paid revenue by issue date
+										</p>
+									</CardHeader>
+									<CardContent className="h-[240px] md:h-[280px]">
+										<Skeleton className="h-full w-full" />
+									</CardContent>
+								</Card>
+								<Card className="dashboard-card rounded-none">
+									<CardHeader>
+										<CardTitle>Invoice status mix</CardTitle>
+										<p className="text-sm text-muted-foreground">
+											All invoices grouped by status
+										</p>
+									</CardHeader>
+									<CardContent className="flex h-[240px] items-center justify-center md:h-[280px]">
+										<Skeleton className="h-40 w-40 rounded-full" />
+									</CardContent>
+								</Card>
+							</div>
+						}
+					>
+						<DashboardCharts
+							invoices={invoiceList}
+							isLoading={invoices === undefined}
+						/>
+					</Suspense>
+
+					<Card className="dashboard-card rounded-none">
 						<CardHeader>
 							<CardTitle>Recent invoices</CardTitle>
 							<p className="text-sm text-muted-foreground">
@@ -300,70 +358,11 @@ function DashboardPage() {
 						<CardContent>
 							<RecentInvoicesTable
 								invoices={invoiceList}
-								isLoading={finalInvoices === undefined}
+								isLoading={invoices === undefined}
+								variant="dashboard"
 							/>
 						</CardContent>
 					</Card>
-
-					<Suspense
-						fallback={
-							<div className="grid gap-4 lg:grid-cols-3">
-								<Card className="lg:col-span-2">
-									<CardHeader>
-										<CardTitle>Revenue (last 8 weeks)</CardTitle>
-										<p className="text-sm text-muted-foreground">
-											Total and paid revenue by issue date
-										</p>
-									</CardHeader>
-									<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
-										<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full flex items-end justify-between gap-1 pb-4">
-											{Array.from({ length: 8 }).map((_, i) => {
-												// Use index-based heights for consistent rendering
-												const heights = [45, 52, 38, 60, 48, 55, 42, 58];
-												const paidHeights = [30, 35, 25, 40, 32, 38, 28, 42];
-												return (
-													<div
-														key={i}
-														className="flex flex-1 flex-col items-center gap-1"
-													>
-														<div className="flex w-full flex-col gap-1">
-															<Skeleton
-																className="w-full"
-																style={{ height: `${heights[i] || 50}%` }}
-															/>
-															<Skeleton
-																className="w-full"
-																style={{ height: `${paidHeights[i] || 35}%` }}
-															/>
-														</div>
-														<Skeleton className="h-3 w-8" />
-													</div>
-												);
-											})}
-										</div>
-									</CardContent>
-								</Card>
-								<Card>
-									<CardHeader>
-										<CardTitle>Invoice status mix</CardTitle>
-										<p className="text-sm text-muted-foreground">
-											All invoices grouped by status
-										</p>
-									</CardHeader>
-									<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
-										<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full flex items-center justify-center">
-											<Skeleton className="h-32 w-32 sm:h-48 sm:w-48 rounded-full" />
-										</div>
-									</CardContent>
-								</Card>
-							</div>
-						}
-					>
-						<DashboardCharts
-							invoices={invoiceList}
-							isLoading={finalInvoices === undefined}
-						/>
-					</Suspense>
 				</div>
 			</div>
 		</AppSidebar>

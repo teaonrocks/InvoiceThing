@@ -9,13 +9,12 @@ import {
 	PieChart,
 	Pie,
 	Cell,
+	Legend,
 } from "recharts";
 import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	ChartLegend,
-	ChartLegendContent,
 	type ChartConfig,
 } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,18 +30,68 @@ const STATUS_LABELS: Record<InvoiceStatus, string> = {
 	overdue: "Overdue",
 };
 
-const STATUS_COLORS: Record<InvoiceStatus, string> = {
-	draft: "var(--chart-1)",
-	sent: "var(--chart-2)",
-	paid: "var(--chart-3)",
-	overdue: "var(--chart-4)",
-};
-
 type Invoice = Doc<"invoices"> & { client?: Doc<"clients"> | null };
 
 interface DashboardChartsProps {
 	invoices: Invoice[];
 	isLoading?: boolean;
+}
+
+const PAID_COLOR = "hsl(142 71% 45%)";
+const UNPAID_COLOR = "#e5e5e5";
+
+const STATUS_CHART_COLORS: Record<InvoiceStatus, string> = {
+	paid: "hsl(142 71% 45%)",
+	sent: "hsl(221 83% 53%)",
+	draft: "hsl(0 0% 70%)",
+	overdue: "#e63946",
+};
+
+function ChartSkeleton() {
+	return (
+		<div className="grid gap-4 lg:grid-cols-3">
+			<Card className="dashboard-card rounded-none lg:col-span-2">
+				<CardHeader>
+					<CardTitle>Revenue (last 8 weeks)</CardTitle>
+					<p className="text-sm text-muted-foreground">
+						Total and paid revenue by issue date
+					</p>
+				</CardHeader>
+				<CardContent className="h-[240px] md:h-[280px]">
+					<div className="flex h-full items-end justify-between gap-2 pb-2">
+						{Array.from({ length: 8 }).map((_, i) => {
+							const heights = [45, 52, 38, 60, 48, 55, 42, 58];
+							return (
+								<div
+									key={i}
+									className="flex flex-1 flex-col items-center gap-1"
+								>
+									<div className="flex w-full flex-col justify-end">
+										<Skeleton
+											className="w-full rounded-t-sm"
+											style={{ height: `${(heights[i] || 50) * 2}px` }}
+										/>
+									</div>
+									<Skeleton className="h-3 w-8" />
+								</div>
+							);
+						})}
+					</div>
+				</CardContent>
+			</Card>
+			<Card className="dashboard-card rounded-none">
+				<CardHeader>
+					<CardTitle>Invoice status mix</CardTitle>
+					<p className="text-sm text-muted-foreground">
+						All invoices grouped by status
+					</p>
+				</CardHeader>
+				<CardContent className="flex h-[240px] items-center justify-center md:h-[280px]">
+					<Skeleton className="h-40 w-40 rounded-full" />
+				</CardContent>
+			</Card>
+		</div>
+	);
 }
 
 export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
@@ -74,7 +123,6 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 						: Number(invoice.total);
 
 				if (issuedAt >= start.getTime() && issuedAt < end.getTime()) {
-					// Exclude drafts from total revenue
 					if (status !== "draft") {
 						totalRevenue += total;
 						if (status === "paid") {
@@ -84,10 +132,12 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 				}
 			});
 
+			const unpaid = Math.max(0, totalRevenue - paidRevenue);
+
 			return {
 				week: format(start, "MMM dd"),
 				paid: Number(paidRevenue.toFixed(2)),
-				total: Number(totalRevenue.toFixed(2)),
+				unpaid: Number(unpaid.toFixed(2)),
 			};
 		});
 	}, [invoiceList, invoices]);
@@ -113,162 +163,96 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 				status,
 				label: STATUS_LABELS[status],
 				count: counts[status],
-				color: STATUS_COLORS[status],
+				fill: STATUS_CHART_COLORS[status],
 			}))
 			.filter((item) => item.count > 0);
 	}, [invoiceList, invoices]);
 
-	// Chart configurations
 	const revenueChartConfig = {
-		total: {
-			label: "Total",
-			color: "hsl(221 83% 53%)", // Blue (blue-500)
-		},
-		paid: {
-			label: "Paid",
-			color: "hsl(142 71% 45%)", // Green (green-500)
-		},
+		paid: { label: "Paid amount", color: PAID_COLOR },
+		unpaid: { label: "Outstanding", color: UNPAID_COLOR },
 	} satisfies ChartConfig;
 
-	const statusChartConfig = {
-		draft: {
-			label: "Draft",
-			color: "var(--muted-foreground)", // Gray
-		},
-		sent: {
-			label: "Sent",
-			color: "hsl(221 83% 53%)", // Blue (blue-500)
-		},
-		paid: {
-			label: "Paid",
-			color: "hsl(142 71% 45%)", // Green (green-500)
-		},
-		overdue: {
-			label: "Overdue",
-			color: "hsl(0 84% 60%)", // Red (red-500)
-		},
-	} satisfies ChartConfig;
-
-	// Show skeleton while loading - AFTER all hooks are called
 	if (isLoading) {
-		return (
-			<div className="grid gap-4 lg:grid-cols-3">
-				<Card className="lg:col-span-2">
-					<CardHeader>
-						<CardTitle>Revenue (last 8 weeks)</CardTitle>
-						<p className="text-sm text-muted-foreground">
-							Total and paid revenue by issue date
-						</p>
-					</CardHeader>
-					<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
-						<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full flex items-end justify-between gap-1 pb-4">
-							{Array.from({ length: 8 }).map((_, i) => {
-								const heights = [45, 52, 38, 60, 48, 55, 42, 58];
-								const paidHeights = [30, 35, 25, 40, 32, 38, 28, 42];
-								return (
-									<div
-										key={i}
-										className="flex flex-1 flex-col items-center gap-1"
-									>
-										<div className="flex w-full flex-col gap-1">
-											<Skeleton
-												className="w-full"
-												style={{ height: `${heights[i] || 50}%` }}
-											/>
-											<Skeleton
-												className="w-full"
-												style={{ height: `${paidHeights[i] || 35}%` }}
-											/>
-										</div>
-										<Skeleton className="h-3 w-8" />
-									</div>
-								);
-							})}
-						</div>
-					</CardContent>
-				</Card>
-				<Card>
-					<CardHeader>
-						<CardTitle>Invoice status mix</CardTitle>
-						<p className="text-sm text-muted-foreground">
-							All invoices grouped by status
-						</p>
-					</CardHeader>
-					<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
-						<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full flex items-center justify-center">
-							<Skeleton className="h-32 w-32 sm:h-48 sm:w-48 rounded-full" />
-						</div>
-					</CardContent>
-				</Card>
-			</div>
-		);
+		return <ChartSkeleton />;
 	}
 
 	return (
 		<div className="grid gap-4 lg:grid-cols-3">
-			<Card className="lg:col-span-2">
+			<Card className="dashboard-card rounded-none lg:col-span-2">
 				<CardHeader>
 					<CardTitle>Revenue (last 8 weeks)</CardTitle>
 					<p className="text-sm text-muted-foreground">
 						Total and paid revenue by issue date
 					</p>
 				</CardHeader>
-				<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
-					<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full w-full max-w-full overflow-hidden">
+				<CardContent className="h-[240px] md:h-[280px]">
+					<div className="h-full w-full">
 						{invoiceList.length ? (
 							<ChartContainer
 								config={revenueChartConfig}
-								className="h-full w-full min-w-0 max-w-full"
+								className="h-full w-full"
 							>
 								<BarChart
-									accessibilityLayer
 									data={weeklyRevenueData}
-									margin={{ top: 8, right: 0, left: 0, bottom: 32 }}
-									style={{ width: "100%", height: "100%" }}
+									margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
 								>
-									<CartesianGrid vertical={false} />
+									<CartesianGrid
+										vertical={false}
+										stroke="hsl(0 0% 92%)"
+										strokeDasharray="0"
+									/>
 									<XAxis
 										dataKey="week"
 										tickLine={false}
-										tickMargin={6}
 										axisLine={false}
-										tickFormatter={(value) => value.slice(0, 3)}
-										style={{ fontSize: "10px" }}
-										className="sm:text-xs"
+										tickMargin={10}
+										tick={{ fontSize: 12, fill: "hsl(0 0% 45%)" }}
 									/>
 									<YAxis
 										tickLine={false}
 										axisLine={false}
-										tickMargin={4}
+										tickMargin={8}
+										tick={{ fontSize: 12, fill: "hsl(0 0% 45%)" }}
 										tickFormatter={(value) => `$${value}`}
-										style={{ fontSize: "10px" }}
-										className="sm:text-xs"
-										width={35}
+										width={48}
 									/>
 									<ChartTooltip
 										content={
 											<ChartTooltipContent
-												formatter={(value) =>
-													`$${Number(value).toLocaleString(undefined, {
-														maximumFractionDigits: 2,
-													})}`
-												}
+												labelFormatter={(label) => label}
+												nameKey="dataKey"
+												formatter={(value, _name, item) => (
+													<div className="flex w-full items-center justify-between gap-4">
+														<span className="text-muted-foreground">
+															{revenueChartConfig[
+																item.dataKey as keyof typeof revenueChartConfig
+															]?.label ?? item.dataKey}
+														</span>
+														<span className="font-mono font-medium tabular-nums text-foreground">
+															$
+															{Number(value).toLocaleString(undefined, {
+																maximumFractionDigits: 2,
+															})}
+														</span>
+													</div>
+												)}
 											/>
 										}
 									/>
-									<ChartLegend
-										content={<ChartLegendContent nameKey="dataKey" />}
-										className="-translate-y-1 text-xs"
-									/>
-									<Bar
-										dataKey="total"
-										fill="var(--color-total)"
-										radius={[4, 4, 0, 0]}
-									/>
 									<Bar
 										dataKey="paid"
-										fill="var(--color-paid)"
+										stackId="revenue"
+										fill={PAID_COLOR}
+										radius={[0, 0, 0, 0]}
+										maxBarSize={48}
+									/>
+									<Bar
+										dataKey="unpaid"
+										stackId="revenue"
+										fill={UNPAID_COLOR}
 										radius={[4, 4, 0, 0]}
+										maxBarSize={48}
 									/>
 								</BarChart>
 							</ChartContainer>
@@ -281,44 +265,49 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 				</CardContent>
 			</Card>
 
-			<Card>
+			<Card className="dashboard-card rounded-none">
 				<CardHeader>
 					<CardTitle>Invoice status mix</CardTitle>
 					<p className="text-sm text-muted-foreground">
 						All invoices grouped by status
 					</p>
 				</CardHeader>
-				<CardContent className="h-[200px] sm:h-[240px] md:h-[320px] overflow-hidden">
-					<div className="-mx-6 px-6 md:mx-0 md:px-0 h-full w-full max-w-full overflow-hidden">
+				<CardContent className="h-[240px] md:h-[280px]">
+					<div className="h-full w-full">
 						{invoiceList.length ? (
 							<ChartContainer
-								config={statusChartConfig}
-								className="h-full w-full min-w-0 max-w-full"
+								config={{
+									paid: { label: "Paid", color: STATUS_CHART_COLORS.paid },
+									sent: { label: "Sent", color: STATUS_CHART_COLORS.sent },
+									draft: { label: "Draft", color: STATUS_CHART_COLORS.draft },
+									overdue: {
+										label: "Overdue",
+										color: STATUS_CHART_COLORS.overdue,
+									},
+								}}
+								className="h-full w-full"
 							>
 								<PieChart>
 									<ChartTooltip content={<ChartTooltipContent hideLabel />} />
-									<ChartLegend
-										content={<ChartLegendContent nameKey="status" />}
-										className="-translate-y-1 text-xs"
-									/>
 									<Pie
 										data={statusData}
 										dataKey="count"
-										nameKey="status"
-										innerRadius={25}
-										outerRadius={50}
-										paddingAngle={statusData.length > 1 ? 4 : 0}
-										startAngle={0}
-										endAngle={360}
-										label
+										nameKey="label"
+										cx="50%"
+										cy="45%"
+										outerRadius={72}
+										paddingAngle={0}
 									>
 										{statusData.map((entry) => (
-											<Cell
-												key={entry.status}
-												fill={`var(--color-${entry.status})`}
-											/>
+											<Cell key={entry.status} fill={entry.fill} />
 										))}
 									</Pie>
+									<Legend
+										verticalAlign="bottom"
+										iconType="circle"
+										iconSize={8}
+										wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+									/>
 								</PieChart>
 							</ChartContainer>
 						) : (
