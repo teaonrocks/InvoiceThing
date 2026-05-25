@@ -505,18 +505,33 @@ export function InvoicePreviewDialog({
 									) : null}
 								</div>
 								<DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-									<Button variant="outline" size="sm" onClick={handleClose}>
-										Close
-									</Button>
-									<div className="flex flex-wrap items-center gap-2">
-										<Button variant="outline" size="sm" asChild>
+									<div className="flex w-full gap-2 sm:order-2 sm:w-auto">
+										<Button
+											size="sm"
+											className="h-9 min-w-0 flex-1 px-2 sm:flex-none"
+											asChild
+										>
+											<Link
+												to="/invoices/$id"
+												params={{ id: invoiceForPreview._id }}
+												onClick={handleClose}
+											>
+												<span className="truncate">Open full invoice</span>
+											</Link>
+										</Button>
+										<Button
+											variant="outline"
+											size="icon"
+											className="size-9 shrink-0"
+											asChild
+										>
 											<Link
 												to="/invoices/$id/edit"
 												params={{ id: invoiceForPreview._id }}
 												onClick={handleClose}
 											>
-												<Edit className="h-4 w-4 mr-2" />
-												Edit
+												<Edit className="h-4 w-4" />
+												<span className="sr-only">Edit</span>
 											</Link>
 										</Button>
 										{downloadInvoice ? (
@@ -525,18 +540,20 @@ export function InvoicePreviewDialog({
 												paymentInstructions={
 													settings?.paymentInstructions
 												}
+												compactLabel
+												size="icon"
+												className="size-9 shrink-0"
 											/>
 										) : null}
-										<Button size="sm" asChild>
-											<Link
-												to="/invoices/$id"
-												params={{ id: invoiceForPreview._id }}
-												onClick={handleClose}
-											>
-												Open full invoice
-											</Link>
-										</Button>
 									</div>
+									<Button
+										variant="outline"
+										size="sm"
+										className="w-full sm:order-1 sm:w-auto"
+										onClick={handleClose}
+									>
+										Close
+									</Button>
 								</DialogFooter>
 							</>
 						) : (

@@ -386,15 +386,29 @@ export function InvoiceLineItemsEditor({
 							<Label htmlFor={`desc-${item.id}`}>
 								Description {index === 0 && "*"}
 							</Label>
-							<Input
-								id={`desc-${item.id}`}
-								placeholder="Service or product description"
-								value={item.description}
-								onChange={(e) =>
-									onUpdate(item.id, "description", e.target.value)
-								}
-								required
-							/>
+							<div className="flex items-center gap-2 sm:block">
+								<Input
+									id={`desc-${item.id}`}
+									className="min-w-0 flex-1"
+									placeholder="Service or product description"
+									value={item.description}
+									onChange={(e) =>
+										onUpdate(item.id, "description", e.target.value)
+									}
+									required
+								/>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon"
+									className="shrink-0 sm:hidden"
+									onClick={() => onRemove(item.id)}
+									disabled={lineItems.length === 1}
+									aria-label="Remove line item"
+								>
+									<Trash2 className="h-4 w-4 text-destructive" />
+								</Button>
+							</div>
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor={`qty-${item.id}`}>Qty</Label>
@@ -436,7 +450,7 @@ export function InvoiceLineItemsEditor({
 								{formatInvoiceCurrency(item.quantity * item.rate)}
 							</div>
 						</div>
-						<div className="flex justify-end sm:justify-center">
+						<div className="hidden sm:flex sm:justify-center">
 							<Button
 								type="button"
 								variant="ghost"
@@ -501,14 +515,27 @@ export function InvoiceClaimsEditor({
 							<div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem_6rem_5rem_auto] sm:items-end sm:gap-3">
 								<div className="space-y-2">
 									<Label htmlFor={`claim-desc-${claim.id}`}>Description</Label>
-									<Input
-										id={`claim-desc-${claim.id}`}
-										placeholder="Travel expenses, materials, etc."
-										value={claim.description}
-										onChange={(e) =>
-											onUpdate(claim.id, "description", e.target.value)
-										}
-									/>
+									<div className="flex items-center gap-2 sm:block">
+										<Input
+											id={`claim-desc-${claim.id}`}
+											className="min-w-0 flex-1"
+											placeholder="Travel expenses, materials, etc."
+											value={claim.description}
+											onChange={(e) =>
+												onUpdate(claim.id, "description", e.target.value)
+											}
+										/>
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon"
+											className="shrink-0 sm:hidden"
+											onClick={() => onRemove(claim.id)}
+											aria-label="Remove expense"
+										>
+											<Trash2 className="h-4 w-4 text-destructive" />
+										</Button>
+									</div>
 								</div>
 								<div className="space-y-2">
 									<Label htmlFor={`claim-date-${claim.id}`}>Date</Label>
@@ -566,7 +593,7 @@ export function InvoiceClaimsEditor({
 										{formatInvoiceCurrency(claim.amount)}
 									</div>
 								</div>
-								<div className="flex justify-end sm:justify-center">
+								<div className="hidden sm:flex sm:justify-center">
 									<Button
 										type="button"
 										variant="ghost"
