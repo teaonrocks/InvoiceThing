@@ -113,7 +113,7 @@ function SidebarNav() {
 
 			<SidebarSeparator />
 
-			<SidebarFooter className="p-3 group-data-[collapsible=icon]:p-2">
+			<SidebarFooter className="shrink-0 p-3 group-data-[collapsible=icon]:p-2">
 				<div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
 					<UserButton afterSignOutUrl="/" />
 					<div className="group-data-[collapsible=icon]:hidden">

@@ -225,6 +225,11 @@
 	background-size: 60px 60px;
 }
 
+/* Clerk UserButton menu is portaled outside Radix sheets/dialogs (z-50). */
+[class*="cl-userButtonPopover"] {
+	z-index: 200 !important;
+}
+
 @keyframes loading-line {
 	0% {
 		transform: translateX(-100%);

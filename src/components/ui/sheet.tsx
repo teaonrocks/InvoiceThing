@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { isClerkPortalTarget } from "@/lib/clerk-portal"
 
 const Sheet = SheetPrimitive.Root
 
@@ -56,12 +57,35 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
+>(
+  (
+    {
+      side = "right",
+      className,
+      children,
+      onInteractOutside,
+      onPointerDownOutside,
+      ...props
+    },
+    ref
+  ) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), className)}
+      onInteractOutside={(event) => {
+        if (isClerkPortalTarget(event.target)) {
+          event.preventDefault()
+        }
+        onInteractOutside?.(event)
+      }}
+      onPointerDownOutside={(event) => {
+        if (isClerkPortalTarget(event.target)) {
+          event.preventDefault()
+        }
+        onPointerDownOutside?.(event)
+      }}
       {...props}
     >
       <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
@@ -71,7 +95,8 @@ const SheetContent = React.forwardRef<
       {children}
     </SheetPrimitive.Content>
   </SheetPortal>
-))
+  )
+)
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({

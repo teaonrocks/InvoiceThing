@@ -19,10 +19,9 @@ import {
 	Plus,
 	Trash2,
 	CalendarIcon,
-	Upload,
 	X,
-	Image as ImageIcon,
 } from "lucide-react";
+import { ReceiptImagePicker } from "@/components/receipt-image-picker";
 import { cn } from "@/lib/utils";
 import type { Doc } from "@/../convex/_generated/dataModel";
 import {
@@ -581,67 +580,16 @@ export function InvoiceClaimsEditor({
 							</div>
 
 							<div className="border-t border-border pt-4">
-								<Label
-									htmlFor={`claim-image-${claim.id}`}
-									className={cn(
-										"block cursor-pointer",
-										uploadingClaimIds.has(claim.id) &&
-											"pointer-events-none opacity-50",
-									)}
-								>
-									<div className="flex min-h-[88px] w-full flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-muted/20 px-4 py-4 transition-colors hover:border-brand hover:bg-muted/40 sm:min-h-0 sm:flex-row sm:justify-start sm:border sm:border-solid sm:bg-transparent sm:px-3 sm:py-2">
-										{uploadingClaimIds.has(claim.id) ? (
-											<>
-												<Spinner className="h-5 w-5" />
-												<span className="text-sm">Uploading…</span>
-											</>
-										) : claim.imageStorageId ? (
-											<>
-												<ImageIcon className="h-5 w-5 text-brand" />
-												<span className="text-sm font-medium">
-													Receipt attached — tap to change
-												</span>
-											</>
-										) : (
-											<>
-												<Upload className="h-5 w-5 text-brand" />
-												<span className="text-sm font-medium">
-													Upload receipt photo
-												</span>
-												<span className="text-xs text-muted-foreground sm:hidden">
-													Camera or gallery
-												</span>
-											</>
-										)}
-									</div>
-									<input
-										id={`claim-image-${claim.id}`}
-										type="file"
-										accept="image/*,.heic,.heif"
-										capture="environment"
-										className="hidden"
-										disabled={uploadingClaimIds.has(claim.id)}
-										onChange={(e) => {
-											const file = e.target.files?.[0];
-											if (file) onImageUpload(claim.id, file);
-											e.target.value = "";
-										}}
-									/>
-								</Label>
-
-								{claim.imageStorageId &&
-									!uploadingClaimIds.has(claim.id) && (
-										<Button
-											type="button"
-											variant="ghost"
-											size="sm"
-											className="mt-2 w-full rounded-none sm:w-auto"
-											onClick={() => onImageRemove(claim.id)}
-										>
-											<X className="h-4 w-4 mr-1" />
-											Remove receipt
-										</Button>
-									)}
+								<Label className="mb-2 block">Receipt</Label>
+								<ReceiptImagePicker
+									idPrefix={`claim-image-${claim.id}`}
+									compact
+									isUploading={uploadingClaimIds.has(claim.id)}
+									hasImage={Boolean(claim.imageStorageId)}
+									disabled={uploadingClaimIds.has(claim.id)}
+									onFileSelect={(file) => onImageUpload(claim.id, file)}
+									onRemove={() => onImageRemove(claim.id)}
+								/>
 							</div>
 						</div>
 					))}

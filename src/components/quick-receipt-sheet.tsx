@@ -31,7 +31,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useReceiptUpload } from "@/hooks/use-receipt-upload";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Camera, Check, Upload } from "lucide-react";
+import { CalendarIcon, Upload } from "lucide-react";
+import { ReceiptImagePicker } from "@/components/receipt-image-picker";
 
 type InvoiceOption = {
 	_id: Id<"invoices">;
@@ -197,63 +198,17 @@ export function QuickReceiptSheet({
 
 					<div className="space-y-2">
 						<Label>Receipt photo</Label>
-						<label
-							htmlFor="quick-receipt-file"
-							className={cn(
-								"flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-muted/20 px-4 py-6 transition-colors hover:border-brand hover:bg-muted/40",
-								busy && "pointer-events-none opacity-50",
-							)}
-						>
-							{isUploading ? (
-								<>
-									<Spinner className="h-5 w-5" />
-									<span className="text-sm text-muted-foreground">
-										Uploading…
-									</span>
-								</>
-							) : imageStorageId ? (
-								<>
-									<Check className="h-5 w-5 text-brand" />
-									<span className="text-sm font-medium">Receipt attached</span>
-									<span className="text-xs text-muted-foreground">
-										Tap to replace
-									</span>
-								</>
-							) : (
-								<>
-									<Camera className="h-6 w-6 text-brand" />
-									<span className="text-sm font-medium">Take or choose photo</span>
-									<span className="text-xs text-muted-foreground">
-										JPEG, PNG, or HEIC
-									</span>
-								</>
-							)}
-						</label>
-						<input
-							id="quick-receipt-file"
-							type="file"
-							accept="image/*,.heic,.heif"
-							capture="environment"
-							className="hidden"
+						<ReceiptImagePicker
+							idPrefix="quick-receipt"
+							isUploading={isUploading}
+							hasImage={Boolean(imageStorageId)}
 							disabled={busy}
-							onChange={(e) => {
-								const file = e.target.files?.[0];
-								void handleFileChange(file);
-								e.target.value = "";
-							}}
+							onFileSelect={(file) => void handleFileChange(file)}
+							onRemove={() => setImageStorageId(undefined)}
 						/>
-						{imageStorageId ? (
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								className="h-8 px-0 text-muted-foreground"
-								onClick={() => setImageStorageId(undefined)}
-								disabled={busy}
-							>
-								Remove photo
-							</Button>
-						) : null}
+						<p className="text-xs text-muted-foreground">
+							JPEG, PNG, or HEIC
+						</p>
 					</div>
 
 					<div className="space-y-2">
