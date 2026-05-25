@@ -213,7 +213,11 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 										tickLine={false}
 										axisLine={false}
 										tickMargin={8}
-										tick={{ fontSize: 12, fill: "var(--chart-tick)" }}
+										tick={{
+											fontSize: 12,
+											fill: "var(--chart-tick)",
+											fontFamily: '"DM Mono", monospace',
+										}}
 										tickFormatter={(value) => `$${value}`}
 										width={48}
 									/>
@@ -229,7 +233,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 																item.dataKey as keyof typeof revenueChartConfig
 															]?.label ?? item.dataKey}
 														</span>
-														<span className="font-mono font-medium tabular-nums text-foreground">
+														<span className="font-number font-medium text-foreground">
 															$
 															{Number(value).toLocaleString(undefined, {
 																maximumFractionDigits: 2,

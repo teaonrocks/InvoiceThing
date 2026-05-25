@@ -7,6 +7,7 @@ import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import { pdf } from "@react-pdf/renderer";
 import {
 	Download,
+	Edit,
 	FileText,
 	Image as ReceiptIcon,
 	ImageOff as ReceiptOffIcon,
@@ -17,8 +18,15 @@ import {
 import { ColumnHeader } from "@/components/data-table/column-header";
 import { DataTable } from "@/components/data-table/data-table";
 import { InvoicePDF } from "@/components/invoice-pdf";
+import {
+	DownloadInvoicePDF,
+	downloadInvoicePdfById,
+	mapConvexInvoiceToDownload,
+	mapPreviewToDownloadInvoice,
+} from "@/components/download-invoice-pdf";
 import { Button } from "@/components/ui/button";
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
+import { INVOICE_STATUS_OPTIONS } from "@/components/invoice-status-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Table,
@@ -62,12 +70,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import {
-	InvoiceStatus,
-	InvoiceStatusOption,
-	InvoiceRow,
-	useInvoiceColumns,
-} from "./-columns";
+import { InvoiceStatus, InvoiceRow, useInvoiceColumns } from "./-columns";
 import { useAppData } from "@/context/app-data-provider";
 import {
 	Tooltip,
@@ -77,12 +80,7 @@ import {
 } from "@/components/ui/tooltip";
 import { formatAddressParts } from "@/lib/utils";
 
-const STATUS_OPTIONS: InvoiceStatusOption[] = [
-	{ value: "draft", label: "Draft", color: "bg-gray-500" },
-	{ value: "sent", label: "Sent", color: "bg-blue-500" },
-	{ value: "paid", label: "Paid", color: "bg-green-500" },
-	{ value: "overdue", label: "Overdue", color: "bg-red-500" },
-];
+const STATUS_OPTIONS = INVOICE_STATUS_OPTIONS;
 
 type InvoicePreview = {
 	_id: Id<"invoices">;
@@ -151,6 +149,8 @@ function InvoicesPage() {
 	const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [isDownloading, setIsDownloading] = useState(false);
+	const [downloadingInvoiceId, setDownloadingInvoiceId] =
+		useState<Id<"invoices"> | null>(null);
 	const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 	const [previewInvoiceId, setPreviewInvoiceId] =
 		useState<Id<"invoices"> | null>(null);
@@ -293,6 +293,16 @@ function InvoicesPage() {
 		});
 	}, [invoiceForPreview]);
 
+	const downloadInvoice = useMemo(() => {
+		if (!invoiceForPreview) return null;
+		if (previewInvoice?.client && previewInvoice.lineItems?.length) {
+			return mapConvexInvoiceToDownload(
+				previewInvoice as InvoiceWithRelations,
+			);
+		}
+		return mapPreviewToDownloadInvoice(invoiceForPreview);
+	}, [invoiceForPreview, previewInvoice]);
+
 	const tableData: InvoiceRow[] = useMemo(
 		() =>
 			invoiceList.map((invoice) => ({
@@ -316,7 +326,11 @@ function InvoicesPage() {
 	);
 	const selectedCount = selectedIds.length;
 	const isBusy =
-		isBulkUpdating || isDeleting || isDownloading || isStatusUpdating;
+		isBulkUpdating ||
+		isDeleting ||
+		isDownloading ||
+		isStatusUpdating ||
+		downloadingInvoiceId !== null;
 
 	const handlePreviewClose = useCallback(() => {
 		setIsPreviewOpen(false);
@@ -446,73 +460,39 @@ function InvoicesPage() {
 		toast,
 	]);
 
+	const handleDownloadInvoicePdf = useCallback(
+		async (invoice: InvoiceRow) => {
+			setDownloadingInvoiceId(invoice._id);
+			try {
+				await downloadInvoicePdfById(
+					convex,
+					invoice._id,
+					settings?.paymentInstructions,
+				);
+			} catch (error) {
+				console.error(error);
+				toast({
+					title: "Unable to download",
+					description: `We couldn't generate invoice ${invoice.invoiceNumber}. Please try again.`,
+					variant: "destructive",
+				});
+			} finally {
+				setDownloadingInvoiceId(null);
+			}
+		},
+		[convex, settings?.paymentInstructions, toast],
+	);
+
 	const handleBulkDownload = useCallback(async () => {
 		if (!selectedIds.length) return;
 		setIsDownloading(true);
 		try {
 			for (const invoiceId of selectedIds) {
-				const invoice = await convex.query(api.invoices.get, {
+				await downloadInvoicePdfById(
+					convex,
 					invoiceId,
-				});
-				if (!invoice) continue;
-
-				const claimImageUrls = await Promise.all(
-					(invoice.claims ?? []).map(async (claim) => {
-						if (!claim.imageStorageId) return undefined;
-						const url = await convex.query(api.files.getFileUrl, {
-							storageId: claim.imageStorageId,
-						});
-						return url ?? undefined;
-					}),
+					settings?.paymentInstructions,
 				);
-
-				const clientInfo = invoice.client
-					? {
-							name: invoice.client.name,
-							email: invoice.client.email ?? undefined,
-							contactPerson: invoice.client.contactPerson ?? undefined,
-							streetName: invoice.client.streetName ?? undefined,
-							buildingName: invoice.client.buildingName ?? undefined,
-							unitNumber: invoice.client.unitNumber ?? undefined,
-							postalCode: invoice.client.postalCode ?? undefined,
-						}
-					: {
-							name: "Unknown client",
-						};
-
-				const pdfData = {
-					invoiceNumber: invoice.invoiceNumber,
-					issueDate: format(new Date(invoice.issueDate), "MMMM d, yyyy"),
-					dueDate: format(new Date(invoice.dueDate), "MMMM d, yyyy"),
-					client: clientInfo,
-					lineItems: invoice.lineItems.map((item) => ({
-						description: item.description,
-						quantity: item.quantity,
-						unitPrice: item.unitPrice,
-						total: item.total,
-					})),
-					claims: invoice.claims?.map((claim, index) => ({
-						description: claim.description,
-						amount: claim.amount,
-						date: format(new Date(claim.date), "MMM d, yyyy"),
-						imageUrl: claimImageUrls[index] ?? undefined,
-					})),
-					subtotal: invoice.subtotal,
-					tax: invoice.tax,
-					total: invoice.total,
-					notes: invoice.notes,
-					paymentInstructions: settings?.paymentInstructions,
-				};
-
-				const blob = await pdf(<InvoicePDF invoice={pdfData} />).toBlob();
-				const url = URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = `invoice-${invoice.invoiceNumber}.pdf`;
-				document.body.appendChild(link);
-				link.click();
-				link.remove();
-				URL.revokeObjectURL(url);
 			}
 			toast({
 				title: "Downloads started",
@@ -543,7 +523,6 @@ function InvoicesPage() {
 
 	const columns = useInvoiceColumns({
 		onStatusChange: handleStatusChange,
-		statusOptions: STATUS_OPTIONS,
 		disableStatusChange: isBusy,
 	});
 
@@ -587,7 +566,12 @@ function InvoicesPage() {
 							filterPlaceholder="Filter by client..."
 							enableRowSelection
 							onSelectionChange={setSelectedInvoices}
-							meta={{ onDeleteInvoice: handleDeleteInvoice, isDeleting }}
+							meta={{
+								onDeleteInvoice: handleDeleteInvoice,
+								onDownloadPdf: handleDownloadInvoicePdf,
+								isDeleting,
+								downloadingInvoiceId,
+							}}
 							renderToolbar={() =>
 								selectedCount > 0 ? (
 									<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
@@ -706,7 +690,10 @@ function InvoicesPage() {
 								<>
 									<DialogHeader>
 										<DialogTitle className="flex flex-wrap items-center gap-3 text-2xl">
-											Invoice #{invoiceForPreview.invoiceNumber}
+											Invoice{" "}
+											<span className="font-number">
+												#{invoiceForPreview.invoiceNumber}
+											</span>
 											{invoiceForPreview ? (
 												<InvoiceStatusBadge status={invoiceForPreview.status} />
 											) : null}
@@ -748,7 +735,7 @@ function InvoicesPage() {
 											<div className="grid grid-cols-2 gap-4 text-sm">
 												<div>
 													<p className="text-muted-foreground">Issued</p>
-													<p className="font-semibold">
+													<p className="font-number font-semibold">
 														{format(
 															new Date(invoiceForPreview.issueDate),
 															"MMM d, yyyy",
@@ -757,7 +744,7 @@ function InvoicesPage() {
 												</div>
 												<div>
 													<p className="text-muted-foreground">Due</p>
-													<p className="font-semibold">
+													<p className="font-number font-semibold">
 														{format(
 															new Date(invoiceForPreview.dueDate),
 															"MMM d, yyyy",
@@ -766,7 +753,7 @@ function InvoicesPage() {
 												</div>
 												<div>
 													<p className="text-muted-foreground">Total</p>
-													<p className="font-semibold">
+													<p className="font-number font-semibold">
 														{new Intl.NumberFormat("en-US", {
 															style: "currency",
 															currency: "USD",
@@ -820,16 +807,16 @@ function InvoicesPage() {
 																	key={`${item.description}-${index}`}
 																>
 																	<TableCell>{item.description}</TableCell>
-																	<TableCell className="text-right">
+																	<TableCell className="font-number text-right">
 																		{item.quantity}
 																	</TableCell>
-																	<TableCell className="text-right">
+																	<TableCell className="font-number text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(item.unitPrice)}
 																	</TableCell>
-																	<TableCell className="text-right">
+																	<TableCell className="font-number text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
@@ -889,7 +876,7 @@ function InvoicesPage() {
 																	<TableCell>
 																		{claim.description}
 																	</TableCell>
-																	<TableCell>
+																	<TableCell className="font-number">
 																		{claim.date
 																			? format(
 																					new Date(claim.date),
@@ -897,7 +884,7 @@ function InvoicesPage() {
 																				)
 																			: "—"}
 																	</TableCell>
-																	<TableCell className="text-right">
+																	<TableCell className="font-number text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
@@ -958,22 +945,43 @@ function InvoicesPage() {
 											</div>
 										) : null}
 									</div>
-									<DialogFooter className="gap-2">
-										<Button variant="outline" onClick={handlePreviewClose}>
+									<DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={handlePreviewClose}
+										>
 											Close
 										</Button>
-										<Button asChild>
-											<Link
-												to="/invoices/$id"
-												params={{ id: invoiceForPreview._id }}
-												onClick={(e) => {
-													handlePreviewClose();
-													// Let Link handle navigation
-												}}
-											>
-												Open full invoice
-											</Link>
-										</Button>
+										<div className="flex flex-wrap items-center gap-2">
+											<Button variant="outline" size="sm" asChild>
+												<Link
+													to="/invoices/$id/edit"
+													params={{ id: invoiceForPreview._id }}
+													onClick={handlePreviewClose}
+												>
+													<Edit className="h-4 w-4 mr-2" />
+													Edit
+												</Link>
+											</Button>
+											{downloadInvoice ? (
+												<DownloadInvoicePDF
+													invoice={downloadInvoice}
+													paymentInstructions={
+														settings?.paymentInstructions
+													}
+												/>
+											) : null}
+											<Button size="sm" asChild>
+												<Link
+													to="/invoices/$id"
+													params={{ id: invoiceForPreview._id }}
+													onClick={handlePreviewClose}
+												>
+													Open full invoice
+												</Link>
+											</Button>
+										</div>
 									</DialogFooter>
 								</>
 							) : (

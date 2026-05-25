@@ -7,21 +7,64 @@ import {
 	View,
 	StyleSheet,
 	Image,
+	Font,
 } from "@react-pdf/renderer";
 import { formatAddressParts } from "@/lib/utils";
 
-// Register fonts (optional - using built-in fonts for now)
-// Font.register({
-//   family: 'Roboto',
-//   src: 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf',
-// });
+const FONT_CDN = "https://cdn.jsdelivr.net/npm";
+
+Font.register({
+	family: "Space Grotesk",
+	fonts: [
+		{
+			src: `${FONT_CDN}/@fontsource/space-grotesk@5/files/space-grotesk-latin-500-normal.woff`,
+			fontWeight: 500,
+		},
+		{
+			src: `${FONT_CDN}/@fontsource/space-grotesk@5/files/space-grotesk-latin-700-normal.woff`,
+			fontWeight: 700,
+		},
+	],
+});
+
+Font.register({
+	family: "DM Sans",
+	fonts: [
+		{
+			src: `${FONT_CDN}/@fontsource/dm-sans@5/files/dm-sans-latin-400-normal.woff`,
+			fontWeight: 400,
+		},
+		{
+			src: `${FONT_CDN}/@fontsource/dm-sans@5/files/dm-sans-latin-700-normal.woff`,
+			fontWeight: 700,
+		},
+	],
+});
+
+Font.register({
+	family: "DM Mono",
+	fonts: [
+		{
+			src: `${FONT_CDN}/@fontsource/dm-mono@5/files/dm-mono-latin-400-normal.woff`,
+			fontWeight: 400,
+		},
+		{
+			src: `${FONT_CDN}/@fontsource/dm-mono@5/files/dm-mono-latin-500-normal.woff`,
+			fontWeight: 500,
+		},
+	],
+});
+
+const heading = { fontFamily: "Space Grotesk", fontWeight: 700 as const };
+const body = { fontFamily: "DM Sans" };
+const mono = { fontFamily: "DM Mono" };
 
 // Define styles
 const styles = StyleSheet.create({
 	page: {
 		padding: 40,
 		fontSize: 11,
-		fontFamily: "Helvetica",
+		...body,
 	},
 	header: {
 		marginBottom: 30,
@@ -30,20 +73,21 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		fontSize: 28,
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		marginBottom: 10,
 	},
 	invoiceNumber: {
 		fontSize: 12,
 		color: "#666",
 		marginBottom: 4,
+		...mono,
 	},
 	section: {
 		marginBottom: 20,
 	},
 	sectionTitle: {
 		fontSize: 12,
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		marginBottom: 8,
 		color: "#333",
 	},
@@ -53,11 +97,13 @@ const styles = StyleSheet.create({
 	},
 	label: {
 		width: 100,
-		fontFamily: "Helvetica-Bold",
+		...body,
+		fontWeight: 700,
 		color: "#666",
 	},
 	value: {
 		flex: 1,
+		...mono,
 	},
 	table: {
 		marginTop: 20,
@@ -71,7 +117,7 @@ const styles = StyleSheet.create({
 		marginBottom: 8,
 	},
 	tableHeaderCell: {
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		fontSize: 10,
 		textTransform: "uppercase",
 	},
@@ -90,14 +136,17 @@ const styles = StyleSheet.create({
 	quantityCell: {
 		flex: 1,
 		textAlign: "right",
+		...mono,
 	},
 	rateCell: {
 		flex: 1,
 		textAlign: "right",
+		...mono,
 	},
 	amountCell: {
 		flex: 1,
 		textAlign: "right",
+		...mono,
 	},
 	totalsContainer: {
 		marginTop: 20,
@@ -127,10 +176,12 @@ const styles = StyleSheet.create({
 	totalValue: {
 		width: 80,
 		textAlign: "right",
+		...mono,
 	},
 	grandTotal: {
 		fontSize: 14,
-		fontFamily: "Helvetica-Bold",
+		...mono,
+		fontWeight: 500,
 		paddingTop: 8,
 		borderTopWidth: 2,
 		borderTopColor: "#333",
@@ -141,7 +192,7 @@ const styles = StyleSheet.create({
 		paddingRight: 20,
 	},
 	paymentTitle: {
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		marginBottom: 8,
 		fontSize: 11,
 	},
@@ -158,7 +209,7 @@ const styles = StyleSheet.create({
 		borderRadius: 4,
 	},
 	notesTitle: {
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		marginBottom: 8,
 	},
 	notesText: {
@@ -181,7 +232,7 @@ const styles = StyleSheet.create({
 		padding: 8,
 		borderRadius: 4,
 		fontSize: 10,
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		textTransform: "uppercase",
 	},
 	statusDraft: {
@@ -216,7 +267,7 @@ const styles = StyleSheet.create({
 	receiptPage: {
 		padding: 40,
 		fontSize: 11,
-		fontFamily: "Helvetica",
+		...body,
 		justifyContent: "space-between",
 	},
 	receiptPageHeader: {
@@ -224,13 +275,14 @@ const styles = StyleSheet.create({
 	},
 	receiptPageTitle: {
 		fontSize: 20,
-		fontFamily: "Helvetica-Bold",
+		...heading,
 		marginBottom: 4,
 	},
 	receiptPageMeta: {
 		fontSize: 10,
 		color: "#555",
 		marginBottom: 4,
+		...mono,
 	},
 	receiptImageFull: {
 		flexGrow: 1,
@@ -321,7 +373,7 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 				{/* Bill To */}
 				<View style={styles.section}>
 					<Text style={styles.sectionTitle}>Bill To:</Text>
-					<Text style={{ marginBottom: 4, fontFamily: "Helvetica-Bold" }}>
+					<Text style={{ marginBottom: 4, ...heading }}>
 						{invoice.client.name}
 					</Text>
 					{invoice.client.contactPerson && (
@@ -408,11 +460,15 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 											</Text>
 										)}
 									</View>
-									<Text style={[styles.tableCell, { flex: 1 }]}>
+									<Text style={[styles.tableCell, { flex: 1 }, mono]}>
 										{claim.date}
 									</Text>
 									<Text
-										style={[styles.tableCell, { flex: 1, textAlign: "right" }]}
+										style={[
+											styles.tableCell,
+											{ flex: 1, textAlign: "right" },
+											mono,
+										]}
 									>
 										${claim.amount.toFixed(2)}
 									</Text>

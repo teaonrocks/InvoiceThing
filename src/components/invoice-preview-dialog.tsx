@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import {
+	Edit,
 	Image as ReceiptIcon,
 	ImageOff as ReceiptOffIcon,
 	Loader2,
@@ -12,6 +13,11 @@ import {
 
 import { ColumnHeader } from "@/components/data-table/column-header";
 import { Button } from "@/components/ui/button";
+import {
+	DownloadInvoicePDF,
+	mapConvexInvoiceToDownload,
+	mapPreviewToDownloadInvoice,
+} from "@/components/download-invoice-pdf";
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import {
 	Dialog,
@@ -173,6 +179,11 @@ export function InvoicePreviewDialog({
 		open && invoiceId ? { invoiceId } : "skip",
 	);
 
+	const settings = useQuery(
+		api.settings.get,
+		previewInvoice?.userId ? { userId: previewInvoice.userId } : "skip",
+	);
+
 	const normalizedPreview = useMemo(() => {
 		if (!previewInvoice) return null;
 		return normalizePreview(previewInvoice as InvoiceWithRelations);
@@ -221,6 +232,16 @@ export function InvoicePreviewDialog({
 		onOpenChange(false);
 	}, [onOpenChange]);
 
+	const downloadInvoice = useMemo(() => {
+		if (!invoiceForPreview) return null;
+		if (previewInvoice?.client && previewInvoice.lineItems?.length) {
+			return mapConvexInvoiceToDownload(
+				previewInvoice as InvoiceWithRelations,
+			);
+		}
+		return mapPreviewToDownloadInvoice(invoiceForPreview);
+	}, [invoiceForPreview, previewInvoice]);
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			{open ? (
@@ -230,7 +251,10 @@ export function InvoicePreviewDialog({
 							<>
 								<DialogHeader>
 									<DialogTitle className="flex flex-wrap items-center gap-3 text-2xl">
-										Invoice #{invoiceForPreview.invoiceNumber}
+										Invoice{" "}
+										<span className="font-number">
+											#{invoiceForPreview.invoiceNumber}
+										</span>
 										{invoiceForPreview ? (
 											<InvoiceStatusBadge status={invoiceForPreview.status} />
 										) : null}
@@ -272,7 +296,7 @@ export function InvoicePreviewDialog({
 										<div className="grid grid-cols-2 gap-4 text-sm">
 											<div>
 												<p className="text-muted-foreground">Issued</p>
-												<p className="font-semibold">
+												<p className="font-number font-semibold">
 													{format(
 														new Date(invoiceForPreview.issueDate),
 														"MMM d, yyyy",
@@ -281,7 +305,7 @@ export function InvoicePreviewDialog({
 											</div>
 											<div>
 												<p className="text-muted-foreground">Due</p>
-												<p className="font-semibold">
+												<p className="font-number font-semibold">
 													{format(
 														new Date(invoiceForPreview.dueDate),
 														"MMM d, yyyy",
@@ -290,7 +314,7 @@ export function InvoicePreviewDialog({
 											</div>
 											<div>
 												<p className="text-muted-foreground">Total</p>
-												<p className="font-semibold">
+												<p className="font-number font-semibold">
 													{new Intl.NumberFormat("en-US", {
 														style: "currency",
 														currency: "USD",
@@ -344,16 +368,16 @@ export function InvoicePreviewDialog({
 																key={`${item.description}-${index}`}
 															>
 																<TableCell>{item.description}</TableCell>
-																<TableCell className="text-right">
+																<TableCell className="font-number text-right">
 																	{item.quantity}
 																</TableCell>
-																<TableCell className="text-right">
+																<TableCell className="font-number text-right">
 																	{new Intl.NumberFormat("en-US", {
 																		style: "currency",
 																		currency: "USD",
 																	}).format(item.unitPrice)}
 																</TableCell>
-																<TableCell className="text-right">
+																<TableCell className="font-number text-right">
 																	{new Intl.NumberFormat("en-US", {
 																		style: "currency",
 																		currency: "USD",
@@ -411,7 +435,7 @@ export function InvoicePreviewDialog({
 																key={`${claim.description}-${index}`}
 															>
 																<TableCell>{claim.description}</TableCell>
-																<TableCell>
+																<TableCell className="font-number">
 																	{claim.date
 																		? format(
 																				new Date(claim.date),
@@ -419,7 +443,7 @@ export function InvoicePreviewDialog({
 																			)
 																		: "—"}
 																</TableCell>
-																<TableCell className="text-right">
+																<TableCell className="font-number text-right">
 																	{new Intl.NumberFormat("en-US", {
 																		style: "currency",
 																		currency: "USD",
@@ -480,19 +504,39 @@ export function InvoicePreviewDialog({
 										</div>
 									) : null}
 								</div>
-								<DialogFooter className="gap-2">
-									<Button variant="outline" onClick={handleClose}>
+								<DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+									<Button variant="outline" size="sm" onClick={handleClose}>
 										Close
 									</Button>
-									<Button asChild>
-										<Link
-											to="/invoices/$id"
-											params={{ id: invoiceForPreview._id }}
-											onClick={handleClose}
-										>
-											Open full invoice
-										</Link>
-									</Button>
+									<div className="flex flex-wrap items-center gap-2">
+										<Button variant="outline" size="sm" asChild>
+											<Link
+												to="/invoices/$id/edit"
+												params={{ id: invoiceForPreview._id }}
+												onClick={handleClose}
+											>
+												<Edit className="h-4 w-4 mr-2" />
+												Edit
+											</Link>
+										</Button>
+										{downloadInvoice ? (
+											<DownloadInvoicePDF
+												invoice={downloadInvoice}
+												paymentInstructions={
+													settings?.paymentInstructions
+												}
+											/>
+										) : null}
+										<Button size="sm" asChild>
+											<Link
+												to="/invoices/$id"
+												params={{ id: invoiceForPreview._id }}
+												onClick={handleClose}
+											>
+												Open full invoice
+											</Link>
+										</Button>
+									</div>
 								</DialogFooter>
 							</>
 						) : (

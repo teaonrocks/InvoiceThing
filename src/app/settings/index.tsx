@@ -151,7 +151,10 @@ function SettingsPage() {
 										maxLength={10}
 									/>
 									<p className="text-xs text-muted-foreground">
-										Example: {invoicePrefix}-0001
+										Example:{" "}
+										<span className="font-number">
+											{invoicePrefix}-0001
+										</span>
 									</p>
 								</div>
 
@@ -161,14 +164,18 @@ function SettingsPage() {
 										id="startNumber"
 										type="number"
 										min="1"
+										className="font-number"
 										value={invoiceNumberStart}
 										onChange={(e) =>
 											setInvoiceNumberStart(parseInt(e.target.value) || 1)
 										}
 									/>
 									<p className="text-xs text-muted-foreground">
-										First invoice will be: {invoicePrefix}-
-										{String(invoiceNumberStart).padStart(4, "0")}
+										First invoice will be:{" "}
+										<span className="font-number">
+											{invoicePrefix}-
+											{String(invoiceNumberStart).padStart(4, "0")}
+										</span>
 									</p>
 								</div>
 							</div>
@@ -181,13 +188,16 @@ function SettingsPage() {
 										type="number"
 										min="1"
 										max="365"
+										className="font-number"
 										value={dueDateDays}
 										onChange={(e) =>
 											setDueDateDays(parseInt(e.target.value) || 14)
 										}
 									/>
 									<p className="text-xs text-muted-foreground">
-										Due date will be {dueDateDays} days from issue date
+										Due date will be{" "}
+										<span className="font-number">{dueDateDays}</span> days from
+										issue date
 									</p>
 								</div>
 
@@ -199,6 +209,7 @@ function SettingsPage() {
 										min="0"
 										max="100"
 										step="0.1"
+										className="font-number"
 										value={taxRate}
 										onChange={(e) =>
 											setTaxRate(parseFloat(e.target.value) || 0)
@@ -267,8 +278,14 @@ function SettingsPage() {
 											</SelectContent>
 										</Select>
 										<p className="text-xs text-muted-foreground">
-											Example: $123.47 → $
-											{roundToIncrement(123.47, roundingIncrement).toFixed(2)}
+											Example:{" "}
+											<span className="font-number">$123.47</span> →{" "}
+											<span className="font-number">
+												$
+												{roundToIncrement(123.47, roundingIncrement).toFixed(
+													2,
+												)}
+											</span>
 										</p>
 									</div>
 								)}
@@ -295,7 +312,7 @@ function SettingsPage() {
 									onChange={(e) => setPaymentInstructions(e.target.value)}
 									placeholder="Example:&#10;&#10;Bank Transfer:&#10;Bank: ABC Bank&#10;Account Name: Your Business Name&#10;Account Number: 1234567890&#10;&#10;PayPal: yourname@example.com&#10;&#10;Venmo: @yourname"
 									rows={8}
-									className="font-mono text-sm"
+									className="font-number text-sm"
 								/>
 								<p className="text-xs text-muted-foreground">
 									This information will appear on your invoices to help clients

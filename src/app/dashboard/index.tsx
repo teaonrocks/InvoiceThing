@@ -249,7 +249,7 @@ function DashboardPage() {
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="font-number text-2xl font-bold">
 										${displayStats.totalOutstanding.toFixed(2)}
 									</div>
 									<p className="mt-1 text-xs text-muted-foreground">
@@ -267,7 +267,7 @@ function DashboardPage() {
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="font-number text-2xl font-bold">
 										${displayStats.totalOverdue.toFixed(2)}
 									</div>
 									<p className="mt-1 text-xs text-muted-foreground">
@@ -285,7 +285,7 @@ function DashboardPage() {
 									</CardTitle>
 								</CardHeader>
 								<CardContent>
-									<div className="text-2xl font-bold">
+									<div className="font-number text-2xl font-bold">
 										${displayStats.averageInvoiceValue.toFixed(2)}
 									</div>
 									<p className="mt-1 text-xs text-muted-foreground">

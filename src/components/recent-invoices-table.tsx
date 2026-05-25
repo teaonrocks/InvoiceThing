@@ -159,7 +159,7 @@ export function RecentInvoicesTable({
 					<ColumnHeader title="Invoice" column={column} />
 				),
 				cell: ({ row }) => (
-					<span className="font-medium">
+					<span className="font-number font-medium">
 						#{row.getValue<string>("invoiceNumber")}
 					</span>
 				),
@@ -184,7 +184,9 @@ export function RecentInvoicesTable({
 				accessorKey: "issueDate",
 				header: ({ column }) => <ColumnHeader title="Date" column={column} />,
 				cell: ({ row }) => (
-					<span>{format(row.original.issueDate, "MMM d, yyyy")}</span>
+					<span className="font-number">
+						{format(row.original.issueDate, "MMM d, yyyy")}
+					</span>
 				),
 			},
 			{
@@ -198,7 +200,9 @@ export function RecentInvoicesTable({
 						style: "currency",
 						currency: "USD",
 					}).format(amount);
-					return <span className="font-medium">{formatted}</span>;
+					return (
+						<span className="font-number font-medium">{formatted}</span>
+					);
 				},
 			},
 			{
@@ -278,11 +282,11 @@ export function RecentInvoicesTable({
 							className="cursor-pointer"
 							onClick={() => handlePreviewOpen(invoice)}
 						>
-							<TableCell className="font-medium py-4">
+							<TableCell className="font-number font-medium py-4">
 								#{invoice.invoiceNumber}
 							</TableCell>
 							<TableCell className="py-4">{invoice.clientName}</TableCell>
-							<TableCell className="py-4 font-medium">
+							<TableCell className="font-number py-4 font-medium">
 								{new Intl.NumberFormat("en-US", {
 									style: "currency",
 									currency: "USD",
@@ -291,7 +295,7 @@ export function RecentInvoicesTable({
 							<TableCell className="py-4">
 								<InvoiceStatusBadge status={invoice.status} />
 							</TableCell>
-							<TableCell className="py-4 text-muted-foreground">
+							<TableCell className="font-number py-4 text-muted-foreground">
 								{format(invoice.issueDate, "MMM d, yyyy")}
 							</TableCell>
 						</TableRow>

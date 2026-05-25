@@ -273,7 +273,7 @@ function Home() {
 											variants={staggerChild}
 											className="py-10 lg:py-14 lg:px-8 first:lg:pl-0 last:lg:pr-0"
 										>
-											<div className="font-instrument mb-2 text-4xl text-foreground sm:text-5xl">
+											<div className="font-number mb-2 text-4xl text-foreground sm:text-5xl">
 												{stat.num}
 											</div>
 											<div className="font-dm text-xs font-500 tracking-[0.15em] uppercase text-muted-foreground">
@@ -417,7 +417,7 @@ function Home() {
 										}}
 									>
 										<div className="flex items-baseline gap-2 mb-4">
-											<span className="font-instrument text-6xl">$0</span>
+											<span className="font-number text-6xl">$0</span>
 											<span className="font-dm text-sm font-300 text-muted-foreground">
 												/month
 											</span>
