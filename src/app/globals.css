@@ -5,74 +5,88 @@
 @source "./**/*.{js,ts,jsx,tsx,mdx}";
 
 :root {
-	--background: hsl(0 0% 100%);
-	--foreground: hsl(0 0% 3.9%);
+	--background: hsl(240 6% 97%);
+	--foreground: hsl(240 10% 10%);
 	--card: hsl(0 0% 100%);
-	--card-foreground: hsl(0 0% 3.9%);
+	--card-foreground: hsl(240 10% 10%);
 	--popover: hsl(0 0% 100%);
-	--popover-foreground: hsl(0 0% 3.9%);
-	--primary: hsl(0 0% 9%);
+	--popover-foreground: hsl(240 10% 10%);
+	--primary: hsl(240 10% 10%);
 	--primary-foreground: hsl(0 0% 98%);
-	--secondary: hsl(0 0% 96.1%);
-	--secondary-foreground: hsl(0 0% 9%);
-	--muted: hsl(0 0% 96.1%);
-	--muted-foreground: hsl(0 0% 45.1%);
-	--accent: hsl(0 0% 96.1%);
-	--accent-foreground: hsl(0 0% 9%);
-	--destructive: hsl(0 84.2% 60.2%);
+	--secondary: hsl(240 5% 94%);
+	--secondary-foreground: hsl(240 10% 10%);
+	--muted: hsl(240 5% 94%);
+	--muted-foreground: hsl(240 4% 46%);
+	--accent: hsl(240 5% 93%);
+	--accent-foreground: hsl(240 10% 10%);
+	--destructive: hsl(0 72% 51%);
 	--destructive-foreground: hsl(0 0% 98%);
-	--border: hsl(0 0% 89.8%);
-	--input: hsl(0 0% 89.8%);
-	--ring: hsl(0 0% 3.9%);
-	--chart-1: hsl(12 76% 61%);
-	--chart-2: hsl(173 58% 39%);
-	--chart-3: hsl(197 37% 24%);
-	--chart-4: hsl(43 74% 66%);
-	--chart-5: hsl(27 87% 67%);
+	--border: hsl(240 6% 88%);
+	--input: hsl(240 6% 88%);
+	--ring: hsl(240 6% 50%);
+	--chart-1: hsl(220 65% 52%);
+	--chart-2: hsl(152 48% 40%);
+	--chart-3: hsl(30 70% 50%);
+	--chart-4: hsl(280 55% 55%);
+	--chart-5: hsl(350 65% 52%);
 	--radius: 0.5rem;
 	--sidebar-background: hsl(0 0% 100%);
-	--sidebar-foreground: hsl(0 0% 3.9%);
-	--sidebar-primary: hsl(0 0% 9%);
+	--sidebar-foreground: hsl(240 10% 10%);
+	--sidebar-primary: hsl(240 10% 10%);
 	--sidebar-primary-foreground: hsl(0 0% 98%);
-	--sidebar-accent: hsl(0 0% 96.1%);
-	--sidebar-accent-foreground: hsl(0 0% 9%);
-	--sidebar-border: hsl(0 0% 89.8%);
-	--sidebar-ring: hsl(0 0% 3.9%);
+	--sidebar-accent: hsl(240 5% 95%);
+	--sidebar-accent-foreground: hsl(240 10% 10%);
+	--sidebar-border: hsl(240 6% 90%);
+	--sidebar-ring: hsl(240 6% 50%);
+	--status-paid: hsl(152 48% 40%);
+	--status-sent: hsl(215 65% 48%);
+	--status-draft: hsl(240 4% 62%);
+	--status-overdue: hsl(0 65% 48%);
+	--chart-unpaid: hsl(240 5% 86%);
+	--chart-grid: hsl(240 6% 91%);
+	--chart-tick: hsl(240 4% 50%);
 }
 
 .dark {
-	--background: hsl(0 0% 3.9%);
-	--foreground: hsl(0 0% 98%);
-	--card: hsl(0 0% 3.9%);
-	--card-foreground: hsl(0 0% 98%);
-	--popover: hsl(0 0% 3.9%);
-	--popover-foreground: hsl(0 0% 98%);
-	--primary: hsl(0 0% 98%);
-	--primary-foreground: hsl(0 0% 9%);
-	--secondary: hsl(0 0% 14.9%);
-	--secondary-foreground: hsl(0 0% 98%);
-	--muted: hsl(0 0% 14.9%);
-	--muted-foreground: hsl(0 0% 63.9%);
-	--accent: hsl(0 0% 14.9%);
-	--accent-foreground: hsl(0 0% 98%);
-	--destructive: hsl(0 62.8% 30.6%);
+	--background: hsl(240 6% 10%);
+	--foreground: hsl(0 0% 93%);
+	--card: hsl(240 5% 13%);
+	--card-foreground: hsl(0 0% 93%);
+	--popover: hsl(240 5% 13%);
+	--popover-foreground: hsl(0 0% 93%);
+	--primary: hsl(0 0% 93%);
+	--primary-foreground: hsl(240 6% 10%);
+	--secondary: hsl(240 4% 16%);
+	--secondary-foreground: hsl(0 0% 93%);
+	--muted: hsl(240 4% 16%);
+	--muted-foreground: hsl(240 5% 58%);
+	--accent: hsl(240 4% 18%);
+	--accent-foreground: hsl(0 0% 93%);
+	--destructive: hsl(0 55% 45%);
 	--destructive-foreground: hsl(0 0% 98%);
-	--border: hsl(0 0% 14.9%);
-	--input: hsl(0 0% 14.9%);
-	--ring: hsl(0 0% 83.1%);
-	--chart-1: hsl(220 70% 50%);
-	--chart-2: hsl(160 60% 45%);
-	--chart-3: hsl(30 80% 55%);
-	--chart-4: hsl(280 65% 60%);
-	--chart-5: hsl(340 75% 55%);
-	--sidebar-background: hsl(0 0% 3.9%);
-	--sidebar-foreground: hsl(0 0% 98%);
-	--sidebar-primary: hsl(0 0% 98%);
-	--sidebar-primary-foreground: hsl(0 0% 9%);
-	--sidebar-accent: hsl(0 0% 14.9%);
-	--sidebar-accent-foreground: hsl(0 0% 98%);
-	--sidebar-border: hsl(0 0% 14.9%);
-	--sidebar-ring: hsl(0 0% 83.1%);
+	--border: hsl(240 5% 20%);
+	--input: hsl(240 5% 18%);
+	--ring: hsl(240 5% 50%);
+	--chart-1: hsl(220 55% 58%);
+	--chart-2: hsl(152 42% 48%);
+	--chart-3: hsl(30 60% 55%);
+	--chart-4: hsl(280 45% 58%);
+	--chart-5: hsl(350 50% 55%);
+	--sidebar-background: hsl(240 6% 8%);
+	--sidebar-foreground: hsl(0 0% 90%);
+	--sidebar-primary: hsl(0 0% 93%);
+	--sidebar-primary-foreground: hsl(240 6% 10%);
+	--sidebar-accent: hsl(240 4% 15%);
+	--sidebar-accent-foreground: hsl(0 0% 93%);
+	--sidebar-border: hsl(240 5% 18%);
+	--sidebar-ring: hsl(240 5% 50%);
+	--status-paid: hsl(152 42% 48%);
+	--status-sent: hsl(215 50% 60%);
+	--status-draft: hsl(240 4% 42%);
+	--status-overdue: hsl(0 50% 58%);
+	--chart-unpaid: hsl(240 4% 26%);
+	--chart-grid: hsl(240 5% 18%);
+	--chart-tick: hsl(240 5% 50%);
 }
 
 @theme inline {
@@ -131,7 +145,7 @@
 	font-family: "DM Sans", sans-serif;
 }
 .swiss-grid {
-	background-color: #ffffff;
+	background-color: var(--background);
 	background-image:
 		linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
 		linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
@@ -140,7 +154,7 @@
 
 .dashboard-card {
 	border-radius: 0;
-	border: 1px solid hsl(0 0% 90%);
+	border: 1px solid var(--border);
 	box-shadow: none;
 	background-color: var(--card);
 	gap: 0;
@@ -148,7 +162,7 @@
 }
 
 .dark .dashboard-card {
-	border-color: hsl(0 0% 18%);
+	border-color: hsl(240 5% 22%);
 }
 
 .dashboard-card [data-slot="card-header"] {
@@ -162,14 +176,14 @@
 
 .dashboard-stat-card {
 	border-radius: 0;
-	border: 1px solid hsl(0 0% 90%);
+	border: 1px solid var(--border);
 	box-shadow: none;
 	gap: 0;
 	padding: 0;
 }
 
 .dark .dashboard-stat-card {
-	border-color: hsl(0 0% 18%);
+	border-color: hsl(240 5% 22%);
 }
 
 .dashboard-stat-card [data-slot="card-header"] {
@@ -191,43 +205,43 @@
 }
 
 .invoice-status-badge--paid {
-	background-color: hsl(142 76% 94%);
-	color: hsl(142 72% 29%);
+	background-color: hsl(152 45% 93%);
+	color: hsl(152 50% 28%);
 }
 
 .invoice-status-badge--sent {
-	background-color: hsl(214 95% 93%);
-	color: hsl(221 83% 40%);
+	background-color: hsl(215 55% 93%);
+	color: hsl(215 60% 35%);
 }
 
 .invoice-status-badge--draft {
-	background-color: hsl(0 0% 94%);
-	color: hsl(0 0% 40%);
+	background-color: hsl(240 5% 93%);
+	color: hsl(240 4% 42%);
 }
 
 .invoice-status-badge--overdue {
-	background-color: hsl(0 93% 94%);
-	color: hsl(0 72% 40%);
+	background-color: hsl(0 55% 94%);
+	color: hsl(0 60% 38%);
 }
 
 .dark .invoice-status-badge--paid {
-	background-color: hsl(142 40% 18%);
-	color: hsl(142 60% 70%);
+	background-color: hsl(152 28% 16%);
+	color: hsl(152 38% 60%);
 }
 
 .dark .invoice-status-badge--sent {
-	background-color: hsl(221 40% 18%);
-	color: hsl(214 80% 75%);
+	background-color: hsl(215 28% 16%);
+	color: hsl(215 42% 66%);
 }
 
 .dark .invoice-status-badge--draft {
-	background-color: hsl(0 0% 18%);
-	color: hsl(0 0% 65%);
+	background-color: hsl(240 4% 18%);
+	color: hsl(240 5% 58%);
 }
 
 .dark .invoice-status-badge--overdue {
-	background-color: hsl(0 40% 18%);
-	color: hsl(0 80% 75%);
+	background-color: hsl(0 28% 16%);
+	color: hsl(0 42% 62%);
 }
 
 @keyframes loading-line {

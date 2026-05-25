@@ -37,14 +37,14 @@ interface DashboardChartsProps {
 	isLoading?: boolean;
 }
 
-const PAID_COLOR = "hsl(142 71% 45%)";
-const UNPAID_COLOR = "#e5e5e5";
+const PAID_COLOR = "var(--status-paid)";
+const UNPAID_COLOR = "var(--chart-unpaid)";
 
 const STATUS_CHART_COLORS: Record<InvoiceStatus, string> = {
-	paid: "hsl(142 71% 45%)",
-	sent: "hsl(221 83% 53%)",
-	draft: "hsl(0 0% 70%)",
-	overdue: "#e63946",
+	paid: "var(--status-paid)",
+	sent: "var(--status-sent)",
+	draft: "var(--status-draft)",
+	overdue: "var(--status-overdue)",
 };
 
 function ChartSkeleton() {
@@ -199,7 +199,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 								>
 									<CartesianGrid
 										vertical={false}
-										stroke="hsl(0 0% 92%)"
+										stroke="var(--chart-grid)"
 										strokeDasharray="0"
 									/>
 									<XAxis
@@ -207,13 +207,13 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 										tickLine={false}
 										axisLine={false}
 										tickMargin={10}
-										tick={{ fontSize: 12, fill: "hsl(0 0% 45%)" }}
+										tick={{ fontSize: 12, fill: "var(--chart-tick)" }}
 									/>
 									<YAxis
 										tickLine={false}
 										axisLine={false}
 										tickMargin={8}
-										tick={{ fontSize: 12, fill: "hsl(0 0% 45%)" }}
+										tick={{ fontSize: 12, fill: "var(--chart-tick)" }}
 										tickFormatter={(value) => `$${value}`}
 										width={48}
 									/>
