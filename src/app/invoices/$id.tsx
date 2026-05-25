@@ -37,7 +37,7 @@ import {
 	ImageOff,
 	ExternalLink,
 } from "lucide-react";
-import { Navigation } from "@/components/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
 import { DownloadInvoicePDF } from "@/components/download-invoice-pdf";
 import { formatAddressParts } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,7 +106,7 @@ function InvoiceDetailPage() {
 	});
 	const settings = useQuery(
 		api.settings.get,
-		invoice?.userId ? { userId: invoice.userId } : "skip"
+		invoice?.userId ? { userId: invoice.userId } : "skip",
 	);
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const deleteInvoice = useMutation(api.invoices.remove);
@@ -125,7 +125,7 @@ function InvoiceDetailPage() {
 
 		if (
 			confirm(
-				`Are you sure you want to delete invoice ${invoice.invoiceNumber}? This action cannot be undone.`
+				`Are you sure you want to delete invoice ${invoice.invoiceNumber}? This action cannot be undone.`,
 			)
 		) {
 			await deleteInvoice({ invoiceId: invoice._id });
@@ -150,9 +150,8 @@ function InvoiceDetailPage() {
 
 	if (!invoice) {
 		return (
-			<div className="min-h-screen">
-				<Navigation />
-				<div className="container max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+			<AppSidebar>
+				<div className="max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 					<div className="mb-6">
 						<Skeleton className="h-10 w-32" />
 					</div>
@@ -197,7 +196,7 @@ function InvoiceDetailPage() {
 						</CardContent>
 					</Card>
 				</div>
-			</div>
+			</AppSidebar>
 		);
 	}
 
@@ -209,9 +208,8 @@ function InvoiceDetailPage() {
 	});
 
 	return (
-		<div className="min-h-screen">
-			<Navigation />
-			<div className="container max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+		<AppSidebar>
+			<div className="max-w-5xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
 				{/* Header */}
 				<div className="mb-6">
 					<Link to="/invoices">
@@ -475,6 +473,6 @@ function InvoiceDetailPage() {
 					</CardContent>
 				</Card>
 			</div>
-		</div>
+		</AppSidebar>
 	);
 }

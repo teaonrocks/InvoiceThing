@@ -55,7 +55,7 @@ export function Navigation() {
 										"text-sm font-medium transition-colors hover:text-primary",
 										pathname === route.href
 											? "text-foreground"
-											: "text-muted-foreground"
+											: "text-muted-foreground",
 									)}
 								>
 									{route.label}
@@ -75,7 +75,11 @@ export function Navigation() {
 							aria-expanded={isMenuOpen}
 							aria-label={isMenuOpen ? "Close navigation" : "Open navigation"}
 						>
-							{isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+							{isMenuOpen ? (
+								<X className="h-5 w-5" />
+							) : (
+								<Menu className="h-5 w-5" />
+							)}
 						</button>
 					</div>
 				</div>
@@ -93,7 +97,7 @@ export function Navigation() {
 										"rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
 										pathname === route.href
 											? "bg-muted text-foreground"
-											: "text-muted-foreground"
+											: "text-muted-foreground",
 									)}
 								>
 									{route.label}

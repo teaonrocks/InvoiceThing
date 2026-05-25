@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import { useStoreUser } from "@/hooks/use-store-user";
-import { Navigation } from "@/components/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,8 +44,8 @@ function SettingsPage() {
 
 	const settings = useQuery(
 		api.settings.get,
-		currentUser ? { userId: currentUser._id } : "skip"
-	)
+		currentUser ? { userId: currentUser._id } : "skip",
+	);
 	const upsertSettings = useMutation(api.settings.upsert);
 
 	const [invoicePrefix, setInvoicePrefix] = useState("INV");
@@ -80,8 +80,8 @@ function SettingsPage() {
 				title: "Error",
 				description: "User not found",
 				variant: "destructive",
-			})
-			return
+			});
+			return;
 		}
 
 		setIsSubmitting(true);
@@ -96,36 +96,35 @@ function SettingsPage() {
 				paymentInstructions: paymentInstructions.trim() || undefined,
 				enableRounding,
 				roundingIncrement,
-			})
+			});
 
 			toast({
 				title: "Success",
 				description: "Settings saved successfully",
-			})
+			});
 		} catch (error) {
 			console.error("Error saving settings:", error);
 			toast({
 				title: "Error",
 				description: "Failed to save settings. Please try again.",
 				variant: "destructive",
-			})
+			});
 		} finally {
 			setIsSubmitting(false);
 		}
-	}
+	};
 
 	if (!user || !currentUser) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 			</div>
-		)
+		);
 	}
 
 	return (
-		<div className="min-h-screen">
-			<Navigation />
-			<main className="container max-w-3xl mx-auto px-4 py-4 sm:py-8">
+		<AppSidebar>
+			<div className="max-w-3xl mx-auto px-4 py-4 sm:px-8 sm:py-8">
 				<div className="flex items-center gap-3 mb-6 sm:mb-8">
 					<SettingsIcon className="h-6 w-6 sm:h-8 sm:w-8" />
 					<h1 className="text-3xl sm:text-4xl font-bold">Settings</h1>
@@ -325,7 +324,7 @@ function SettingsPage() {
 						</Button>
 					</div>
 				</form>
-			</main>
-		</div>
-	)
+			</div>
+		</AppSidebar>
+	);
 }

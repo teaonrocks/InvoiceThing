@@ -3,13 +3,15 @@ import {
 	createRootRoute,
 	HeadContent,
 	Scripts,
+	Link,
 } from "@tanstack/react-router";
 import appCss from "./globals.css?url";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
 import { useAppData } from "@/context/app-data-provider";
-import { Spinner } from "@/components/ui/spinner";
+import { ArrowUpRight } from "lucide-react";
 
 export const Route = createRootRoute({
 	head: () => {
@@ -58,11 +60,23 @@ export const Route = createRootRoute({
 					rel: "stylesheet",
 					href: appCss,
 				},
-				// Favicon link
 				{
 					rel: "icon",
 					type: "image/x-icon",
 					href: "/favicon.ico",
+				},
+				{
+					rel: "preconnect",
+					href: "https://fonts.googleapis.com",
+				},
+				{
+					rel: "preconnect",
+					href: "https://fonts.gstatic.com",
+					crossOrigin: "anonymous",
+				},
+				{
+					rel: "stylesheet",
+					href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap",
 				},
 				// Preconnect to Convex for faster API calls
 				...(convexDomain
@@ -90,16 +104,7 @@ export const Route = createRootRoute({
 		};
 	},
 	component: RootLayout,
-	notFoundComponent: () => (
-		<div className="flex min-h-screen items-center justify-center">
-			<div className="text-center">
-				<h1 className="text-2xl font-bold">404 - Page Not Found</h1>
-				<p className="text-muted-foreground mt-2">
-					The page you're looking for doesn't exist.
-				</p>
-			</div>
-		</div>
-	),
+	notFoundComponent: NotFoundPage,
 });
 
 function RootLayout() {
@@ -140,24 +145,86 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 	return <>{children}</>;
 }
 
-// Improved loading screen with better styling
 function LoadingScreen() {
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-background">
-			<div className="flex flex-col items-center gap-6 px-4">
-				<div className="flex flex-col items-center gap-3">
-					<div className="relative">
-						<Spinner className="size-10 text-primary" />
-						<div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
-					</div>
-					<div className="text-center space-y-1">
-						<h2 className="text-xl font-semibold tracking-tight">
-							InvoiceThing
-						</h2>
-						<p className="text-sm text-muted-foreground animate-pulse">
-							Loading...
-						</p>
-					</div>
+		<div
+			className="swiss-grid flex min-h-screen flex-col items-center justify-center"
+			style={{ color: "#111" }}
+		>
+			<div className="text-center">
+				<h2 className="font-instrument text-3xl mb-8">
+					Invoice<span style={{ color: "#e63946" }}>Thing</span>
+				</h2>
+				<div
+					className="mx-auto w-48 overflow-hidden"
+					style={{ height: "2px", backgroundColor: "#eee" }}
+				>
+					<div
+						className="h-full w-full"
+						style={{
+							backgroundColor: "#e63946",
+							animation: "loading-line 1.4s ease-in-out infinite",
+						}}
+					/>
+				</div>
+				<p
+					className="font-dm text-[11px] tracking-[0.25em] uppercase mt-5"
+					style={{ color: "#999" }}
+				>
+					Loading
+				</p>
+			</div>
+		</div>
+	);
+}
+
+function NotFoundPage() {
+	return (
+		<div
+			className="swiss-grid flex min-h-screen flex-col items-center justify-center px-6"
+			style={{ color: "#111" }}
+		>
+			<div className="relative text-center">
+				<div
+					className="font-instrument select-none pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+					style={{
+						fontSize: "clamp(12rem, 30vw, 20rem)",
+						lineHeight: 0.85,
+						color: "#e63946",
+						opacity: 0.06,
+					}}
+				>
+					404
+				</div>
+				<div className="relative z-10">
+					<p
+						className="font-dm text-xs font-600 tracking-[0.25em] uppercase mb-6"
+						style={{ color: "#e63946" }}
+					>
+						Page Not Found
+					</p>
+					<h1 className="font-instrument text-5xl sm:text-6xl lg:text-7xl leading-[0.95] mb-6">
+						Nothing
+						<br />
+						<span className="italic">here</span>
+						<span style={{ color: "#e63946" }}>.</span>
+					</h1>
+					<p
+						className="font-dm text-sm font-300 leading-relaxed max-w-sm mx-auto mb-10"
+						style={{ color: "#777" }}
+					>
+						The page you're looking for doesn't exist or has been moved.
+					</p>
+					<Link to="/">
+						<Button
+							size="lg"
+							className="font-dm text-sm font-600 rounded-none px-8 py-6 group"
+							style={{ backgroundColor: "#e63946", color: "#fff" }}
+						>
+							Back to Home
+							<ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+						</Button>
+					</Link>
 				</div>
 			</div>
 		</div>

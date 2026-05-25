@@ -14,7 +14,7 @@ import {
 	Trash2,
 } from "lucide-react";
 
-import { Navigation } from "@/components/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table/data-table";
 import { InvoicePDF } from "@/components/invoice-pdf";
 import { Button } from "@/components/ui/button";
@@ -132,8 +132,8 @@ function InvoicesPage() {
 
 	const settings = useQuery(
 		api.settings.get,
-		currentUser?._id ? { userId: currentUser._id } : "skip"
-	)
+		currentUser?._id ? { userId: currentUser._id } : "skip",
+	);
 
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const updateStatusBulk = useMutation(api.invoices.updateStatusBulk);
@@ -155,8 +155,8 @@ function InvoicesPage() {
 
 	const previewInvoice = useQuery(
 		api.invoices.get,
-		previewInvoiceId ? { invoiceId: previewInvoiceId } : "skip"
-	)
+		previewInvoiceId ? { invoiceId: previewInvoiceId } : "skip",
+	);
 
 	const normalizePreview = useCallback(
 		(invoice: InvoiceWithRelations): InvoicePreview => ({
@@ -178,7 +178,7 @@ function InvoicesPage() {
 						buildingName: invoice.client.buildingName ?? null,
 						unitNumber: invoice.client.unitNumber ?? null,
 						postalCode: invoice.client.postalCode ?? null,
-				  }
+					}
 				: null,
 			lineItems: (invoice.lineItems ?? []).map((item) => ({
 				description: item.description,
@@ -193,8 +193,8 @@ function InvoicesPage() {
 				hasReceipt: Boolean(claim.imageStorageId),
 			})),
 		}),
-		[]
-	)
+		[],
+	);
 
 	const normalizeFromList = useCallback(
 		(invoice: InvoiceListEntry): InvoicePreview => ({
@@ -216,13 +216,13 @@ function InvoicesPage() {
 						buildingName: invoice.client.buildingName ?? null,
 						unitNumber: invoice.client.unitNumber ?? null,
 						postalCode: invoice.client.postalCode ?? null,
-				  }
+					}
 				: null,
 			lineItems: [],
 			claims: [],
 		}),
-		[]
-	)
+		[],
+	);
 
 	const normalizedPreview = useMemo(() => {
 		if (!previewInvoice) return null;
@@ -234,7 +234,7 @@ function InvoicesPage() {
 		setPreviewCache((current) => ({
 			...current,
 			[normalizedPreview._id]: normalizedPreview,
-		}))
+		}));
 	}, [normalizedPreview]);
 
 	const invoiceForPreview = useMemo(() => {
@@ -252,8 +252,8 @@ function InvoicesPage() {
 		}
 
 		const fallback = invoiceList.find(
-			(invoice) => invoice._id === previewInvoiceId
-		)
+			(invoice) => invoice._id === previewInvoiceId,
+		);
 		if (fallback) {
 			return normalizeFromList(fallback as InvoiceListEntry);
 		}
@@ -265,13 +265,13 @@ function InvoicesPage() {
 		previewCache,
 		invoiceList,
 		normalizeFromList,
-	])
+	]);
 
 	const previewStatusOption = useMemo(() => {
 		if (!invoiceForPreview) return undefined;
 		return STATUS_OPTIONS.find(
-			(option) => option.value === invoiceForPreview.status
-		)
+			(option) => option.value === invoiceForPreview.status,
+		);
 	}, [invoiceForPreview]);
 
 	const previewAddress = useMemo(() => {
@@ -282,7 +282,7 @@ function InvoicesPage() {
 			buildingName: client.buildingName ?? undefined,
 			unitNumber: client.unitNumber ?? undefined,
 			postalCode: client.postalCode ?? undefined,
-		})
+		});
 	}, [invoiceForPreview]);
 
 	const tableData: InvoiceRow[] = useMemo(
@@ -299,13 +299,13 @@ function InvoicesPage() {
 				clientEmail: invoice.client?.email ?? undefined,
 				clientContact: invoice.client?.contactPerson ?? undefined,
 			})),
-		[invoiceList]
-	)
+		[invoiceList],
+	);
 
 	const selectedIds = useMemo(
 		() => selectedInvoices.map((invoice) => invoice._id),
-		[selectedInvoices]
-	)
+		[selectedInvoices],
+	);
 	const selectedCount = selectedIds.length;
 	const isBusy =
 		isBulkUpdating || isDeleting || isDownloading || isStatusUpdating;
@@ -326,14 +326,14 @@ function InvoicesPage() {
 			try {
 				await deleteInvoices({
 					invoiceIds: [invoice._id],
-				})
+				});
 				setSelectedInvoices((current) =>
-					current.filter((item) => item._id !== invoice._id)
-				)
+					current.filter((item) => item._id !== invoice._id),
+				);
 				toast({
 					title: "Invoice deleted",
 					description: `Invoice ${invoice.invoiceNumber} has been removed.`,
-				})
+				});
 				if (previewInvoiceId === invoice._id) {
 					handlePreviewClose();
 				}
@@ -343,13 +343,13 @@ function InvoicesPage() {
 					title: "Unable to delete",
 					description: "An error occurred while deleting the invoice.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsDeleting(false);
 			}
 		},
-		[deleteInvoices, handlePreviewClose, previewInvoiceId, toast]
-	)
+		[deleteInvoices, handlePreviewClose, previewInvoiceId, toast],
+	);
 
 	const handleStatusChange = useCallback(
 		async (invoiceId: Id<"invoices">, newStatus: InvoiceStatus) => {
@@ -358,11 +358,11 @@ function InvoicesPage() {
 				await updateStatus({
 					invoiceId,
 					status: newStatus,
-				})
+				});
 				toast({
 					title: "Status updated",
 					description: `Invoice status changed to ${newStatus}.`,
-				})
+				});
 			} catch (error) {
 				console.error(error);
 				toast({
@@ -370,13 +370,13 @@ function InvoicesPage() {
 					description:
 						"We couldn't update the invoice status. Please try again.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsStatusUpdating(false);
 			}
 		},
-		[toast, updateStatus]
-	)
+		[toast, updateStatus],
+	);
 
 	const handleBulkStatusChange = useCallback(
 		async (status: InvoiceStatus) => {
@@ -386,24 +386,24 @@ function InvoicesPage() {
 				await updateStatusBulk({
 					invoiceIds: selectedIds,
 					status,
-				})
+				});
 				toast({
 					title: "Status updated",
 					description: `Updated ${selectedIds.length} invoice(s).`,
-				})
+				});
 			} catch (error) {
 				console.error(error);
 				toast({
 					title: "Unable to update",
 					description: "An error occurred while updating invoice statuses.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsBulkUpdating(false);
 			}
 		},
-		[selectedIds, toast, updateStatusBulk]
-	)
+		[selectedIds, toast, updateStatusBulk],
+	);
 
 	const handleBulkDelete = useCallback(async () => {
 		if (!selectedIds.length) return;
@@ -411,7 +411,7 @@ function InvoicesPage() {
 		try {
 			await deleteInvoices({
 				invoiceIds: selectedIds,
-			})
+			});
 			setSelectedInvoices([]);
 			if (previewInvoiceId && selectedIds.includes(previewInvoiceId)) {
 				handlePreviewClose();
@@ -419,14 +419,14 @@ function InvoicesPage() {
 			toast({
 				title: "Invoices deleted",
 				description: "Selected invoices have been removed.",
-			})
+			});
 		} catch (error) {
 			console.error(error);
 			toast({
 				title: "Unable to delete",
 				description: "An error occurred while deleting invoices.",
 				variant: "destructive",
-			})
+			});
 		} finally {
 			setIsDeleting(false);
 		}
@@ -436,7 +436,7 @@ function InvoicesPage() {
 		previewInvoiceId,
 		selectedIds,
 		toast,
-	])
+	]);
 
 	const handleBulkDownload = useCallback(async () => {
 		if (!selectedIds.length) return;
@@ -445,7 +445,7 @@ function InvoicesPage() {
 			for (const invoiceId of selectedIds) {
 				const invoice = await convex.query(api.invoices.get, {
 					invoiceId,
-				})
+				});
 				if (!invoice) continue;
 
 				const claimImageUrls = await Promise.all(
@@ -453,10 +453,10 @@ function InvoicesPage() {
 						if (!claim.imageStorageId) return undefined;
 						const url = await convex.query(api.files.getFileUrl, {
 							storageId: claim.imageStorageId,
-						})
+						});
 						return url ?? undefined;
-					})
-				)
+					}),
+				);
 
 				const clientInfo = invoice.client
 					? {
@@ -467,10 +467,10 @@ function InvoicesPage() {
 							buildingName: invoice.client.buildingName ?? undefined,
 							unitNumber: invoice.client.unitNumber ?? undefined,
 							postalCode: invoice.client.postalCode ?? undefined,
-					  }
+						}
 					: {
 							name: "Unknown client",
-					  }
+						};
 
 				const pdfData = {
 					invoiceNumber: invoice.invoiceNumber,
@@ -494,7 +494,7 @@ function InvoicesPage() {
 					total: invoice.total,
 					notes: invoice.notes,
 					paymentInstructions: settings?.paymentInstructions,
-				}
+				};
 
 				const blob = await pdf(<InvoicePDF invoice={pdfData} />).toBlob();
 				const url = URL.createObjectURL(blob);
@@ -509,7 +509,7 @@ function InvoicesPage() {
 			toast({
 				title: "Downloads started",
 				description: `Generated ${selectedIds.length} PDF file(s).`,
-			})
+			});
 		} catch (error) {
 			console.error(error);
 			toast({
@@ -517,7 +517,7 @@ function InvoicesPage() {
 				description:
 					"We couldn't generate one or more invoices. Please try again.",
 				variant: "destructive",
-			})
+			});
 		} finally {
 			setIsDownloading(false);
 		}
@@ -526,8 +526,8 @@ function InvoicesPage() {
 	useEffect(() => {
 		if (!previewInvoiceId) return;
 		const stillExists = invoiceList.some(
-			(invoice) => invoice._id === previewInvoiceId
-		)
+			(invoice) => invoice._id === previewInvoiceId,
+		);
 		if (!stillExists) {
 			handlePreviewClose();
 		}
@@ -537,12 +537,11 @@ function InvoicesPage() {
 		onStatusChange: handleStatusChange,
 		statusOptions: STATUS_OPTIONS,
 		disableStatusChange: isBusy,
-	})
+	});
 
 	return (
-		<div className="min-h-screen">
-			<Navigation />
-			<main className="container mx-auto px-4 py-4 sm:py-8">
+		<AppSidebar>
+			<div className="px-4 py-4 sm:px-8 sm:py-8">
 				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<h1 className="text-3xl font-bold sm:text-4xl">Invoices</h1>
 					<Button asChild className="w-full sm:w-auto">
@@ -681,7 +680,7 @@ function InvoicesPage() {
 						/>
 					</div>
 				)}
-			</main>
+			</div>
 			<Dialog
 				open={isPreviewOpen}
 				onOpenChange={(open) => {
@@ -746,7 +745,7 @@ function InvoicesPage() {
 													<p className="font-semibold">
 														{format(
 															new Date(invoiceForPreview.issueDate),
-															"MMM d, yyyy"
+															"MMM d, yyyy",
 														)}
 													</p>
 												</div>
@@ -755,7 +754,7 @@ function InvoicesPage() {
 													<p className="font-semibold">
 														{format(
 															new Date(invoiceForPreview.dueDate),
-															"MMM d, yyyy"
+															"MMM d, yyyy",
 														)}
 													</p>
 												</div>
@@ -877,8 +876,8 @@ function InvoicesPage() {
 																		{claim.date
 																			? format(
 																					new Date(claim.date),
-																					"MMM d, yyyy"
-																			  )
+																					"MMM d, yyyy",
+																				)
 																			: "—"}
 																	</td>
 																	<td className="px-4 py-2 text-right">
@@ -951,7 +950,7 @@ function InvoicesPage() {
 												to="/invoices/$id"
 												params={{ id: invoiceForPreview._id }}
 												onClick={(e) => {
-													handlePreviewClose()
+													handlePreviewClose();
 													// Let Link handle navigation
 												}}
 											>
@@ -969,6 +968,6 @@ function InvoicesPage() {
 					</DialogContent>
 				) : null}
 			</Dialog>
-		</div>
-	)
+		</AppSidebar>
+	);
 }

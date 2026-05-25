@@ -16,7 +16,11 @@ const HEIC_MIME_TYPES = new Set([
 
 const isHeicFile = (file: File) => {
 	const extension = file.name.split(".").pop()?.toLowerCase();
-	return HEIC_MIME_TYPES.has(file.type) || extension === "heic" || extension === "heif";
+	return (
+		HEIC_MIME_TYPES.has(file.type) ||
+		extension === "heic" ||
+		extension === "heif"
+	);
 };
 
 const errorToMessage = (error: unknown) => {
@@ -56,7 +60,8 @@ const convertHeicToJpeg = async (file: File, quality: number) => {
 	} catch (error) {
 		const message = errorToMessage(error);
 		const isFormatUnsupported =
-			message.includes("ERR_LIBHEIF") || message.includes("format not supported");
+			message.includes("ERR_LIBHEIF") ||
+			message.includes("format not supported");
 		if (isFormatUnsupported) {
 			try {
 				const { heicTo } = await import("heic-to");
@@ -68,7 +73,7 @@ const convertHeicToJpeg = async (file: File, quality: number) => {
 			} catch (fallbackError) {
 				const fallbackMessage = errorToMessage(fallbackError);
 				throw new Error(
-					`HEIC conversion failed: ${message}. Fallback failed: ${fallbackMessage}`
+					`HEIC conversion failed: ${message}. Fallback failed: ${fallbackMessage}`,
 				);
 			}
 		}
@@ -82,7 +87,7 @@ export const compressImageFile = async (
 		maxDimension = DEFAULT_MAX_DIMENSION,
 		quality = DEFAULT_QUALITY,
 		mimeType = DEFAULT_MIME_TYPE,
-	}: CompressImageOptions = {}
+	}: CompressImageOptions = {},
 ): Promise<File> => {
 	let sourceBlob: Blob = file;
 	let sourceWidth = 0;
@@ -164,7 +169,7 @@ export const compressImageFile = async (
 				resolve(result);
 			},
 			mimeType,
-			quality
+			quality,
 		);
 	});
 

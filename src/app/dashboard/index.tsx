@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Navigation } from "@/components/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppData } from "@/context/app-data-provider";
@@ -9,7 +9,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const DashboardCharts = lazy(() =>
 	import("@/components/dashboard-charts").then((mod) => ({
 		default: mod.DashboardCharts,
-	}))
+	})),
 );
 
 export const Route = createFileRoute("/dashboard/")({
@@ -51,9 +51,8 @@ export const Route = createFileRoute("/dashboard/")({
 		if (typeof window === "undefined") {
 			try {
 				// Import server-side utilities
-				const { getClerkToken, callConvexHttp } = await import(
-					"@/lib/server-auth"
-				);
+				const { getClerkToken, callConvexHttp } =
+					await import("@/lib/server-auth");
 
 				// Debug: Log if we're on server and if request is available
 				if (process.env.NODE_ENV === "development") {
@@ -61,7 +60,7 @@ export const Route = createFileRoute("/dashboard/")({
 					console.log("[SSR Loader] Request available:", !!request);
 					console.log(
 						"[SSR Loader] CLERK_SECRET_KEY set:",
-						!!process.env.CLERK_SECRET_KEY
+						!!process.env.CLERK_SECRET_KEY,
 					);
 				}
 
@@ -69,7 +68,7 @@ export const Route = createFileRoute("/dashboard/")({
 				if (!request) {
 					if (process.env.NODE_ENV === "development") {
 						console.log(
-							"[SSR Loader] No request available, falling back to client-side hooks"
+							"[SSR Loader] No request available, falling back to client-side hooks",
 						);
 					}
 					return null;
@@ -81,7 +80,7 @@ export const Route = createFileRoute("/dashboard/")({
 					// Not authenticated, return null to use client-side hooks
 					if (process.env.NODE_ENV === "development") {
 						console.log(
-							"[SSR Loader] No Clerk token available, falling back to client-side hooks"
+							"[SSR Loader] No Clerk token available, falling back to client-side hooks",
 						);
 					}
 					return null;
@@ -111,7 +110,7 @@ export const Route = createFileRoute("/dashboard/")({
 					convexUrl,
 					"users/getCurrentUser",
 					{ clerkId: auth.userId },
-					clerkToken
+					clerkToken,
 				);
 
 				if (!convexUser?._id) {
@@ -125,13 +124,13 @@ export const Route = createFileRoute("/dashboard/")({
 						convexUrl,
 						"invoices/getStats",
 						{ userId: convexUser._id },
-						clerkToken
+						clerkToken,
 					),
 					callConvexHttp(
 						convexUrl,
 						"invoices/getByUser",
 						{ userId: convexUser._id },
-						clerkToken
+						clerkToken,
 					),
 				]);
 
@@ -146,7 +145,7 @@ export const Route = createFileRoute("/dashboard/")({
 				// Fall back to client-side hooks
 				console.debug(
 					"Server-side data fetching failed, using client-side hooks:",
-					error
+					error,
 				);
 			}
 		}
@@ -180,9 +179,8 @@ function DashboardPage() {
 	const invoiceList = finalInvoices ?? [];
 
 	return (
-		<div className="min-h-screen">
-			<Navigation />
-			<main className="container mx-auto px-4 py-4 sm:py-8">
+		<AppSidebar>
+			<div className="px-4 py-4 sm:px-8 sm:py-8">
 				<h1 className="mb-8 text-3xl font-bold sm:text-4xl">Dashboard</h1>
 
 				<div className="space-y-8">
@@ -367,7 +365,7 @@ function DashboardPage() {
 						/>
 					</Suspense>
 				</div>
-			</main>
-		</div>
+			</div>
+		</AppSidebar>
 	);
 }
