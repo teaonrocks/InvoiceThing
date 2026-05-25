@@ -25,12 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Save, Settings as SettingsIcon } from "lucide-react";
 import { useAppData } from "@/context/app-data-provider";
-
-// Utility function to round invoice total (same as in backend)
-function roundToIncrement(value: number, increment: number): number {
-	if (increment <= 0) return value;
-	return Math.round(value / increment) * increment;
-}
+import { roundToIncrement } from "@/lib/invoice-rounding";
 
 export const Route = createFileRoute("/settings/")({
 	component: SettingsPage,

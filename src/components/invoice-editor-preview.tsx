@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import type { Doc } from "@/../convex/_generated/dataModel";
 import { formatAddressParts } from "@/lib/utils";
 import { formatInvoiceCurrency } from "@/lib/invoice-format";
+import { applyInvoiceTotalRounding } from "@/lib/invoice-rounding";
 import type {
 	InvoiceFormClaim,
 	InvoiceFormLineItem,
@@ -111,9 +112,10 @@ export function buildInvoiceEditorPreviewData({
 	subtotal,
 	expensesTotal,
 	tax,
-	total,
 	taxRate,
 	paymentInstructions,
+	enableRounding,
+	roundingIncrement,
 }: {
 	invoiceNumber: string;
 	issueDate?: Date;
@@ -126,12 +128,19 @@ export function buildInvoiceEditorPreviewData({
 	subtotal: number;
 	expensesTotal: number;
 	tax: number;
-	total: number;
 	taxRate: number;
 	paymentInstructions?: string;
+	enableRounding?: boolean;
+	roundingIncrement?: number;
 }): InvoiceEditorPreviewData {
 	const client =
 		clients?.find((entry) => entry._id === selectedClientId) ?? null;
+
+	const totalBeforeRounding = subtotal + expensesTotal + tax;
+	const { total: roundedTotal, roundingAdjustment } = applyInvoiceTotalRounding(
+		totalBeforeRounding,
+		{ enableRounding, roundingIncrement },
+	);
 
 	return {
 		invoiceNumber: invoiceNumber.trim() || "DRAFT",
@@ -158,8 +167,9 @@ export function buildInvoiceEditorPreviewData({
 		subtotal,
 		expensesTotal,
 		tax,
-		total,
+		total: roundedTotal,
 		taxRate,
+		roundingAdjustment,
 		paymentInstructions: paymentInstructions?.trim() || undefined,
 	};
 }

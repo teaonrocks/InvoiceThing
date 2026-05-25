@@ -337,10 +337,6 @@ function NewInvoicePage() {
 		return (calculateSubtotal() + calculateClaimsTotal()) * taxRate;
 	};
 
-	const calculateTotal = () => {
-		return calculateSubtotal() + calculateClaimsTotal() + calculateTax();
-	};
-
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -413,9 +409,10 @@ function NewInvoicePage() {
 				subtotal: calculateSubtotal(),
 				expensesTotal: calculateClaimsTotal(),
 				tax: calculateTax(),
-				total: calculateTotal(),
 				taxRate,
 				paymentInstructions: settings?.paymentInstructions,
+				enableRounding: settings?.enableRounding,
+				roundingIncrement: settings?.roundingIncrement,
 			}),
 		[
 			invoiceNumber,
@@ -427,6 +424,8 @@ function NewInvoicePage() {
 			claims,
 			notes,
 			settings?.paymentInstructions,
+			settings?.enableRounding,
+			settings?.roundingIncrement,
 			taxRate,
 		],
 	);
