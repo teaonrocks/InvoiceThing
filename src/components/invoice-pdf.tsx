@@ -12,6 +12,7 @@ import { formatAddressParts } from "@/lib/utils";
 import {
 	buildInvoiceBranding,
 	type InvoiceBranding,
+	getInvoiceTextColors,
 } from "@/lib/invoice-branding";
 import { ensureInvoicePdfFont } from "@/lib/register-invoice-pdf-fonts";
 
@@ -19,6 +20,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 	const font = ensureInvoicePdfFont(branding.fontKey);
 	const accent = branding.accentColor;
 	const secondary = branding.secondaryColor;
+	const textColors = getInvoiceTextColors(accent, secondary);
 	const heading = { fontFamily: font.pdfFamily, fontWeight: 700 as const };
 	const body = { fontFamily: font.pdfFamily };
 	const mono = { fontFamily: "DM Mono" };
@@ -29,6 +31,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			fontSize: 11,
 			...body,
 			backgroundColor: secondary,
+			color: textColors.foreground,
 		},
 		header: {
 			marginBottom: 30,
@@ -45,11 +48,11 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			fontSize: 28,
 			...heading,
 			marginBottom: 10,
-			color: accent,
+			color: textColors.accent,
 		},
 		invoiceNumber: {
 			fontSize: 12,
-			color: "#666",
+			color: textColors.mutedForeground,
 			marginBottom: 4,
 			...mono,
 		},
@@ -60,7 +63,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			fontSize: 12,
 			...heading,
 			marginBottom: 8,
-			color: accent,
+			color: textColors.accent,
 		},
 		row: {
 			flexDirection: "row",
@@ -70,7 +73,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			width: 100,
 			...body,
 			fontWeight: 700,
-			color: "#666",
+			color: textColors.mutedForeground,
 		},
 		value: {
 			flex: 1,
@@ -83,7 +86,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 		tableHeader: {
 			flexDirection: "row",
 			borderBottomWidth: 2,
-			borderBottomColor: accent,
+			borderBottomColor: textColors.accent,
 			paddingBottom: 8,
 			marginBottom: 8,
 		},
@@ -91,13 +94,13 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			...heading,
 			fontSize: 10,
 			textTransform: "uppercase",
-			color: accent,
+			color: textColors.accent,
 		},
 		tableRow: {
 			flexDirection: "row",
 			paddingVertical: 6,
 			borderBottomWidth: 1,
-			borderBottomColor: "#eee",
+			borderBottomColor: textColors.border,
 		},
 		tableCell: {
 			fontSize: 10,
@@ -159,14 +162,14 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			fontWeight: 500,
 			paddingTop: 8,
 			borderTopWidth: 2,
-			borderTopColor: accent,
+			borderTopColor: textColors.accent,
 		},
 		grandTotalLabel: {
-			color: accent,
+			color: textColors.accent,
 			fontWeight: 700,
 		},
 		grandTotalValue: {
-			color: accent,
+			color: textColors.accent,
 		},
 		paymentInfo: {
 			flex: 1,
@@ -177,13 +180,13 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			...heading,
 			marginBottom: 8,
 			fontSize: 11,
-			color: accent,
+			color: textColors.accent,
 		},
 		paymentText: {
 			fontSize: 9,
 			lineHeight: 1.5,
 			whiteSpace: "pre-wrap",
-			color: "#333",
+			color: textColors.mutedForeground,
 		},
 		notes: {
 			marginTop: 30,
@@ -194,7 +197,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 		notesTitle: {
 			...heading,
 			marginBottom: 8,
-			color: accent,
+			color: textColors.accent,
 		},
 		notesText: {
 			fontSize: 10,
@@ -207,11 +210,11 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			right: 40,
 			textAlign: "center",
 			fontSize: 9,
-			color: "#999",
+			color: textColors.mutedForeground,
 		},
 		receiptLabel: {
 			fontSize: 8,
-			color: "#666",
+			color: textColors.mutedForeground,
 			marginTop: 4,
 		},
 		receiptPage: {
@@ -227,11 +230,11 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			fontSize: 20,
 			...heading,
 			marginBottom: 4,
-			color: accent,
+			color: textColors.accent,
 		},
 		receiptPageMeta: {
 			fontSize: 10,
-			color: "#555",
+			color: textColors.mutedForeground,
 			marginBottom: 4,
 			...mono,
 		},
@@ -243,7 +246,7 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 		receiptImageWrapper: {
 			marginTop: 12,
 			borderWidth: 1,
-			borderColor: "#ddd",
+			borderColor: textColors.border,
 			padding: 12,
 			alignItems: "center",
 		},
@@ -286,6 +289,10 @@ export type InvoicePdfData = {
 
 export const InvoicePDF = ({ invoice }: { invoice: InvoicePdfData }) => {
 	const branding = invoice.branding ?? buildInvoiceBranding();
+	const textColors = getInvoiceTextColors(
+		branding.accentColor,
+		branding.secondaryColor,
+	);
 	const styles = createInvoicePdfStyles(branding);
 	const claims = invoice.claims ?? [];
 	const claimsWithImages = claims.filter((claim) => Boolean(claim.imageUrl));
@@ -347,7 +354,7 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoicePdfData }) => {
 						</Text>
 					)}
 					{formattedClientAddress && (
-						<Text style={{ fontSize: 10, color: "#666" }}>
+						<Text style={{ fontSize: 10, color: textColors.mutedForeground }}>
 							{formattedClientAddress}
 						</Text>
 					)}

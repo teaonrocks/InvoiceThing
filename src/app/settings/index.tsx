@@ -19,6 +19,7 @@ import {
 	INVOICE_COLOR_PRESETS,
 	INVOICE_FONT_OPTIONS,
 	getInvoiceFont,
+	getInvoiceTextColors,
 	isHexColor,
 	normalizeHexColor,
 	resolveInvoiceFontKey,
@@ -543,8 +544,17 @@ function SettingsPage() {
 									className="rounded-sm border border-border px-4 py-3 text-lg"
 									style={{
 										fontFamily: getInvoiceFont(invoiceFontFamily).cssFamily,
-										color: accentColor,
-										backgroundColor: secondaryColor,
+										color: getInvoiceTextColors(
+											isHexColor(accentColor)
+												? accentColor
+												: DEFAULT_INVOICE_ACCENT_COLOR,
+											isHexColor(secondaryColor)
+												? secondaryColor
+												: DEFAULT_INVOICE_SECONDARY_COLOR,
+										).accent,
+										backgroundColor: isHexColor(secondaryColor)
+											? secondaryColor
+											: DEFAULT_INVOICE_SECONDARY_COLOR,
 									}}
 								>
 									Preview: Invoice #{invoicePrefix}-0001

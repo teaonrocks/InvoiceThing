@@ -181,6 +181,8 @@ export function getInvoiceFont(key?: string): InvoiceFontOption {
 	return INVOICE_FONT_OPTIONS.find((font) => font.key === resolvedKey)!;
 }
 
+export { getInvoiceTextColors, type InvoiceTextColors } from "@/lib/color-contrast";
+
 export function buildInvoiceBranding(
 	settings?: SettingsBrandingSource | null,
 	logoUrl?: string | null,

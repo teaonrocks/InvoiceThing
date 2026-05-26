@@ -205,6 +205,12 @@
 	font-family: "DM Mono", monospace;
 	font-variant-numeric: tabular-nums;
 }
+.invoice-preview {
+	color: var(--invoice-fg);
+}
+.invoice-preview .invoice-text-muted {
+	color: var(--invoice-muted);
+}
 .text-brand {
 	color: var(--brand);
 }
