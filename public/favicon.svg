@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" role="img" aria-label="InvoiceThing">
+  <rect width="28" height="28" fill="hsl(354 78% 56%)"/>
+  <text
+    x="14"
+    y="14"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="hsl(0 0% 98%)"
+    font-family="DM Sans, system-ui, sans-serif"
+    font-size="16"
+    font-weight="700"
+  >IT</text>
+</svg>

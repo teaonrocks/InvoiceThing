@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
 	Table,
 	TableBody,
@@ -25,6 +26,7 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
+	tableShellClassName,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +102,9 @@ export function DataTable<TData, TValue>({
 	const handleRowClick = React.useCallback(
 		(rowData: TData, event: React.MouseEvent<HTMLTableRowElement>) => {
 			if (!onRowClick) return;
+			if (document.querySelector('[role="alertdialog"][data-state="open"]')) {
+				return;
+			}
 			const target = event.target as HTMLElement;
 			const interactive = target.closest(
 				"button, a, input, textarea, select, [role='menuitem'], [role='checkbox'], [data-no-row-click]"
@@ -135,11 +140,11 @@ export function DataTable<TData, TValue>({
 					) : null}
 				</div>
 			</div>
-			<div className="overflow-hidden rounded-md border">
+			<div className={tableShellClassName}>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
+							<TableRow key={headerGroup.id} className="hover:bg-transparent">
 								{headerGroup.headers.map((header) => {
 									return (
 										<TableHead key={header.id}>
@@ -181,9 +186,9 @@ export function DataTable<TData, TValue>({
 							<TableRow>
 								<TableCell
 									colSpan={columns.length}
-									className="h-24 text-center"
+									className="h-24 p-0"
 								>
-									No results.
+									<EmptyState />
 								</TableCell>
 							</TableRow>
 						)}

@@ -7,6 +7,7 @@ import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import { pdf } from "@react-pdf/renderer";
 import {
 	Download,
+	Edit,
 	FileText,
 	Image as ReceiptIcon,
 	ImageOff as ReceiptOffIcon,
@@ -14,12 +15,27 @@ import {
 	Trash2,
 } from "lucide-react";
 
-import { Navigation } from "@/components/navigation";
+import { ColumnHeader } from "@/components/data-table/column-header";
 import { DataTable } from "@/components/data-table/data-table";
 import { InvoicePDF } from "@/components/invoice-pdf";
+import {
+	DownloadInvoicePDF,
+	downloadInvoicePdfById,
+	mapConvexInvoiceToDownload,
+	mapPreviewToDownloadInvoice,
+} from "@/components/download-invoice-pdf";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
+import { INVOICE_STATUS_OPTIONS } from "@/components/invoice-status-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import { TableSkeleton } from "@/components/table-skeleton";
 import {
 	AlertDialog,
@@ -54,12 +70,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import {
-	InvoiceStatus,
-	InvoiceStatusOption,
-	InvoiceRow,
-	useInvoiceColumns,
-} from "./-columns";
+import { InvoiceStatus, InvoiceRow, useInvoiceColumns } from "./-columns";
 import { useAppData } from "@/context/app-data-provider";
 import {
 	Tooltip,
@@ -68,13 +79,13 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatAddressParts } from "@/lib/utils";
+import {
+	MobileInvoiceCardList,
+	type MobileInvoiceCardRow,
+} from "@/components/mobile-invoice-card-list";
+import { useMobileReceipt } from "@/components/mobile-app-shell";
 
-const STATUS_OPTIONS: InvoiceStatusOption[] = [
-	{ value: "draft", label: "Draft", color: "bg-gray-500" },
-	{ value: "sent", label: "Sent", color: "bg-blue-500" },
-	{ value: "paid", label: "Paid", color: "bg-green-500" },
-	{ value: "overdue", label: "Overdue", color: "bg-red-500" },
-];
+const STATUS_OPTIONS = INVOICE_STATUS_OPTIONS;
 
 type InvoicePreview = {
 	_id: Id<"invoices">;
@@ -125,6 +136,7 @@ export const Route = createFileRoute("/invoices/")({
 
 function InvoicesPage() {
 	const navigate = useNavigate();
+	const { openReceiptSheet } = useMobileReceipt();
 	const { toast } = useToast();
 	const convex = useConvex();
 	const { invoices: cachedInvoices, currentUser } = useAppData();
@@ -132,8 +144,8 @@ function InvoicesPage() {
 
 	const settings = useQuery(
 		api.settings.get,
-		currentUser?._id ? { userId: currentUser._id } : "skip"
-	)
+		currentUser?._id ? { userId: currentUser._id } : "skip",
+	);
 
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const updateStatusBulk = useMutation(api.invoices.updateStatusBulk);
@@ -143,6 +155,8 @@ function InvoicesPage() {
 	const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [isDownloading, setIsDownloading] = useState(false);
+	const [downloadingInvoiceId, setDownloadingInvoiceId] =
+		useState<Id<"invoices"> | null>(null);
 	const [isStatusUpdating, setIsStatusUpdating] = useState(false);
 	const [previewInvoiceId, setPreviewInvoiceId] =
 		useState<Id<"invoices"> | null>(null);
@@ -150,13 +164,14 @@ function InvoicesPage() {
 	const [previewCache, setPreviewCache] = useState<
 		Record<string, InvoicePreview>
 	>({});
+	const [mobileFilter, setMobileFilter] = useState("");
 
 	const invoiceList = useMemo(() => invoices ?? [], [invoices]);
 
 	const previewInvoice = useQuery(
 		api.invoices.get,
-		previewInvoiceId ? { invoiceId: previewInvoiceId } : "skip"
-	)
+		previewInvoiceId ? { invoiceId: previewInvoiceId } : "skip",
+	);
 
 	const normalizePreview = useCallback(
 		(invoice: InvoiceWithRelations): InvoicePreview => ({
@@ -178,7 +193,7 @@ function InvoicesPage() {
 						buildingName: invoice.client.buildingName ?? null,
 						unitNumber: invoice.client.unitNumber ?? null,
 						postalCode: invoice.client.postalCode ?? null,
-				  }
+					}
 				: null,
 			lineItems: (invoice.lineItems ?? []).map((item) => ({
 				description: item.description,
@@ -193,8 +208,8 @@ function InvoicesPage() {
 				hasReceipt: Boolean(claim.imageStorageId),
 			})),
 		}),
-		[]
-	)
+		[],
+	);
 
 	const normalizeFromList = useCallback(
 		(invoice: InvoiceListEntry): InvoicePreview => ({
@@ -216,13 +231,13 @@ function InvoicesPage() {
 						buildingName: invoice.client.buildingName ?? null,
 						unitNumber: invoice.client.unitNumber ?? null,
 						postalCode: invoice.client.postalCode ?? null,
-				  }
+					}
 				: null,
 			lineItems: [],
 			claims: [],
 		}),
-		[]
-	)
+		[],
+	);
 
 	const normalizedPreview = useMemo(() => {
 		if (!previewInvoice) return null;
@@ -234,7 +249,7 @@ function InvoicesPage() {
 		setPreviewCache((current) => ({
 			...current,
 			[normalizedPreview._id]: normalizedPreview,
-		}))
+		}));
 	}, [normalizedPreview]);
 
 	const invoiceForPreview = useMemo(() => {
@@ -252,8 +267,8 @@ function InvoicesPage() {
 		}
 
 		const fallback = invoiceList.find(
-			(invoice) => invoice._id === previewInvoiceId
-		)
+			(invoice) => invoice._id === previewInvoiceId,
+		);
 		if (fallback) {
 			return normalizeFromList(fallback as InvoiceListEntry);
 		}
@@ -265,13 +280,13 @@ function InvoicesPage() {
 		previewCache,
 		invoiceList,
 		normalizeFromList,
-	])
+	]);
 
 	const previewStatusOption = useMemo(() => {
 		if (!invoiceForPreview) return undefined;
 		return STATUS_OPTIONS.find(
-			(option) => option.value === invoiceForPreview.status
-		)
+			(option) => option.value === invoiceForPreview.status,
+		);
 	}, [invoiceForPreview]);
 
 	const previewAddress = useMemo(() => {
@@ -282,8 +297,18 @@ function InvoicesPage() {
 			buildingName: client.buildingName ?? undefined,
 			unitNumber: client.unitNumber ?? undefined,
 			postalCode: client.postalCode ?? undefined,
-		})
+		});
 	}, [invoiceForPreview]);
+
+	const downloadInvoice = useMemo(() => {
+		if (!invoiceForPreview) return null;
+		if (previewInvoice?.client && previewInvoice.lineItems?.length) {
+			return mapConvexInvoiceToDownload(
+				previewInvoice as InvoiceWithRelations,
+			);
+		}
+		return mapPreviewToDownloadInvoice(invoiceForPreview);
+	}, [invoiceForPreview, previewInvoice]);
 
 	const tableData: InvoiceRow[] = useMemo(
 		() =>
@@ -299,16 +324,42 @@ function InvoicesPage() {
 				clientEmail: invoice.client?.email ?? undefined,
 				clientContact: invoice.client?.contactPerson ?? undefined,
 			})),
-		[invoiceList]
-	)
+		[invoiceList],
+	);
+
+	const mobileCardData: MobileInvoiceCardRow[] = useMemo(
+		() =>
+			invoiceList.map((invoice) => ({
+				_id: invoice._id as Id<"invoices">,
+				invoiceNumber: invoice.invoiceNumber,
+				status: invoice.status as InvoiceStatus,
+				total: invoice.total,
+				issueDate: invoice.issueDate,
+				dueDate: invoice.dueDate,
+				clientName: invoice.client?.name ?? "Unknown client",
+				claimsCount:
+					"claimsCount" in invoice
+						? (invoice.claimsCount as number | undefined)
+						: undefined,
+				claimsMissingReceipt:
+					"claimsMissingReceipt" in invoice
+						? (invoice.claimsMissingReceipt as number | undefined)
+						: undefined,
+			})),
+		[invoiceList],
+	);
 
 	const selectedIds = useMemo(
 		() => selectedInvoices.map((invoice) => invoice._id),
-		[selectedInvoices]
-	)
+		[selectedInvoices],
+	);
 	const selectedCount = selectedIds.length;
 	const isBusy =
-		isBulkUpdating || isDeleting || isDownloading || isStatusUpdating;
+		isBulkUpdating ||
+		isDeleting ||
+		isDownloading ||
+		isStatusUpdating ||
+		downloadingInvoiceId !== null;
 
 	const handlePreviewClose = useCallback(() => {
 		setIsPreviewOpen(false);
@@ -326,14 +377,14 @@ function InvoicesPage() {
 			try {
 				await deleteInvoices({
 					invoiceIds: [invoice._id],
-				})
+				});
 				setSelectedInvoices((current) =>
-					current.filter((item) => item._id !== invoice._id)
-				)
+					current.filter((item) => item._id !== invoice._id),
+				);
 				toast({
 					title: "Invoice deleted",
 					description: `Invoice ${invoice.invoiceNumber} has been removed.`,
-				})
+				});
 				if (previewInvoiceId === invoice._id) {
 					handlePreviewClose();
 				}
@@ -343,13 +394,13 @@ function InvoicesPage() {
 					title: "Unable to delete",
 					description: "An error occurred while deleting the invoice.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsDeleting(false);
 			}
 		},
-		[deleteInvoices, handlePreviewClose, previewInvoiceId, toast]
-	)
+		[deleteInvoices, handlePreviewClose, previewInvoiceId, toast],
+	);
 
 	const handleStatusChange = useCallback(
 		async (invoiceId: Id<"invoices">, newStatus: InvoiceStatus) => {
@@ -358,11 +409,11 @@ function InvoicesPage() {
 				await updateStatus({
 					invoiceId,
 					status: newStatus,
-				})
+				});
 				toast({
 					title: "Status updated",
 					description: `Invoice status changed to ${newStatus}.`,
-				})
+				});
 			} catch (error) {
 				console.error(error);
 				toast({
@@ -370,13 +421,13 @@ function InvoicesPage() {
 					description:
 						"We couldn't update the invoice status. Please try again.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsStatusUpdating(false);
 			}
 		},
-		[toast, updateStatus]
-	)
+		[toast, updateStatus],
+	);
 
 	const handleBulkStatusChange = useCallback(
 		async (status: InvoiceStatus) => {
@@ -386,24 +437,24 @@ function InvoicesPage() {
 				await updateStatusBulk({
 					invoiceIds: selectedIds,
 					status,
-				})
+				});
 				toast({
 					title: "Status updated",
 					description: `Updated ${selectedIds.length} invoice(s).`,
-				})
+				});
 			} catch (error) {
 				console.error(error);
 				toast({
 					title: "Unable to update",
 					description: "An error occurred while updating invoice statuses.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsBulkUpdating(false);
 			}
 		},
-		[selectedIds, toast, updateStatusBulk]
-	)
+		[selectedIds, toast, updateStatusBulk],
+	);
 
 	const handleBulkDelete = useCallback(async () => {
 		if (!selectedIds.length) return;
@@ -411,7 +462,7 @@ function InvoicesPage() {
 		try {
 			await deleteInvoices({
 				invoiceIds: selectedIds,
-			})
+			});
 			setSelectedInvoices([]);
 			if (previewInvoiceId && selectedIds.includes(previewInvoiceId)) {
 				handlePreviewClose();
@@ -419,14 +470,14 @@ function InvoicesPage() {
 			toast({
 				title: "Invoices deleted",
 				description: "Selected invoices have been removed.",
-			})
+			});
 		} catch (error) {
 			console.error(error);
 			toast({
 				title: "Unable to delete",
 				description: "An error occurred while deleting invoices.",
 				variant: "destructive",
-			})
+			});
 		} finally {
 			setIsDeleting(false);
 		}
@@ -436,80 +487,46 @@ function InvoicesPage() {
 		previewInvoiceId,
 		selectedIds,
 		toast,
-	])
+	]);
+
+	const handleDownloadInvoicePdf = useCallback(
+		async (invoice: InvoiceRow) => {
+			setDownloadingInvoiceId(invoice._id);
+			try {
+				await downloadInvoicePdfById(
+					convex,
+					invoice._id,
+					settings?.paymentInstructions,
+				);
+			} catch (error) {
+				console.error(error);
+				toast({
+					title: "Unable to download",
+					description: `We couldn't generate invoice ${invoice.invoiceNumber}. Please try again.`,
+					variant: "destructive",
+				});
+			} finally {
+				setDownloadingInvoiceId(null);
+			}
+		},
+		[convex, settings?.paymentInstructions, toast],
+	);
 
 	const handleBulkDownload = useCallback(async () => {
 		if (!selectedIds.length) return;
 		setIsDownloading(true);
 		try {
 			for (const invoiceId of selectedIds) {
-				const invoice = await convex.query(api.invoices.get, {
+				await downloadInvoicePdfById(
+					convex,
 					invoiceId,
-				})
-				if (!invoice) continue;
-
-				const claimImageUrls = await Promise.all(
-					(invoice.claims ?? []).map(async (claim) => {
-						if (!claim.imageStorageId) return undefined;
-						const url = await convex.query(api.files.getFileUrl, {
-							storageId: claim.imageStorageId,
-						})
-						return url ?? undefined;
-					})
-				)
-
-				const clientInfo = invoice.client
-					? {
-							name: invoice.client.name,
-							email: invoice.client.email ?? undefined,
-							contactPerson: invoice.client.contactPerson ?? undefined,
-							streetName: invoice.client.streetName ?? undefined,
-							buildingName: invoice.client.buildingName ?? undefined,
-							unitNumber: invoice.client.unitNumber ?? undefined,
-							postalCode: invoice.client.postalCode ?? undefined,
-					  }
-					: {
-							name: "Unknown client",
-					  }
-
-				const pdfData = {
-					invoiceNumber: invoice.invoiceNumber,
-					issueDate: format(new Date(invoice.issueDate), "MMMM d, yyyy"),
-					dueDate: format(new Date(invoice.dueDate), "MMMM d, yyyy"),
-					client: clientInfo,
-					lineItems: invoice.lineItems.map((item) => ({
-						description: item.description,
-						quantity: item.quantity,
-						unitPrice: item.unitPrice,
-						total: item.total,
-					})),
-					claims: invoice.claims?.map((claim, index) => ({
-						description: claim.description,
-						amount: claim.amount,
-						date: format(new Date(claim.date), "MMM d, yyyy"),
-						imageUrl: claimImageUrls[index] ?? undefined,
-					})),
-					subtotal: invoice.subtotal,
-					tax: invoice.tax,
-					total: invoice.total,
-					notes: invoice.notes,
-					paymentInstructions: settings?.paymentInstructions,
-				}
-
-				const blob = await pdf(<InvoicePDF invoice={pdfData} />).toBlob();
-				const url = URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = `invoice-${invoice.invoiceNumber}.pdf`;
-				document.body.appendChild(link);
-				link.click();
-				link.remove();
-				URL.revokeObjectURL(url);
+					settings?.paymentInstructions,
+				);
 			}
 			toast({
 				title: "Downloads started",
 				description: `Generated ${selectedIds.length} PDF file(s).`,
-			})
+			});
 		} catch (error) {
 			console.error(error);
 			toast({
@@ -517,7 +534,7 @@ function InvoicesPage() {
 				description:
 					"We couldn't generate one or more invoices. Please try again.",
 				variant: "destructive",
-			})
+			});
 		} finally {
 			setIsDownloading(false);
 		}
@@ -526,8 +543,8 @@ function InvoicesPage() {
 	useEffect(() => {
 		if (!previewInvoiceId) return;
 		const stillExists = invoiceList.some(
-			(invoice) => invoice._id === previewInvoiceId
-		)
+			(invoice) => invoice._id === previewInvoiceId,
+		);
 		if (!stillExists) {
 			handlePreviewClose();
 		}
@@ -535,14 +552,12 @@ function InvoicesPage() {
 
 	const columns = useInvoiceColumns({
 		onStatusChange: handleStatusChange,
-		statusOptions: STATUS_OPTIONS,
 		disableStatusChange: isBusy,
-	})
+	});
 
 	return (
-		<div className="min-h-screen">
-			<Navigation />
-			<main className="container mx-auto px-4 py-4 sm:py-8">
+		<>
+			<div className="px-4 py-4 sm:px-8 sm:py-8">
 				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<h1 className="text-3xl font-bold sm:text-4xl">Invoices</h1>
 					<Button asChild className="w-full sm:w-auto">
@@ -553,8 +568,8 @@ function InvoicesPage() {
 				{!invoices && (
 					<div className="space-y-4">
 						<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-							<Skeleton className="h-10 w-full max-w-sm" />
-							<Skeleton className="h-10 w-32" />
+							<Skeleton className="h-10 w-full max-w-sm rounded-sm border border-border bg-card" />
+							<Skeleton className="h-10 w-32 rounded-sm border border-border bg-card" />
 						</div>
 						<TableSkeleton columns={7} rows={5} />
 					</div>
@@ -573,6 +588,16 @@ function InvoicesPage() {
 
 				{invoiceList.length > 0 && (
 					<div className="space-y-4">
+						<MobileInvoiceCardList
+							invoices={mobileCardData}
+							filter={mobileFilter}
+							onFilterChange={setMobileFilter}
+							onStatusChange={handleStatusChange}
+							onUploadReceipt={(id) => openReceiptSheet(id)}
+							onRowClick={handleRowPreview}
+							disableActions={isBusy}
+						/>
+						<div className="hidden md:block">
 						<DataTable
 							columns={columns}
 							data={tableData}
@@ -580,7 +605,12 @@ function InvoicesPage() {
 							filterPlaceholder="Filter by client..."
 							enableRowSelection
 							onSelectionChange={setSelectedInvoices}
-							meta={{ onDeleteInvoice: handleDeleteInvoice, isDeleting }}
+							meta={{
+								onDeleteInvoice: handleDeleteInvoice,
+								onDownloadPdf: handleDownloadInvoicePdf,
+								isDeleting,
+								downloadingInvoiceId,
+							}}
 							renderToolbar={() =>
 								selectedCount > 0 ? (
 									<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
@@ -679,9 +709,10 @@ function InvoicesPage() {
 							}
 							onRowClick={handleRowPreview}
 						/>
+						</div>
 					</div>
 				)}
-			</main>
+			</div>
 			<Dialog
 				open={isPreviewOpen}
 				onOpenChange={(open) => {
@@ -699,11 +730,12 @@ function InvoicesPage() {
 								<>
 									<DialogHeader>
 										<DialogTitle className="flex flex-wrap items-center gap-3 text-2xl">
-											Invoice #{invoiceForPreview.invoiceNumber}
-											{previewStatusOption ? (
-												<Badge variant="outline" className="capitalize">
-													{previewStatusOption.label}
-												</Badge>
+											Invoice{" "}
+											<span className="font-number">
+												#{invoiceForPreview.invoiceNumber}
+											</span>
+											{invoiceForPreview ? (
+												<InvoiceStatusBadge status={invoiceForPreview.status} />
 											) : null}
 										</DialogTitle>
 										<DialogDescription>
@@ -743,25 +775,25 @@ function InvoicesPage() {
 											<div className="grid grid-cols-2 gap-4 text-sm">
 												<div>
 													<p className="text-muted-foreground">Issued</p>
-													<p className="font-semibold">
+													<p className="font-number font-semibold">
 														{format(
 															new Date(invoiceForPreview.issueDate),
-															"MMM d, yyyy"
+															"MMM d, yyyy",
 														)}
 													</p>
 												</div>
 												<div>
 													<p className="text-muted-foreground">Due</p>
-													<p className="font-semibold">
+													<p className="font-number font-semibold">
 														{format(
 															new Date(invoiceForPreview.dueDate),
-															"MMM d, yyyy"
+															"MMM d, yyyy",
 														)}
 													</p>
 												</div>
 												<div>
 													<p className="text-muted-foreground">Total</p>
-													<p className="font-semibold">
+													<p className="font-number font-semibold">
 														{new Intl.NumberFormat("en-US", {
 															style: "currency",
 															currency: "USD",
@@ -782,62 +814,68 @@ function InvoicesPage() {
 												Line items
 											</p>
 											<div className="overflow-hidden rounded-md border">
-												<table className="w-full text-sm">
-													<thead className="bg-muted/50">
-														<tr>
-															<th className="px-4 py-2 text-left font-semibold">
-																Description
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Qty
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Unit
-															</th>
-															<th className="px-4 py-2 text-right font-semibold">
-																Total
-															</th>
-														</tr>
-													</thead>
-													<tbody>
+												<Table>
+													<TableHeader>
+														<TableRow className="hover:bg-transparent">
+															<TableHead>
+																<ColumnHeader title="Description" />
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Qty"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Unit"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+															<TableHead className="text-right">
+																<ColumnHeader
+																	title="Total"
+																	className="w-full justify-end"
+																/>
+															</TableHead>
+														</TableRow>
+													</TableHeader>
+													<TableBody>
 														{invoiceForPreview.lineItems?.length ? (
 															invoiceForPreview.lineItems.map((item, index) => (
-																<tr
-																	key={"${item.description}-${index}"}
-																	className="border-t"
+																<TableRow
+																	key={`${item.description}-${index}`}
 																>
-																	<td className="px-4 py-2">
-																		{item.description}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	<TableCell>{item.description}</TableCell>
+																	<TableCell className="font-number text-right">
 																		{item.quantity}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	</TableCell>
+																	<TableCell className="font-number text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(item.unitPrice)}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	</TableCell>
+																	<TableCell className="font-number text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(item.total)}
-																	</td>
-																</tr>
+																	</TableCell>
+																</TableRow>
 															))
 														) : (
-															<tr>
-																<td
-																	className="px-4 py-6 text-center text-muted-foreground"
+															<TableRow>
+																<TableCell
+																	className="py-6 text-center text-muted-foreground"
 																	colSpan={4}
 																>
 																	No line items found.
-																</td>
-															</tr>
+																</TableCell>
+															</TableRow>
 														)}
-													</tbody>
-												</table>
+													</TableBody>
+												</Table>
 											</div>
 										</div>
 										{invoiceForPreview.claims &&
@@ -847,47 +885,52 @@ function InvoicesPage() {
 													Reimbursable expenses
 												</p>
 												<div className="overflow-hidden rounded-md border">
-													<table className="w-full text-sm">
-														<thead className="bg-muted/50">
-															<tr>
-																<th className="px-4 py-2 text-left font-semibold">
-																	Description
-																</th>
-																<th className="px-4 py-2 text-left font-semibold">
-																	Date
-																</th>
-																<th className="px-4 py-2 text-right font-semibold">
-																	Amount
-																</th>
-																<th className="px-4 py-2 text-center font-semibold">
-																	Receipt
-																</th>
-															</tr>
-														</thead>
-														<tbody>
+													<Table>
+														<TableHeader>
+															<TableRow className="hover:bg-transparent">
+																<TableHead>
+																	<ColumnHeader title="Description" />
+																</TableHead>
+																<TableHead>
+																	<ColumnHeader title="Date" />
+																</TableHead>
+																<TableHead className="text-right">
+																	<ColumnHeader
+																		title="Amount"
+																		className="w-full justify-end"
+																	/>
+																</TableHead>
+																<TableHead className="text-center">
+																	<ColumnHeader
+																		title="Receipt"
+																		className="w-full justify-center"
+																	/>
+																</TableHead>
+															</TableRow>
+														</TableHeader>
+														<TableBody>
 															{invoiceForPreview.claims.map((claim, index) => (
-																<tr
-																	key={"${claim.description}-${index}"}
-																	className="border-t"
+																<TableRow
+																	key={`${claim.description}-${index}`}
 																>
-																	<td className="px-4 py-2">
+																	<TableCell>
 																		{claim.description}
-																	</td>
-																	<td className="px-4 py-2">
+																	</TableCell>
+																	<TableCell className="font-number">
 																		{claim.date
 																			? format(
 																					new Date(claim.date),
-																					"MMM d, yyyy"
-																			  )
+																					"MMM d, yyyy",
+																				)
 																			: "—"}
-																	</td>
-																	<td className="px-4 py-2 text-right">
+																	</TableCell>
+																	<TableCell className="font-number text-right">
 																		{new Intl.NumberFormat("en-US", {
 																			style: "currency",
 																			currency: "USD",
 																		}).format(claim.amount)}
-																	</td>
-																	<td className="px-4 py-2 text-center">
+																	</TableCell>
+																	<TableCell className="text-center">
 																		{claim.hasReceipt ? (
 																			<Tooltip>
 																				<TooltipTrigger
@@ -923,11 +966,11 @@ function InvoicesPage() {
 																				</TooltipContent>
 																			</Tooltip>
 																		)}
-																	</td>
-																</tr>
+																	</TableCell>
+																</TableRow>
 															))}
-														</tbody>
-													</table>
+														</TableBody>
+													</Table>
 												</div>
 											</div>
 										) : null}
@@ -942,21 +985,55 @@ function InvoicesPage() {
 											</div>
 										) : null}
 									</div>
-									<DialogFooter className="gap-2">
-										<Button variant="outline" onClick={handlePreviewClose}>
-											Close
-										</Button>
-										<Button asChild>
-											<Link
-												to="/invoices/$id"
-												params={{ id: invoiceForPreview._id }}
-												onClick={(e) => {
-													handlePreviewClose()
-													// Let Link handle navigation
-												}}
+									<DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+										<div className="flex w-full gap-2 sm:order-2 sm:w-auto">
+											<Button
+												size="sm"
+												className="h-9 min-w-0 flex-1 px-2 sm:flex-none"
+												asChild
 											>
-												Open full invoice
-											</Link>
+												<Link
+													to="/invoices/$id"
+													params={{ id: invoiceForPreview._id }}
+													onClick={handlePreviewClose}
+												>
+													<span className="truncate">Open full invoice</span>
+												</Link>
+											</Button>
+											<Button
+												variant="outline"
+												size="icon"
+												className="size-9 shrink-0"
+												asChild
+											>
+												<Link
+													to="/invoices/$id/edit"
+													params={{ id: invoiceForPreview._id }}
+													onClick={handlePreviewClose}
+												>
+													<Edit className="h-4 w-4" />
+													<span className="sr-only">Edit</span>
+												</Link>
+											</Button>
+											{downloadInvoice ? (
+												<DownloadInvoicePDF
+													invoice={downloadInvoice}
+													paymentInstructions={
+														settings?.paymentInstructions
+													}
+													compactLabel
+													size="icon"
+													className="size-9 shrink-0"
+												/>
+											) : null}
+										</div>
+										<Button
+											variant="outline"
+											size="sm"
+											className="w-full sm:order-1 sm:w-auto"
+											onClick={handlePreviewClose}
+										>
+											Close
 										</Button>
 									</DialogFooter>
 								</>
@@ -969,6 +1046,6 @@ function InvoicesPage() {
 					</DialogContent>
 				) : null}
 			</Dialog>
-		</div>
-	)
+		</>
+	);
 }

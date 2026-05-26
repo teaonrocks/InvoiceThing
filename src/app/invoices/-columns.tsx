@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import type { ColumnDef, HeaderContext } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -17,21 +17,15 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { InvoiceStatusSelect } from "@/components/invoice-status-select";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpDown, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
+import { ColumnHeader } from "@/components/data-table/column-header";
+import { Loader2, MoreHorizontal, Trash2 } from "lucide-react";
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
 
@@ -48,45 +42,20 @@ export interface InvoiceRow {
 	clientContact?: string | null;
 }
 
-export interface InvoiceStatusOption {
-	value: InvoiceStatus;
-	label: string;
-	color: string;
-}
-
 interface InvoiceColumnMeta {
 	onDeleteInvoice?: (invoice: InvoiceRow) => void;
+	onDownloadPdf?: (invoice: InvoiceRow) => void;
 	isDeleting?: boolean;
+	downloadingInvoiceId?: Id<"invoices"> | null;
 }
 
 interface InvoiceColumnOptions {
 	onStatusChange: (invoiceId: Id<"invoices">, status: InvoiceStatus) => void;
-	statusOptions: InvoiceStatusOption[];
 	disableStatusChange?: boolean;
 }
 
-const SortableHeader = ({
-	title,
-	column,
-}: {
-	title: string;
-	column: HeaderContext<InvoiceRow, unknown>["column"];
-}) => {
-	return (
-		<Button
-			variant="ghost"
-			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-			className="-ml-3"
-		>
-			{title}
-			<ArrowUpDown className="ml-2 h-4 w-4" />
-		</Button>
-	);
-};
-
 export const useInvoiceColumns = ({
 	onStatusChange,
-	statusOptions,
 	disableStatusChange,
 }: InvoiceColumnOptions): ColumnDef<InvoiceRow>[] => {
 	return useMemo(() => {
@@ -118,10 +87,10 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "invoiceNumber",
 				header: ({ column }) => (
-					<SortableHeader title="Invoice" column={column} />
+					<ColumnHeader title="Invoice" column={column} />
 				),
 				cell: ({ row }) => (
-					<div className="font-medium">
+					<div className="font-number font-medium">
 						#{row.getValue<string>("invoiceNumber")}
 					</div>
 				),
@@ -129,7 +98,7 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "clientName",
 				header: ({ column }) => (
-					<SortableHeader title="Client" column={column} />
+					<ColumnHeader title="Client" column={column} />
 				),
 				cell: ({ row }) => (
 					<div className="flex flex-col">
@@ -145,23 +114,27 @@ export const useInvoiceColumns = ({
 			{
 				accessorKey: "issueDate",
 				header: ({ column }) => (
-					<SortableHeader title="Issued" column={column} />
+					<ColumnHeader title="Issued" column={column} />
 				),
 				cell: ({ row }) => (
-					<span>{format(row.original.issueDate, "MMM d, yyyy")}</span>
+					<span className="font-number">
+						{format(row.original.issueDate, "MMM d, yyyy")}
+					</span>
 				),
 			},
 			{
 				accessorKey: "dueDate",
-				header: ({ column }) => <SortableHeader title="Due" column={column} />,
+				header: ({ column }) => <ColumnHeader title="Due" column={column} />,
 				cell: ({ row }) => (
-					<span>{format(row.original.dueDate, "MMM d, yyyy")}</span>
+					<span className="font-number">
+						{format(row.original.dueDate, "MMM d, yyyy")}
+					</span>
 				),
 			},
 			{
 				accessorKey: "total",
 				header: ({ column }) => (
-					<SortableHeader title="Total" column={column} />
+					<ColumnHeader title="Total" column={column} />
 				),
 				cell: ({ row }) => {
 					const amount = Number(row.getValue("total"));
@@ -169,38 +142,22 @@ export const useInvoiceColumns = ({
 						style: "currency",
 						currency: "USD",
 					}).format(amount);
-					return <span className="font-medium">{formatted}</span>;
+					return (
+						<span className="font-number font-medium">{formatted}</span>
+					);
 				},
 			},
 			{
 				accessorKey: "status",
-				header: "Status",
+				header: () => <ColumnHeader title="Status" />,
 				cell: ({ row }) => (
-					<div className="flex items-center gap-2">
-						<Select
-							defaultValue={row.original.status}
-							onValueChange={(value) =>
-								onStatusChange(row.original._id, value as InvoiceStatus)
-							}
-							disabled={disableStatusChange}
-						>
-							<SelectTrigger className="h-8 w-[140px]">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{statusOptions.map((option) => (
-									<SelectItem key={option.value} value={option.value}>
-										<div className="flex items-center gap-2">
-											<span
-												className={cn("h-2.5 w-2.5 rounded-full", option.color)}
-											/>
-											{option.label}
-										</div>
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<InvoiceStatusSelect
+						defaultValue={row.original.status}
+						onValueChange={(value) =>
+							onStatusChange(row.original._id, value)
+						}
+						disabled={disableStatusChange}
+					/>
 				),
 			},
 			{
@@ -210,7 +167,11 @@ export const useInvoiceColumns = ({
 				cell: ({ row, table }) => {
 					const meta = table.options.meta as InvoiceColumnMeta | undefined;
 					const isDeleting = meta?.isDeleting ?? false;
+					const isDownloadingPdf =
+						meta?.downloadingInvoiceId === row.original._id;
 					const handleDelete = () => meta?.onDeleteInvoice?.(row.original);
+					const handleDownloadPdf = () =>
+						meta?.onDownloadPdf?.(row.original);
 
 					return (
 						<div className="flex justify-end pr-1">
@@ -243,14 +204,27 @@ export const useInvoiceColumns = ({
 											Edit invoice
 										</Link>
 									</DropdownMenuItem>
+									<DropdownMenuItem
+										onSelect={(event) => {
+											event.preventDefault();
+											handleDownloadPdf();
+										}}
+										disabled={isDownloadingPdf}
+										data-no-row-click
+									>
+										{isDownloadingPdf && (
+											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										)}
+										Download PDF
+									</DropdownMenuItem>
 									<AlertDialog>
 										<AlertDialogTrigger asChild>
 											<DropdownMenuItem
 												onSelect={(event) => event.preventDefault()}
-												className="flex items-center gap-2 text-destructive focus:text-destructive"
+												className="text-destructive focus:text-destructive"
 												data-no-row-click
 											>
-												<Trash2 className="h-4 w-4" /> Delete
+												Delete
 											</DropdownMenuItem>
 										</AlertDialogTrigger>
 										<AlertDialogContent>
@@ -289,5 +263,5 @@ export const useInvoiceColumns = ({
 				},
 			},
 		];
-	}, [disableStatusChange, onStatusChange, statusOptions]);
+	}, [disableStatusChange, onStatusChange]);
 };

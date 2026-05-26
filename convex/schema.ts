@@ -50,6 +50,21 @@ export default defineSchema({
 		.index("by_client", ["clientId"])
 		.index("by_invoice_number", ["invoiceNumber"]),
 
+	// Reusable line item history per client
+	clientLineItemHistory: defineTable({
+		userId: v.id("users"),
+		clientId: v.id("clients"),
+		description: v.string(),
+		unitPrice: v.number(),
+		normalizedDescription: v.string(),
+		lastUsedAt: v.number(),
+		usageCount: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_client", ["clientId"])
+		.index("by_user_client", ["userId", "clientId"]),
+
 	// Invoice line items table
 	lineItems: defineTable({
 		invoiceId: v.id("invoices"),
@@ -80,6 +95,10 @@ export default defineSchema({
 		paymentInstructions: v.optional(v.string()), // Payment details to show on invoice
 		enableRounding: v.optional(v.boolean()), // Whether to enable invoice total rounding
 		roundingIncrement: v.optional(v.number()), // Rounding increment (e.g., 0.05, 0.10, 1.00)
+		logoStorageId: v.optional(v.id("_storage")),
+		invoiceAccentColor: v.optional(v.string()),
+		invoiceSecondaryColor: v.optional(v.string()),
+		invoiceFontFamily: v.optional(v.string()),
 		createdAt: v.number(),
 		updatedAt: v.number(),
 	}).index("by_user", ["userId"]),

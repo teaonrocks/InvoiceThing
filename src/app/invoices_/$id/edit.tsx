@@ -1,56 +1,36 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClientSelector } from "@/components/client-selector";
+	InvoiceFormPage,
+	InvoiceEditorLayout,
+	InvoiceDetailsFields,
+	InvoiceFormActions,
+	InvoiceLineItemsEditor,
+	InvoiceClaimsEditor,
+	InvoiceNotesSection,
+	type InvoiceFormLineItem,
+	type InvoiceFormClaim,
+} from "@/components/invoice-form-ui";
 import {
-	Plus,
-	Trash2,
-	ArrowLeft,
-	CalendarIcon,
-	Upload,
-	X,
-	Image as ImageIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+	InvoiceEditorPreview,
+	buildInvoiceEditorPreviewData,
+} from "@/components/invoice-editor-preview";
+import { ArrowLeft } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useUser } from "@clerk/clerk-react";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/context/app-data-provider";
-import { compressImageFile } from "@/lib/image";
+import { useReceiptUpload } from "@/hooks/use-receipt-upload";
+import { useInvoiceSettingsBranding } from "@/hooks/use-invoice-settings-branding";
 
 export const Route = createFileRoute("/invoices_/$id/edit")({
 	component: EditInvoicePage,
 });
-
-type LineItem = {
-	id: string;
-	description: string;
-	quantity: number;
-	rate: number;
-};
-
-type Claim = {
-	id: string;
-	description: string;
-	amount: number;
-	date: Date;
-	imageStorageId?: Id<"_storage">;
-};
 
 function EditInvoicePage() {
 	const navigate = useNavigate();
@@ -70,21 +50,29 @@ function EditInvoicePage() {
 
 	// Update mutation
 	const updateInvoice = useMutation(api.invoices.update);
-	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+	const { uploadReceipt } = useReceiptUpload();
+	const branding = useInvoiceSettingsBranding(currentUser?._id);
 
 	const [selectedClientId, setSelectedClientId] = useState("");
 	const [invoiceNumber, setInvoiceNumber] = useState("");
 	const [issueDate, setIssueDate] = useState<Date | undefined>();
 	const [dueDate, setDueDate] = useState<Date | undefined>();
 	const [notes, setNotes] = useState("");
-	const [lineItems, setLineItems] = useState<LineItem[]>([
+	const [lineItems, setLineItems] = useState<InvoiceFormLineItem[]>([
 		{ id: "1", description: "", quantity: 1, rate: 0 },
-	])
-	const [claims, setClaims] = useState<Claim[]>([]);
+	]);
+	const [claims, setClaims] = useState<InvoiceFormClaim[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
 	const [uploadingClaimIds, setUploadingClaimIds] = useState<Set<string>>(
 		new Set()
+	);
+
+	const lineItemHistory = useQuery(
+		api.invoices.getLineItemHistoryByClient,
+		currentUser && selectedClientId
+			? { userId: currentUser._id, clientId: selectedClientId as Id<"clients"> }
+			: "skip",
 	);
 
 	// Load invoice data when available
@@ -141,8 +129,8 @@ function EditInvoicePage() {
 
 	const updateLineItem = (
 		id: string,
-		field: keyof LineItem,
-		value: string | number
+		field: keyof InvoiceFormLineItem,
+		value: string | number,
 	) => {
 		setLineItems(
 			lineItems.map((item) =>
@@ -150,6 +138,27 @@ function EditInvoicePage() {
 			)
 		)
 	}
+
+	const selectLineItemSuggestion = (
+		id: string,
+		description: string,
+		rate: number,
+	) => {
+		setLineItems(
+			lineItems.map((item) =>
+				item.id === id ? { ...item, description, rate } : item
+			),
+		);
+	};
+
+	const lineItemSuggestions = useMemo(
+		() =>
+			lineItemHistory?.map((item) => ({
+				description: item.description,
+				unitPrice: item.unitPrice,
+			})) ?? [],
+		[lineItemHistory],
+	);
 
 	const calculateSubtotal = () => {
 		return lineItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
@@ -173,8 +182,8 @@ function EditInvoicePage() {
 
 	const updateClaim = (
 		claimId: string,
-		field: keyof Claim,
-		value: string | number | Date
+		field: keyof InvoiceFormClaim,
+		value: string | number | Date,
 	) => {
 		setClaims((current) =>
 			current.map((claim) =>
@@ -189,98 +198,30 @@ function EditInvoicePage() {
 	}
 
 	const handleClaimImageUpload = async (claimId: string, file: File) => {
+		setUploadingClaimIds((prev) => new Set(prev).add(claimId));
 		try {
-			const isHeic =
-				file.type === "image/heic" ||
-				file.type === "image/heif" ||
-				/\.hei[cf]$/i.test(file.name);
-
-			if (!file.type.startsWith("image/") && !isHeic) {
+			const storageId = await uploadReceipt(file);
+			if (storageId) {
+				setClaims((current) =>
+					current.map((claim) =>
+						claim.id === claimId
+							? { ...claim, imageStorageId: storageId }
+							: claim,
+					),
+				);
 				toast({
-					title: "Invalid file",
-					description: "Please upload an image file.",
-					variant: "destructive",
-				})
-				return
+					title: "Receipt uploaded",
+					description: "The receipt image has been attached.",
+				});
 			}
-
-			if (file.size > 20 * 1024 * 1024) {
-				toast({
-					title: "File too large",
-					description: "Images must be 20MB or smaller.",
-					variant: "destructive",
-				})
-				return
-			}
-
-			// Set loading state
-			setUploadingClaimIds((prev) => new Set(prev).add(claimId));
-
-			let compressedFile: File;
-			try {
-				compressedFile = await compressImageFile(file);
-			} catch (error) {
-				const message =
-					error instanceof Error
-						? error.message
-						: typeof error === "string"
-							? error
-							: "Failed to convert image.";
-				toast({
-					title: "Upload failed",
-					description: message,
-					variant: "destructive",
-				})
-				return
-			}
-			if (compressedFile.size > 5 * 1024 * 1024) {
-				toast({
-					title: "File too large",
-					description: "Compressed image must be 5MB or smaller.",
-					variant: "destructive",
-				})
-				return
-			}
-
-			const uploadUrl = await generateUploadUrl();
-
-			const response = await fetch(uploadUrl, {
-				method: "POST",
-				headers: { "Content-Type": compressedFile.type },
-				body: compressedFile,
-			})
-			if (!response.ok) {
-				throw new Error("Upload failed. Please try again.");
-			}
-
-			const { storageId } = await response.json();
-
-			setClaims((current) =>
-				current.map((claim) =>
-					claim.id === claimId ? { ...claim, imageStorageId: storageId } : claim
-				)
-			)
-
-			toast({
-				title: "Receipt uploaded",
-				description: "The receipt image has been attached.",
-			})
-		} catch (error) {
-			console.error("Error uploading receipt:", error);
-			toast({
-				title: "Upload failed",
-				description: "We couldn't upload that image. Please try again.",
-				variant: "destructive",
-			})
 		} finally {
-			// Clear loading state
 			setUploadingClaimIds((prev) => {
 				const next = new Set(prev);
 				next.delete(claimId);
 				return next;
 			});
 		}
-	}
+	};
 
 	const removeClaimImage = (claimId: string) => {
 		setClaims((current) =>
@@ -308,10 +249,6 @@ function EditInvoicePage() {
 	const calculateTax = () => {
 		const taxRate = getTaxRate();
 		return (calculateSubtotal() + calculateClaimsTotal()) * taxRate;
-	}
-
-	const calculateTotal = () => {
-		return calculateSubtotal() + calculateClaimsTotal() + calculateTax();
 	}
 
 	const taxRate = getTaxRate();
@@ -372,473 +309,109 @@ function EditInvoicePage() {
 		}
 	}
 
+	const previewData = useMemo(
+		() =>
+			buildInvoiceEditorPreviewData({
+				invoiceNumber,
+				issueDate,
+				dueDate,
+				selectedClientId,
+				clients,
+				lineItems,
+				claims,
+				notes,
+				subtotal: calculateSubtotal(),
+				expensesTotal: calculateClaimsTotal(),
+				tax: calculateTax(),
+				taxRate,
+				paymentInstructions: settings?.paymentInstructions,
+				enableRounding: settings?.enableRounding,
+				roundingIncrement: settings?.roundingIncrement,
+				branding,
+			}),
+		[
+			invoiceNumber,
+			issueDate,
+			dueDate,
+			selectedClientId,
+			clients,
+			lineItems,
+			claims,
+			notes,
+			settings?.paymentInstructions,
+			settings?.enableRounding,
+			settings?.roundingIncrement,
+			taxRate,
+			branding,
+		],
+	);
+
 	if (!user || !currentUser || !invoice) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<Spinner className="h-8 w-8 text-muted-foreground" />
 			</div>
-		)
+		);
 	}
 
 	return (
-		<div className="container max-w-4xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
-			<div className="mb-6">
+		<InvoiceFormPage
+			title="Edit invoice"
+			backLink={
 				<Link to="/invoices/$id" params={{ id }}>
 					<Button variant="ghost" size="sm">
 						<ArrowLeft className="h-4 w-4 mr-2" />
 						Back to Invoice
 					</Button>
 				</Link>
-			</div>
-
-			<Card>
-				<CardHeader>
-					<CardTitle className="text-xl sm:text-2xl">Edit Invoice</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-6">
-						{/* Invoice Details */}
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div className="space-y-2">
-								<Label htmlFor="client">Client *</Label>
-								<ClientSelector
-									clients={clients}
-									selectedClientId={selectedClientId}
-									onClientSelect={setSelectedClientId}
-									placeholder="Select a client"
-								/>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="invoiceNumber">Invoice Number *</Label>
-								<Input
-									id="invoiceNumber"
-									placeholder="INV-001"
-									value={invoiceNumber}
-									onChange={(e) => setInvoiceNumber(e.target.value)}
-									required
-								/>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="issueDate">Issue Date *</Label>
-								<Popover>
-									<PopoverTrigger asChild>
-										<Button
-											variant="outline"
-											className={cn(
-												"w-full justify-start text-left font-normal",
-												!issueDate && "text-muted-foreground"
-											)}
-										>
-											<CalendarIcon className="mr-2 h-4 w-4" />
-											{issueDate ? (
-												format(issueDate, "PPP")
-											) : (
-												<span>Pick a date</span>
-											)}
-										</Button>
-									</PopoverTrigger>
-									<PopoverContent className="w-auto p-0" align="start">
-										<Calendar
-											mode="single"
-											selected={issueDate}
-											onSelect={setIssueDate}
-											initialFocus
-										/>
-									</PopoverContent>
-								</Popover>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="dueDate">Due Date *</Label>
-								<Popover>
-									<PopoverTrigger asChild>
-										<Button
-											variant="outline"
-											className={cn(
-												"w-full justify-start text-left font-normal",
-												!dueDate && "text-muted-foreground"
-											)}
-										>
-											<CalendarIcon className="mr-2 h-4 w-4" />
-											{dueDate ? (
-												format(dueDate, "PPP")
-											) : (
-												<span>Pick a date</span>
-											)}
-										</Button>
-									</PopoverTrigger>
-									<PopoverContent className="w-auto p-0" align="start">
-										<Calendar
-											mode="single"
-											selected={dueDate}
-											onSelect={setDueDate}
-											initialFocus
-										/>
-									</PopoverContent>
-								</Popover>
-							</div>
-						</div>
-
-						{/* Line Items */}
-						<div className="space-y-4">
-							<div className="flex items-center justify-between">
-								<Label className="text-lg">Line Items</Label>
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={addLineItem}
-								>
-									<Plus className="h-4 w-4 mr-2" />
-									Add Item
-								</Button>
-							</div>
-
-							<div className="space-y-3">
-								{lineItems.map((item, index) => (
-									<div
-										key={item.id}
-										className="grid grid-cols-12 gap-3 items-end"
-									>
-										<div className="col-span-12 md:col-span-6 space-y-2">
-											<Label htmlFor={`desc-${item.id}`}>
-												Description {index === 0 && "*"}
-											</Label>
-											<Input
-												id={"desc-${item.id}"}
-												placeholder="Service or product description"
-												value={item.description}
-												onChange={(e) =>
-													updateLineItem(item.id, "description", e.target.value)
-												}
-												required
-											/>
-										</div>
-
-										<div className="col-span-5 md:col-span-2 space-y-2">
-											<Label htmlFor={`qty-${item.id}`}>Qty</Label>
-											<Input
-												id={"qty-${item.id}"}
-												type="number"
-												min="1"
-												value={item.quantity}
-												onChange={(e) =>
-													updateLineItem(
-														item.id,
-														"quantity",
-														parseInt(e.target.value) || 1
-													)
-												}
-												required
-											/>
-										</div>
-
-										<div className="col-span-5 md:col-span-2 space-y-2">
-											<Label htmlFor={`rate-${item.id}`}>Rate</Label>
-											<Input
-												id={"rate-${item.id}"}
-												type="number"
-												min="0"
-												step="0.01"
-												value={item.rate}
-												onChange={(e) =>
-													updateLineItem(
-														item.id,
-														"rate",
-														parseFloat(e.target.value) || 0
-													)
-												}
-												required
-											/>
-										</div>
-
-										<div className="col-span-5 md:col-span-1 space-y-2">
-											<Label>Amount</Label>
-											<div className="h-10 flex items-center font-medium">
-												${(item.quantity * item.rate).toFixed(2)}
-											</div>
-										</div>
-
-										<div className="col-span-2 md:col-span-1">
-											<Button
-												type="button"
-												variant="ghost"
-												size="icon"
-												onClick={() => removeLineItem(item.id)}
-												disabled={lineItems.length === 1}
-											>
-												<Trash2 className="h-4 w-4 text-destructive" />
-											</Button>
-										</div>
-									</div>
-								))}
-							</div>
-						</div>
-
-						{/* Claims/Expenses */}
-						<div className="space-y-4">
-							<div className="flex items-center justify-between">
-								<div>
-									<Label className="text-lg">Reimbursable Expenses</Label>
-									<p className="text-sm text-muted-foreground">
-										Attach expenses or receipts that should be reimbursed with
-										this invoice.
-									</p>
-								</div>
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={addClaim}
-								>
-									<Plus className="mr-2 h-4 w-4" /> Add Expense
-								</Button>
-							</div>
-
-							{claims.length > 0 ? (
-								<div className="space-y-3">
-									{claims.map((claim) => (
-										<div
-											key={claim.id}
-											className="space-y-3 rounded-lg border p-4"
-										>
-											<div className="grid grid-cols-12 items-end gap-3">
-												<div className="col-span-12 space-y-2 md:col-span-5">
-													<Label htmlFor={`claim-desc-${claim.id}`}>
-														Description
-													</Label>
-													<Input
-														id={"claim-desc-${claim.id}"}
-														placeholder="Travel, materials, etc."
-														value={claim.description}
-														onChange={(event) =>
-															updateClaim(
-																claim.id,
-																"description",
-																event.target.value
-															)
-														}
-													/>
-												</div>
-
-												<div className="col-span-6 space-y-2 md:col-span-3">
-													<Label htmlFor={`claim-date-${claim.id}`}>Date</Label>
-													<Popover>
-														<PopoverTrigger asChild>
-															<Button
-																variant="outline"
-																className={cn(
-																	"w-full justify-start text-left font-normal",
-																	!claim.date && "text-muted-foreground"
-																)}
-															>
-																<CalendarIcon className="mr-2 h-4 w-4" />
-																{claim.date
-																	? format(claim.date, "PP")
-																	: "Pick date"}
-															</Button>
-														</PopoverTrigger>
-														<PopoverContent
-															className="w-auto p-0"
-															align="start"
-														>
-															<Calendar
-																mode="single"
-																selected={claim.date}
-																onSelect={(date) =>
-																	date && updateClaim(claim.id, "date", date)
-																}
-																initialFocus
-															/>
-														</PopoverContent>
-													</Popover>
-												</div>
-
-												<div className="col-span-4 space-y-2 md:col-span-2">
-													<Label htmlFor={`claim-amount-${claim.id}`}>
-														Amount
-													</Label>
-													<Input
-														id={"claim-amount-${claim.id}"}
-														type="number"
-														min="0"
-														step="0.01"
-														placeholder="0.00"
-														value={
-															Number.isFinite(claim.amount) ? claim.amount : ""
-														}
-														onChange={(event) =>
-															updateClaim(
-																claim.id,
-																"amount",
-																parseFloat(event.target.value) || 0
-															)
-														}
-													/>
-												</div>
-
-												<div className="col-span-5 md:col-span-1">
-													<Label className="md:hidden">Total</Label>
-													<div className="flex h-10 items-center font-medium">
-														${claim.amount.toFixed(2)}
-													</div>
-												</div>
-
-												<div className="col-span-2 md:col-span-1">
-													<Button
-														type="button"
-														variant="ghost"
-														size="icon"
-														onClick={() => removeClaim(claim.id)}
-													>
-														<Trash2 className="h-4 w-4 text-destructive" />
-													</Button>
-												</div>
-											</div>
-
-											<div className="flex flex-wrap items-center gap-3">
-												<Label
-													htmlFor={`claim-image-${claim.id}`}
-													className={cn(
-														"cursor-pointer",
-														uploadingClaimIds.has(claim.id) && "pointer-events-none opacity-50"
-													)}
-												>
-													<div className="flex items-center gap-2 rounded-md border px-3 py-2 transition-colors hover:bg-accent hover:text-accent-foreground">
-														{uploadingClaimIds.has(claim.id) ? (
-															<>
-																<Spinner className="h-4 w-4" />
-																<span className="text-sm">Uploading...</span>
-															</>
-														) : claim.imageStorageId ? (
-															<>
-																<ImageIcon className="h-4 w-4" />
-																<span className="text-sm">Change Receipt</span>
-															</>
-														) : (
-															<>
-																<Upload className="h-4 w-4" />
-																<span className="text-sm">Upload Receipt</span>
-															</>
-														)}
-													</div>
-													<input
-														id={`claim-image-${claim.id}`}
-														type="file"
-														accept="image/*,.heic,.heif"
-														className="hidden"
-														disabled={uploadingClaimIds.has(claim.id)}
-														onChange={(event) => {
-															const file = event.target.files?.[0]
-															if (file) {
-																handleClaimImageUpload(claim.id, file)
-															}
-														}}
-													/>
-												</Label>
-
-												{claim.imageStorageId && !uploadingClaimIds.has(claim.id) ? (
-													<>
-														<Button
-															type="button"
-															variant="ghost"
-															size="sm"
-															onClick={() => removeClaimImage(claim.id)}
-														>
-															<X className="mr-1 h-4 w-4" />
-															Remove
-														</Button>
-														<span className="text-sm text-muted-foreground">
-															✓ Receipt attached
-														</span>
-													</>
-												) : null}
-											</div>
-										</div>
-									))}
-								</div>
-							) : (
-								<p className="text-sm text-muted-foreground">
-									No reimbursable expenses added yet.
-								</p>
-							)}
-						</div>
-
-						{/* Totals */}
-						<div className="border-t pt-4">
-							<div className="flex justify-end">
-								<div className="w-full md:w-64 space-y-2">
-									<div className="flex justify-between">
-										<span className="text-muted-foreground">Subtotal:</span>
-										<span className="font-medium">
-											${calculateSubtotal().toFixed(2)}
-										</span>
-									</div>
-									{claims.length > 0 && (
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">Expenses:</span>
-											<span className="font-medium">
-												${calculateClaimsTotal().toFixed(2)}
-											</span>
-										</div>
-									)}
-									{taxRate > 0 && (
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">
-												Tax ({(taxRate * 100).toFixed(1)}%):
-											</span>
-											<span className="font-medium">
-												${calculateTax().toFixed(2)}
-											</span>
-										</div>
-									)}
-									<div className="flex justify-between text-lg font-bold">
-										<span>Total:</span>
-										<span>${calculateTotal().toFixed(2)}</span>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						{/* Notes */}
-						<div className="space-y-2">
-							<Label htmlFor="notes">Notes (Optional)</Label>
-							<Textarea
-								id="notes"
-								placeholder="Additional notes or payment terms..."
-								value={notes}
-								onChange={(e) => setNotes(e.target.value)}
-								rows={3}
-							/>
-						</div>
-
-						{/* Actions */}
-						<div className="flex justify-end gap-3">
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => navigate({ to: "/invoices/$id", params: { id } })}
-								disabled={isSubmitting}
-							>
-								Cancel
-							</Button>
-							<Button type="submit" disabled={isSubmitting}>
-								{isSubmitting ? (
-									<>
-										<Spinner className="h-4 w-4 mr-2" />
-										Updating...
-									</>
-								) : (
-									"Update Invoice"
-								)}
-							</Button>
-						</div>
-					</form>
-				</CardContent>
-			</Card>
-		</div>
-	)
+			}
+		>
+			<InvoiceEditorLayout
+				onSubmit={handleSubmit}
+				preview={<InvoiceEditorPreview data={previewData} />}
+				controls={
+					<>
+						<InvoiceDetailsFields
+							clients={clients}
+							selectedClientId={selectedClientId}
+							onClientSelect={setSelectedClientId}
+							invoiceNumber={invoiceNumber}
+							onInvoiceNumberChange={setInvoiceNumber}
+							issueDate={issueDate}
+							onIssueDateChange={(date) => setIssueDate(date)}
+							dueDate={dueDate}
+							onDueDateChange={setDueDate}
+						/>
+						<InvoiceLineItemsEditor
+							lineItems={lineItems}
+							onAdd={addLineItem}
+							onRemove={removeLineItem}
+							onUpdate={updateLineItem}
+							onSelectSuggestion={selectLineItemSuggestion}
+							lineItemSuggestions={lineItemSuggestions}
+							clientSelected={Boolean(selectedClientId)}
+						/>
+						<InvoiceClaimsEditor
+							claims={claims}
+							uploadingClaimIds={uploadingClaimIds}
+							onAdd={addClaim}
+							onRemove={removeClaim}
+							onUpdate={updateClaim}
+							onImageUpload={handleClaimImageUpload}
+							onImageRemove={removeClaimImage}
+						/>
+						<InvoiceNotesSection notes={notes} onNotesChange={setNotes} />
+						<InvoiceFormActions
+							onCancel={() =>
+								navigate({ to: "/invoices/$id", params: { id } })
+							}
+							submitLabel="Update invoice"
+							isSubmitting={isSubmitting}
+						/>
+					</>
+				}
+			/>
+		</InvoiceFormPage>
+	);
 }
 

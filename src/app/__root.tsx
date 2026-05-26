@@ -3,13 +3,17 @@ import {
 	createRootRoute,
 	HeadContent,
 	Scripts,
+	Link,
+	useLocation,
 } from "@tanstack/react-router";
 import appCss from "./globals.css?url";
 import "./globals.css";
+import { AppSidebar } from "@/components/app-sidebar";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
 import { useAppData } from "@/context/app-data-provider";
-import { Spinner } from "@/components/ui/spinner";
+import { ArrowUpRight } from "lucide-react";
 
 export const Route = createRootRoute({
 	head: () => {
@@ -58,11 +62,23 @@ export const Route = createRootRoute({
 					rel: "stylesheet",
 					href: appCss,
 				},
-				// Favicon link
 				{
 					rel: "icon",
-					type: "image/x-icon",
-					href: "/favicon.ico",
+					type: "image/svg+xml",
+					href: "/favicon.svg",
+				},
+				{
+					rel: "preconnect",
+					href: "https://fonts.googleapis.com",
+				},
+				{
+					rel: "preconnect",
+					href: "https://fonts.gstatic.com",
+					crossOrigin: "anonymous",
+				},
+				{
+					rel: "stylesheet",
+					href: "https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap",
 				},
 				// Preconnect to Convex for faster API calls
 				...(convexDomain
@@ -90,16 +106,7 @@ export const Route = createRootRoute({
 		};
 	},
 	component: RootLayout,
-	notFoundComponent: () => (
-		<div className="flex min-h-screen items-center justify-center">
-			<div className="text-center">
-				<h1 className="text-2xl font-bold">404 - Page Not Found</h1>
-				<p className="text-muted-foreground mt-2">
-					The page you're looking for doesn't exist.
-				</p>
-			</div>
-		</div>
-	),
+	notFoundComponent: NotFoundPage,
 });
 
 function RootLayout() {
@@ -111,7 +118,7 @@ function RootLayout() {
 			<body>
 				<Providers>
 					<AuthGate>
-						<Outlet />
+						<AppShell />
 					</AuthGate>
 					<Toaster />
 				</Providers>
@@ -119,6 +126,33 @@ function RootLayout() {
 			</body>
 		</html>
 	);
+}
+
+const SIDEBAR_ROUTE_PREFIXES = [
+	"/dashboard",
+	"/clients",
+	"/invoices",
+	"/settings",
+] as const;
+
+function usesAppSidebar(pathname: string) {
+	return SIDEBAR_ROUTE_PREFIXES.some(
+		(path) => pathname === path || pathname.startsWith(`${path}/`),
+	);
+}
+
+function AppShell() {
+	const { pathname } = useLocation();
+
+	if (usesAppSidebar(pathname)) {
+		return (
+			<AppSidebar>
+				<Outlet />
+			</AppSidebar>
+		);
+	}
+
+	return <Outlet />;
 }
 
 // Gate component that waits for Clerk and Convex user to be ready
@@ -140,24 +174,65 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 	return <>{children}</>;
 }
 
-// Improved loading screen with better styling
 function LoadingScreen() {
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-background">
-			<div className="flex flex-col items-center gap-6 px-4">
-				<div className="flex flex-col items-center gap-3">
-					<div className="relative">
-						<Spinner className="size-10 text-primary" />
-						<div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
-					</div>
-					<div className="text-center space-y-1">
-						<h2 className="text-xl font-semibold tracking-tight">
-							InvoiceThing
-						</h2>
-						<p className="text-sm text-muted-foreground animate-pulse">
-							Loading...
-						</p>
-					</div>
+		<div className="swiss-grid flex min-h-screen flex-col items-center justify-center text-foreground">
+			<div className="text-center">
+				<h2 className="font-instrument mb-8 text-3xl">
+					Invoice<span className="text-brand">Thing</span>
+				</h2>
+				<div className="mx-auto h-0.5 w-48 overflow-hidden bg-muted">
+					<div
+						className="h-full w-full bg-brand"
+						style={{
+							animation: "loading-line 1.4s ease-in-out infinite",
+						}}
+					/>
+				</div>
+				<p className="font-dm mt-5 text-[11px] tracking-[0.25em] uppercase text-muted-foreground">
+					Loading
+				</p>
+			</div>
+		</div>
+	);
+}
+
+function NotFoundPage() {
+	return (
+		<div className="swiss-grid flex min-h-screen flex-col items-center justify-center px-6 text-foreground">
+			<div className="relative text-center">
+				<div
+					className="font-instrument pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-brand opacity-[0.06]"
+					style={{
+						fontSize: "clamp(12rem, 30vw, 20rem)",
+						lineHeight: 0.85,
+					}}
+				>
+					404
+				</div>
+				<div className="relative z-10">
+					<p className="font-dm mb-6 text-xs font-600 tracking-[0.25em] uppercase text-brand">
+						Page Not Found
+					</p>
+					<h1 className="font-instrument mb-6 text-5xl leading-[0.95] sm:text-6xl lg:text-7xl">
+						Nothing
+						<br />
+						<span className="italic">here</span>
+						<span className="text-brand">.</span>
+					</h1>
+					<p className="font-dm mx-auto mb-10 max-w-sm text-sm font-300 leading-relaxed text-muted-foreground">
+						The page you're looking for doesn't exist or has been moved.
+					</p>
+					<Link to="/">
+						<Button
+							variant="brand"
+							size="lg"
+							className="group px-8 py-6 font-dm text-sm font-600"
+						>
+							Back to Home
+							<ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+						</Button>
+					</Link>
 				</div>
 			</div>
 		</div>

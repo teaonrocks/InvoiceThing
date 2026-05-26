@@ -8,7 +8,16 @@ import { api } from "@/../convex/_generated/api";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/table-skeleton";
+import {
+	InvoicePreviewDialog,
+	type InvoicePreviewFallback,
+} from "@/components/invoice-preview-dialog";
+import {
+	InvoiceStatusBadge,
+	type InvoiceStatus,
+} from "@/components/invoice-status-badge";
 import {
 	Select,
 	SelectContent,
@@ -16,11 +25,17 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { ColumnHeader } from "@/components/data-table/column-header";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown } from "lucide-react";
-
-export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
+import { useToast } from "@/hooks/use-toast";
 
 type InvoiceRow = {
 	_id: Id<"invoices">;
@@ -51,76 +66,53 @@ type Invoice = {
 };
 
 const STATUS_OPTIONS = [
-	{ value: "draft" as InvoiceStatus, label: "Draft", color: "bg-gray-500" },
-	{ value: "sent" as InvoiceStatus, label: "Sent", color: "bg-blue-500" },
-	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-green-500" },
-	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-red-500" },
+	{ value: "draft" as InvoiceStatus, label: "Draft", color: "bg-status-draft" },
+	{ value: "sent" as InvoiceStatus, label: "Sent", color: "bg-status-sent" },
+	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-status-paid" },
+	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-status-overdue" },
 ];
 
-const SortableHeader = ({
-	title,
-	column,
-}: {
-	title: string;
-	column: {
-		toggleSorting: (desc?: boolean) => void;
-		getIsSorted: () => false | "asc" | "desc";
-	};
-}) => {
-	return (
-		<Button
-			variant="ghost"
-			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-			className="-ml-3"
-		>
-			{title}
-			<ArrowUpDown className="ml-2 h-4 w-4" />
-		</Button>
-	);
-};
-
-export function RecentInvoicesTable({ 
+export function RecentInvoicesTable({
 	invoices,
-	isLoading 
-}: { 
+	isLoading,
+	variant = "default",
+}: {
 	invoices?: Invoice[];
 	isLoading?: boolean;
+	variant?: "default" | "dashboard";
 }) {
 	const navigate = useNavigate();
 	const { toast } = useToast();
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const [isUpdating, setIsUpdating] = useState(false);
+	const [previewInvoiceId, setPreviewInvoiceId] =
+		useState<Id<"invoices"> | null>(null);
+	const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-	// Get all invoices sorted by issue date (most recent first)
-	const recentInvoices = useMemo(
-		() => {
-			if (!invoices || invoices.length === 0) return [];
-			return invoices
-				.sort((a, b) => b.issueDate - a.issueDate)
-				.map((invoice) => ({
-					_id: invoice._id as Id<"invoices">,
-					invoiceNumber: invoice.invoiceNumber,
-					status: invoice.status as InvoiceStatus,
-					total: invoice.total,
-					issueDate: invoice.issueDate,
-					dueDate: invoice.dueDate,
-					clientId: invoice.clientId as Id<"clients"> | undefined,
-					clientName: invoice.client?.name ?? "Unknown client",
-					clientEmail: invoice.client?.email ?? undefined,
-					clientContact: invoice.client?.contactPerson ?? undefined,
-				}));
-		},
-		[invoices]
-	);
+	const recentInvoices = useMemo(() => {
+		if (!invoices || invoices.length === 0) return [];
+		return invoices
+			.sort((a, b) => b.issueDate - a.issueDate)
+			.slice(0, variant === "dashboard" ? 5 : undefined)
+			.map((invoice) => ({
+				_id: invoice._id as Id<"invoices">,
+				invoiceNumber: invoice.invoiceNumber,
+				status: invoice.status as InvoiceStatus,
+				total: invoice.total,
+				issueDate: invoice.issueDate,
+				dueDate: invoice.dueDate,
+				clientId: invoice.clientId as Id<"clients"> | undefined,
+				clientName: invoice.client?.name ?? "Unknown client",
+				clientEmail: invoice.client?.email ?? undefined,
+				clientContact: invoice.client?.contactPerson ?? undefined,
+			}));
+	}, [invoices, variant]);
 
 	const handleStatusChange = useCallback(
 		async (invoiceId: Id<"invoices">, newStatus: InvoiceStatus) => {
 			setIsUpdating(true);
 			try {
-				await updateStatus({
-					invoiceId,
-					status: newStatus,
-				});
+				await updateStatus({ invoiceId, status: newStatus });
 				toast({
 					title: "Status updated",
 					description: `Invoice status changed to ${newStatus}.`,
@@ -137,18 +129,37 @@ export function RecentInvoicesTable({
 				setIsUpdating(false);
 			}
 		},
-		[updateStatus, toast]
+		[updateStatus, toast],
 	);
+
+	const handleRowClick = useCallback(
+		(row: InvoiceRow) => {
+			navigate({ to: "/invoices/$id", params: { id: row._id } });
+		},
+		[navigate],
+	);
+
+	const handlePreviewOpen = useCallback((row: InvoiceRow) => {
+		setPreviewInvoiceId(row._id);
+		setIsPreviewOpen(true);
+	}, []);
+
+	const handlePreviewClose = useCallback((open: boolean) => {
+		setIsPreviewOpen(open);
+		if (!open) {
+			setPreviewInvoiceId(null);
+		}
+	}, []);
 
 	const columns: ColumnDef<InvoiceRow>[] = useMemo(
 		() => [
 			{
 				accessorKey: "invoiceNumber",
 				header: ({ column }) => (
-					<SortableHeader title="Invoice" column={column} />
+					<ColumnHeader title="Invoice" column={column} />
 				),
 				cell: ({ row }) => (
-					<span className="font-medium">
+					<span className="font-number font-medium">
 						#{row.getValue<string>("invoiceNumber")}
 					</span>
 				),
@@ -156,7 +167,7 @@ export function RecentInvoicesTable({
 			{
 				accessorKey: "clientName",
 				header: ({ column }) => (
-					<SortableHeader title="Client" column={column} />
+					<ColumnHeader title="Client" column={column} />
 				),
 				cell: ({ row }) => (
 					<div className="flex flex-col">
@@ -171,15 +182,17 @@ export function RecentInvoicesTable({
 			},
 			{
 				accessorKey: "issueDate",
-				header: ({ column }) => <SortableHeader title="Date" column={column} />,
+				header: ({ column }) => <ColumnHeader title="Date" column={column} />,
 				cell: ({ row }) => (
-					<span>{format(row.original.issueDate, "MMM d, yyyy")}</span>
+					<span className="font-number">
+						{format(row.original.issueDate, "MMM d, yyyy")}
+					</span>
 				),
 			},
 			{
 				accessorKey: "total",
 				header: ({ column }) => (
-					<SortableHeader title="Amount" column={column} />
+					<ColumnHeader title="Amount" column={column} />
 				),
 				cell: ({ row }) => {
 					const amount = Number(row.getValue("total"));
@@ -187,12 +200,14 @@ export function RecentInvoicesTable({
 						style: "currency",
 						currency: "USD",
 					}).format(amount);
-					return <span className="font-medium">{formatted}</span>;
+					return (
+						<span className="font-number font-medium">{formatted}</span>
+					);
 				},
 			},
 			{
 				accessorKey: "status",
-				header: "Status",
+				header: () => <ColumnHeader title="Status" />,
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<Select
@@ -222,29 +237,80 @@ export function RecentInvoicesTable({
 				),
 			},
 		],
-		[isUpdating, handleStatusChange]
+		[isUpdating, handleStatusChange],
 	);
 
-	// Show skeleton while loading - AFTER all hooks are called
 	if (isLoading || invoices === undefined) {
 		return (
-			<div className="-mx-6 px-6 md:mx-0 md:px-0">
+			<div className={variant === "dashboard" ? "" : "-mx-6 px-6 md:mx-0 md:px-0"}>
 				<TableSkeleton columns={5} rows={5} />
 			</div>
 		);
 	}
 
 	if (recentInvoices.length === 0) {
-		return (
-			<div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-				No invoices yet.
-			</div>
-		);
+		return <EmptyState message="No invoices yet." />;
 	}
 
-	const handleRowClick = (row: InvoiceRow) => {
-		navigate({ to: "/invoices/$id", params: { id: row._id } });
-	};
+	if (variant === "dashboard") {
+		return (
+			<>
+				<Table>
+					<TableHeader>
+					<TableRow className="hover:bg-transparent">
+						<TableHead>
+							<ColumnHeader title="Invoice" />
+						</TableHead>
+						<TableHead>
+							<ColumnHeader title="Client" />
+						</TableHead>
+						<TableHead>
+							<ColumnHeader title="Amount" />
+						</TableHead>
+						<TableHead>
+							<ColumnHeader title="Status" />
+						</TableHead>
+						<TableHead>
+							<ColumnHeader title="Date" />
+						</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{recentInvoices.map((invoice) => (
+						<TableRow
+							key={invoice._id}
+							className="cursor-pointer"
+							onClick={() => handlePreviewOpen(invoice)}
+						>
+							<TableCell className="font-number font-medium py-4">
+								#{invoice.invoiceNumber}
+							</TableCell>
+							<TableCell className="py-4">{invoice.clientName}</TableCell>
+							<TableCell className="font-number py-4 font-medium">
+								{new Intl.NumberFormat("en-US", {
+									style: "currency",
+									currency: "USD",
+								}).format(invoice.total)}
+							</TableCell>
+							<TableCell className="py-4">
+								<InvoiceStatusBadge status={invoice.status} />
+							</TableCell>
+							<TableCell className="font-number py-4 text-muted-foreground">
+								{format(invoice.issueDate, "MMM d, yyyy")}
+							</TableCell>
+						</TableRow>
+					))}
+				</TableBody>
+				</Table>
+				<InvoicePreviewDialog
+					invoiceId={previewInvoiceId}
+					open={isPreviewOpen}
+					onOpenChange={handlePreviewClose}
+					fallbackInvoices={(invoices ?? []) as InvoicePreviewFallback[]}
+				/>
+			</>
+		);
+	}
 
 	return (
 		<div className="-mx-6 px-6 md:mx-0 md:px-0">

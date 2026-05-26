@@ -1,62 +1,118 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source "../components/**/*.{js,ts,jsx,tsx,mdx}";
 @source "./**/*.{js,ts,jsx,tsx,mdx}";
 
 :root {
-	--background: hsl(0 0% 100%);
-	--foreground: hsl(0 0% 3.9%);
+	--background: hsl(240 6% 97%);
+	--foreground: hsl(240 10% 10%);
 	--card: hsl(0 0% 100%);
-	--card-foreground: hsl(0 0% 3.9%);
+	--card-foreground: hsl(240 10% 10%);
 	--popover: hsl(0 0% 100%);
-	--popover-foreground: hsl(0 0% 3.9%);
-	--primary: hsl(0 0% 9%);
+	--popover-foreground: hsl(240 10% 10%);
+	--primary: hsl(240 10% 10%);
 	--primary-foreground: hsl(0 0% 98%);
-	--secondary: hsl(0 0% 96.1%);
-	--secondary-foreground: hsl(0 0% 9%);
-	--muted: hsl(0 0% 96.1%);
-	--muted-foreground: hsl(0 0% 45.1%);
-	--accent: hsl(0 0% 96.1%);
-	--accent-foreground: hsl(0 0% 9%);
-	--destructive: hsl(0 84.2% 60.2%);
+	--secondary: hsl(240 5% 94%);
+	--secondary-foreground: hsl(240 10% 10%);
+	--muted: hsl(240 5% 94%);
+	--muted-foreground: hsl(240 4% 46%);
+	--accent: hsl(240 5% 93%);
+	--accent-foreground: hsl(240 10% 10%);
+	--destructive: hsl(0 72% 51%);
 	--destructive-foreground: hsl(0 0% 98%);
-	--border: hsl(0 0% 89.8%);
-	--input: hsl(0 0% 89.8%);
-	--ring: hsl(0 0% 3.9%);
-	--chart-1: hsl(12 76% 61%);
-	--chart-2: hsl(173 58% 39%);
-	--chart-3: hsl(197 37% 24%);
-	--chart-4: hsl(43 74% 66%);
-	--chart-5: hsl(27 87% 67%);
-	--radius: 0.5rem;
+	--border: hsl(240 6% 88%);
+	--input: hsl(240 6% 88%);
+	--ring: hsl(240 6% 50%);
+	--brand: hsl(354 78% 56%);
+	--brand-foreground: hsl(0 0% 98%);
+	--surface-raised: hsl(0 0% 100%);
+	--border-strong: hsl(240 10% 10%);
+	--chart-1: hsl(220 65% 52%);
+	--chart-2: hsl(152 48% 40%);
+	--chart-3: hsl(30 70% 50%);
+	--chart-4: hsl(280 55% 55%);
+	--chart-5: hsl(350 65% 52%);
+	--radius: 0.25rem;
+	--sidebar-background: hsl(0 0% 100%);
+	--sidebar-foreground: hsl(240 10% 10%);
+	--sidebar-primary: hsl(240 10% 10%);
+	--sidebar-primary-foreground: hsl(0 0% 98%);
+	--sidebar-accent: hsl(240 5% 95%);
+	--sidebar-accent-foreground: hsl(240 10% 10%);
+	--sidebar-border: hsl(240 6% 90%);
+	--sidebar-ring: hsl(240 6% 50%);
+	--status-paid: hsl(152 48% 40%);
+	--status-sent: hsl(215 65% 48%);
+	--status-draft: hsl(240 4% 62%);
+	--status-overdue: hsl(0 65% 48%);
+	--status-paid-bg: hsl(152 45% 93%);
+	--status-paid-fg: hsl(152 50% 28%);
+	--status-sent-bg: hsl(215 55% 93%);
+	--status-sent-fg: hsl(215 60% 35%);
+	--status-draft-bg: hsl(240 5% 93%);
+	--status-draft-fg: hsl(240 4% 42%);
+	--status-overdue-bg: hsl(0 55% 94%);
+	--status-overdue-fg: hsl(0 60% 38%);
+	--chart-unpaid: hsl(240 5% 86%);
+	--chart-grid: hsl(240 6% 91%);
+	--chart-tick: hsl(240 4% 50%);
 }
 
 .dark {
-	--background: hsl(0 0% 3.9%);
-	--foreground: hsl(0 0% 98%);
-	--card: hsl(0 0% 3.9%);
-	--card-foreground: hsl(0 0% 98%);
-	--popover: hsl(0 0% 3.9%);
-	--popover-foreground: hsl(0 0% 98%);
-	--primary: hsl(0 0% 98%);
-	--primary-foreground: hsl(0 0% 9%);
-	--secondary: hsl(0 0% 14.9%);
-	--secondary-foreground: hsl(0 0% 98%);
-	--muted: hsl(0 0% 14.9%);
-	--muted-foreground: hsl(0 0% 63.9%);
-	--accent: hsl(0 0% 14.9%);
-	--accent-foreground: hsl(0 0% 98%);
-	--destructive: hsl(0 62.8% 30.6%);
+	--background: hsl(240 6% 10%);
+	--foreground: hsl(0 0% 93%);
+	--card: hsl(240 5% 13%);
+	--card-foreground: hsl(0 0% 93%);
+	--popover: hsl(240 5% 13%);
+	--popover-foreground: hsl(0 0% 93%);
+	--primary: hsl(0 0% 93%);
+	--primary-foreground: hsl(240 6% 10%);
+	--secondary: hsl(240 4% 16%);
+	--secondary-foreground: hsl(0 0% 93%);
+	--muted: hsl(240 4% 16%);
+	--muted-foreground: hsl(240 5% 58%);
+	--accent: hsl(240 4% 18%);
+	--accent-foreground: hsl(0 0% 93%);
+	--destructive: hsl(0 55% 45%);
 	--destructive-foreground: hsl(0 0% 98%);
-	--border: hsl(0 0% 14.9%);
-	--input: hsl(0 0% 14.9%);
-	--ring: hsl(0 0% 83.1%);
-	--chart-1: hsl(220 70% 50%);
-	--chart-2: hsl(160 60% 45%);
-	--chart-3: hsl(30 80% 55%);
-	--chart-4: hsl(280 65% 60%);
-	--chart-5: hsl(340 75% 55%);
+	--border: hsl(240 5% 20%);
+	--input: hsl(240 5% 18%);
+	--ring: hsl(240 5% 50%);
+	--brand: hsl(354 70% 58%);
+	--brand-foreground: hsl(0 0% 98%);
+	--surface-raised: hsl(240 5% 13%);
+	--border-strong: hsl(240 5% 22%);
+	--chart-1: hsl(220 55% 58%);
+	--chart-2: hsl(152 42% 48%);
+	--chart-3: hsl(30 60% 55%);
+	--chart-4: hsl(280 45% 58%);
+	--chart-5: hsl(350 50% 55%);
+	--sidebar-background: hsl(240 6% 8%);
+	--sidebar-foreground: hsl(0 0% 90%);
+	--sidebar-primary: hsl(0 0% 93%);
+	--sidebar-primary-foreground: hsl(240 6% 10%);
+	--sidebar-accent: hsl(240 4% 15%);
+	--sidebar-accent-foreground: hsl(0 0% 93%);
+	--sidebar-border: hsl(240 5% 18%);
+	--sidebar-ring: hsl(240 5% 50%);
+	--status-paid: hsl(152 42% 48%);
+	--status-sent: hsl(215 50% 60%);
+	--status-draft: hsl(240 4% 42%);
+	--status-overdue: hsl(0 50% 58%);
+	--status-paid-bg: hsl(152 28% 16%);
+	--status-paid-fg: hsl(152 38% 60%);
+	--status-sent-bg: hsl(215 28% 16%);
+	--status-sent-fg: hsl(215 42% 66%);
+	--status-draft-bg: hsl(240 4% 18%);
+	--status-draft-fg: hsl(240 5% 58%);
+	--status-overdue-bg: hsl(0 28% 16%);
+	--status-overdue-fg: hsl(0 42% 62%);
+	--chart-unpaid: hsl(240 4% 26%);
+	--chart-grid: hsl(240 5% 18%);
+	--chart-tick: hsl(240 5% 50%);
 }
 
 @theme inline {
@@ -79,15 +135,39 @@
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
+	--color-brand: var(--brand);
+	--color-brand-foreground: var(--brand-foreground);
+	--color-surface-raised: var(--surface-raised);
+	--color-border-strong: var(--border-strong);
 	--color-chart-1: var(--chart-1);
 	--color-chart-2: var(--chart-2);
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
-	--radius: 0.5rem;
+	--color-status-paid: var(--status-paid);
+	--color-status-sent: var(--status-sent);
+	--color-status-draft: var(--status-draft);
+	--color-status-overdue: var(--status-overdue);
+	--color-status-paid-bg: var(--status-paid-bg);
+	--color-status-paid-fg: var(--status-paid-fg);
+	--color-status-sent-bg: var(--status-sent-bg);
+	--color-status-sent-fg: var(--status-sent-fg);
+	--color-status-draft-bg: var(--status-draft-bg);
+	--color-status-draft-fg: var(--status-draft-fg);
+	--color-status-overdue-bg: var(--status-overdue-bg);
+	--color-status-overdue-fg: var(--status-overdue-fg);
+	--radius: 0.25rem;
 	--radius-lg: var(--radius);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 1px);
+	--radius-sm: calc(var(--radius) - 2px);
+	--color-sidebar: var(--sidebar-background);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
@@ -97,5 +177,67 @@
 	body {
 		background-color: var(--color-background);
 		color: var(--color-foreground);
+		font-family: "DM Sans", sans-serif;
+	}
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: "Space Grotesk", sans-serif;
+	}
+}
+
+.font-heading {
+	font-family: "Space Grotesk", sans-serif;
+}
+.font-instrument {
+	font-family: "Space Grotesk", sans-serif;
+	font-weight: 700;
+	letter-spacing: -0.035em;
+}
+.font-body,
+.font-dm {
+	font-family: "DM Sans", sans-serif;
+}
+.font-number {
+	font-family: "DM Mono", monospace;
+	font-variant-numeric: tabular-nums;
+}
+.text-brand {
+	color: var(--brand);
+}
+.bg-brand {
+	background-color: var(--brand);
+}
+.border-brand {
+	border-color: var(--brand);
+}
+.border-strong {
+	border-color: var(--border-strong);
+}
+.swiss-grid {
+	background-color: var(--background);
+	background-image:
+		linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+	background-size: 60px 60px;
+}
+
+/* Clerk UserButton menu is portaled outside Radix sheets/dialogs (z-50). */
+[class*="cl-userButtonPopover"] {
+	z-index: 200 !important;
+}
+
+@keyframes loading-line {
+	0% {
+		transform: translateX(-100%);
+	}
+	50% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(100%);
 	}
 }

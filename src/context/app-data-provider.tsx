@@ -16,11 +16,12 @@ interface AppDataContextValue {
 	clients: Doc<"clients">[] | undefined;
 	stats:
 		| {
-				totalEarnings: number;
 				totalOutstanding: number;
+				totalOverdue: number;
+				averageInvoiceValue: number;
+				sentInvoices: number;
+				overdueInvoices: number;
 				totalInvoices: number;
-				paidInvoices: number;
-				activeClients: number;
 		  }
 		| undefined;
 	isReady: boolean;

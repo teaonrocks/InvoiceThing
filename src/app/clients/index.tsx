@@ -7,7 +7,6 @@ import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import type { ClientRow } from "./-columns";
 
-import { Navigation } from "@/components/navigation";
 import { DataTable } from "@/components/data-table/data-table";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
@@ -63,8 +62,8 @@ function ClientsPage() {
 	const [selectedClients, setSelectedClients] = useState<ClientRow[]>([]);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [previewClientId, setPreviewClientId] = useState<Id<"clients"> | null>(
-		null
-	)
+		null,
+	);
 	const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
 	const { currentUser: convexUser, clients } = useAppData();
@@ -73,8 +72,8 @@ function ClientsPage() {
 
 	const previewClient = useQuery(
 		api.clients.get,
-		previewClientId ? { clientId: previewClientId } : "skip"
-	)
+		previewClientId ? { clientId: previewClientId } : "skip",
+	);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -89,7 +88,7 @@ function ClientsPage() {
 			unitNumber: unitNumber.trim() || undefined,
 			postalCode: postalCode.trim() || undefined,
 			contactPerson: contactPerson || undefined,
-		})
+		});
 
 		setName("");
 		setEmail("");
@@ -99,7 +98,7 @@ function ClientsPage() {
 		setPostalCode("");
 		setContactPerson("");
 		setOpen(false);
-	}
+	};
 
 	const clientList = useMemo(() => clients ?? [], [clients]);
 
@@ -110,7 +109,7 @@ function ClientsPage() {
 				buildingName: client.buildingName ?? undefined,
 				unitNumber: client.unitNumber ?? undefined,
 				postalCode: client.postalCode ?? undefined,
-			})
+			});
 			const invoiceCount = (client as { invoiceCount?: number }).invoiceCount;
 			return {
 				_id: client._id,
@@ -123,8 +122,8 @@ function ClientsPage() {
 					typeof invoiceCount === "number" && !Number.isNaN(invoiceCount)
 						? invoiceCount
 						: undefined,
-			}
-		})
+			};
+		});
 	}, [clientList]);
 
 	const fallbackPreviewClient = useMemo(() => {
@@ -137,10 +136,11 @@ function ClientsPage() {
 		if (!clientForPreview) return undefined;
 		return formatAddressParts({
 			streetName: (clientForPreview as { streetName?: string }).streetName,
-			buildingName: (clientForPreview as { buildingName?: string }).buildingName,
+			buildingName: (clientForPreview as { buildingName?: string })
+				.buildingName,
 			unitNumber: (clientForPreview as { unitNumber?: string }).unitNumber,
 			postalCode: (clientForPreview as { postalCode?: string }).postalCode,
-		})
+		});
 	}, [clientForPreview]);
 
 	const previewInvoiceCount = useMemo(() => {
@@ -153,8 +153,8 @@ function ClientsPage() {
 
 	const selectedIds = useMemo(
 		() => selectedClients.map((client) => client._id),
-		[selectedClients]
-	)
+		[selectedClients],
+	);
 	const selectedCount = selectedIds.length;
 
 	const handlePreviewClose = useCallback(() => {
@@ -173,12 +173,12 @@ function ClientsPage() {
 			try {
 				await deleteClient({ clientId: client._id });
 				setSelectedClients((current) =>
-					current.filter((item) => item._id !== client._id)
-				)
+					current.filter((item) => item._id !== client._id),
+				);
 				toast({
 					title: "Client removed",
 					description: `${client.name} has been deleted.`,
-				})
+				});
 				if (previewClientId === client._id) {
 					handlePreviewClose();
 				}
@@ -188,13 +188,13 @@ function ClientsPage() {
 					title: "Unable to delete",
 					description: "We couldn't delete the client. Please try again.",
 					variant: "destructive",
-				})
+				});
 			} finally {
 				setIsDeleting(false);
 			}
 		},
-		[deleteClient, handlePreviewClose, previewClientId, toast]
-	)
+		[deleteClient, handlePreviewClose, previewClientId, toast],
+	);
 
 	const handleBulkDelete = useCallback(async () => {
 		if (!selectedIds.length) return;
@@ -210,14 +210,14 @@ function ClientsPage() {
 			toast({
 				title: "Clients deleted",
 				description: `Removed ${selectedIds.length} client(s).`,
-			})
+			});
 		} catch (error) {
 			console.error(error);
 			toast({
 				title: "Unable to delete",
 				description: "We couldn't delete one or more clients.",
 				variant: "destructive",
-			})
+			});
 		} finally {
 			setIsDeleting(false);
 		}
@@ -226,17 +226,16 @@ function ClientsPage() {
 	useEffect(() => {
 		if (!previewClientId) return;
 		const stillExists = clientList.some(
-			(client) => client._id === previewClientId
-		)
+			(client) => client._id === previewClientId,
+		);
 		if (!stillExists) {
 			handlePreviewClose();
 		}
 	}, [clientList, handlePreviewClose, previewClientId]);
 
 	return (
-		<div className="min-h-screen">
-			<Navigation />
-			<main className="container mx-auto px-4 py-4 sm:py-8">
+		<>
+			<div className="px-4 py-4 sm:px-8 sm:py-8">
 				<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<h1 className="text-3xl font-bold sm:text-4xl">Clients</h1>
 					<Dialog open={open} onOpenChange={setOpen}>
@@ -293,7 +292,9 @@ function ClientsPage() {
 											<Input
 												id="client-building"
 												value={buildingName}
-												onChange={(event) => setBuildingName(event.target.value)}
+												onChange={(event) =>
+													setBuildingName(event.target.value)
+												}
 												placeholder="Sunrise Plaza"
 											/>
 										</div>
@@ -328,8 +329,8 @@ function ClientsPage() {
 				{!clients && (
 					<div className="space-y-4">
 						<div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-							<Skeleton className="h-10 w-full max-w-sm" />
-							<Skeleton className="h-10 w-32" />
+							<Skeleton className="h-10 w-full max-w-sm rounded-sm border border-border bg-card" />
+							<Skeleton className="h-10 w-32 rounded-sm border border-border bg-card" />
 						</div>
 						<TableSkeleton columns={5} rows={5} />
 					</div>
@@ -411,7 +412,7 @@ function ClientsPage() {
 						onRowClick={handleRowPreview}
 					/>
 				)}
-			</main>
+			</div>
 			<Dialog
 				open={isPreviewOpen}
 				onOpenChange={(open) => {
@@ -483,7 +484,10 @@ function ClientsPage() {
 										Close
 									</Button>
 									<Button asChild>
-										<Link to="/clients/$id" params={{ id: clientForPreview._id }}>
+										<Link
+											to="/clients/$id"
+											params={{ id: clientForPreview._id }}
+										>
 											Open full profile
 										</Link>
 									</Button>
@@ -497,6 +501,6 @@ function ClientsPage() {
 					</DialogContent>
 				) : null}
 			</Dialog>
-		</div>
-	)
+		</>
+	);
 }
