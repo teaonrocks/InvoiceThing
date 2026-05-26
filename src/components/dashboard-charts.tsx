@@ -134,8 +134,15 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 
 			const unpaid = Math.max(0, totalRevenue - paidRevenue);
 
+			const weekEnd = new Date(start);
+			weekEnd.setDate(weekEnd.getDate() + 6);
+			const week =
+				start.getMonth() === weekEnd.getMonth()
+					? `${format(start, "MMM dd")}–${format(weekEnd, "dd")}`
+					: `${format(start, "MMM dd")} – ${format(weekEnd, "MMM dd")}`;
+
 			return {
-				week: format(start, "MMM dd"),
+				week,
 				paid: Number(paidRevenue.toFixed(2)),
 				unpaid: Number(unpaid.toFixed(2)),
 			};
@@ -195,7 +202,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 							>
 								<BarChart
 									data={weeklyRevenueData}
-									margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+									margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
 								>
 									<CartesianGrid
 										vertical={false}
