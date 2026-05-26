@@ -13,6 +13,8 @@ import {
 	buildInvoiceBranding,
 	type InvoiceBranding,
 	getInvoiceTextColors,
+	INVOICE_LOGO_HEIGHT,
+	INVOICE_LOGO_MAX_WIDTH,
 } from "@/lib/invoice-branding";
 import { ensureInvoicePdfFont } from "@/lib/register-invoice-pdf-fonts";
 
@@ -34,14 +36,18 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			color: textColors.foreground,
 		},
 		header: {
+			position: "relative",
 			marginBottom: 30,
-			flexDirection: "row",
-			justifyContent: "space-between",
-			alignItems: "flex-start",
+		},
+		headerTitle: {
+			paddingRight: INVOICE_LOGO_MAX_WIDTH + 16,
 		},
 		logo: {
-			maxWidth: 120,
-			maxHeight: 48,
+			position: "absolute",
+			top: 0,
+			right: 0,
+			height: INVOICE_LOGO_HEIGHT,
+			maxWidth: INVOICE_LOGO_MAX_WIDTH,
 			objectFit: "contain",
 		},
 		title: {
@@ -317,14 +323,14 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoicePdfData }) => {
 		<Document>
 			<Page size="A4" style={styles.page}>
 				<View style={styles.header}>
-					<View>
-						<Text style={styles.title}>INVOICE</Text>
-						<Text style={styles.invoiceNumber}>#{invoice.invoiceNumber}</Text>
-					</View>
 					{branding.logoUrl ? (
 						// eslint-disable-next-line jsx-a11y/alt-text
 						<Image src={branding.logoUrl} style={styles.logo} />
 					) : null}
+					<View style={branding.logoUrl ? styles.headerTitle : undefined}>
+						<Text style={styles.title}>INVOICE</Text>
+						<Text style={styles.invoiceNumber}>#{invoice.invoiceNumber}</Text>
+					</View>
 				</View>
 
 				<View style={styles.section}>

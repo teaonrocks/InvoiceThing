@@ -137,6 +137,10 @@ export type InvoiceBranding = {
 	fontCssFamily: string;
 };
 
+/** Target height for invoice logos; width scales with aspect ratio up to the max. */
+export const INVOICE_LOGO_HEIGHT = 96;
+export const INVOICE_LOGO_MAX_WIDTH = 240;
+
 export type SettingsBrandingSource = {
 	logoStorageId?: Id<"_storage">;
 	invoiceAccentColor?: string;

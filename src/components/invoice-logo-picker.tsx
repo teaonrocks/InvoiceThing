@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { InvoiceLogoImage } from "@/components/invoice-logo-image";
 import { ImageIcon, Upload, X } from "lucide-react";
 import { useState } from "react";
 
@@ -68,11 +69,7 @@ export function InvoiceLogoPicker({
 					<p className="text-sm text-destructive">{error}</p>
 				) : null}
 				<div className="flex items-center gap-4 border border-border bg-muted/20 p-4">
-					<img
-						src={logoUrl}
-						alt="Invoice logo"
-						className="max-h-16 max-w-[10rem] object-contain"
-					/>
+					<InvoiceLogoImage src={logoUrl} alt="Invoice logo" align="center" />
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-2">
 							<ImageIcon className="h-4 w-4 shrink-0 text-brand" />

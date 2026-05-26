@@ -9,8 +9,10 @@ import {
 	DEFAULT_INVOICE_ACCENT_COLOR,
 	DEFAULT_INVOICE_SECONDARY_COLOR,
 	getInvoiceTextColors,
+	INVOICE_LOGO_MAX_WIDTH,
 } from "@/lib/invoice-branding";
 import { useInvoiceBrandingFont } from "@/hooks/use-invoice-branding-font";
+import { InvoiceLogoImage } from "@/components/invoice-logo-image";
 import type {
 	InvoiceFormClaim,
 	InvoiceFormLineItem,
@@ -200,7 +202,7 @@ function PreviewTableHead({
 	return (
 		<th
 			className={cn(
-				"border-b-2 pb-2 text-left text-[10px] font-semibold tracking-wider uppercase sm:text-xs",
+				"border-b-2 pb-2 text-left text-xs font-bold uppercase",
 				className,
 			)}
 			style={{ borderColor: color, color }}
@@ -222,10 +224,28 @@ function PreviewTableCell({
 	return (
 		<td
 			colSpan={colSpan}
-			className={cn("py-2.5 align-top text-xs sm:text-sm", className)}
+			className={cn("border-b py-2 align-top text-sm", className)}
+			style={{ borderColor: "var(--invoice-border, rgba(0,0,0,0.1))" }}
 		>
 			{children}
 		</td>
+	);
+}
+
+function PreviewLabelRow({
+	label,
+	value,
+}: {
+	label: string;
+	value: React.ReactNode;
+}) {
+	return (
+		<div className="mb-1.5 flex text-sm">
+			<span className="w-[7.5rem] shrink-0 font-bold invoice-text-muted">
+				{label}
+			</span>
+			<span className="font-number min-w-0 flex-1">{value}</span>
+		</div>
 	);
 }
 
@@ -273,90 +293,96 @@ export function InvoiceEditorPreview({
 					{
 						fontFamily: branding.fontCssFamily,
 						backgroundColor: secondaryColor,
+						color: textColors.foreground,
 						"--invoice-fg": textColors.foreground,
 						"--invoice-muted": textColors.mutedForeground,
+						"--invoice-border": textColors.border,
 					} as React.CSSProperties
 				}
 				aria-live="polite"
 				aria-label="Invoice preview"
 			>
-				<div className="min-h-full p-6 sm:p-8 lg:p-10">
-					<div
-						className="flex flex-col gap-4 border-b-2 pb-6 sm:flex-row sm:items-start sm:justify-between"
-						style={{ borderColor: `${textColors.accent}33` }}
-					>
-						<div>
+				<div className="min-h-full p-6 text-sm leading-relaxed sm:p-8 lg:p-10">
+					<div className="relative mb-8">
+						{branding.logoUrl ? (
+							<InvoiceLogoImage
+								src={branding.logoUrl}
+								className="absolute top-0 right-0"
+							/>
+						) : null}
+						<div
+							style={{
+								paddingRight: branding.logoUrl
+									? INVOICE_LOGO_MAX_WIDTH + 16
+									: undefined,
+							}}
+						>
 							<h2
-								className="text-3xl font-bold tracking-tight sm:text-4xl"
+								className="mb-2 text-3xl font-bold leading-none sm:text-4xl"
 								style={{ color: textColors.accent }}
 							>
 								INVOICE
 							</h2>
-							<p className="font-number mt-1 text-sm invoice-text-muted sm:text-base">
+							<p className="font-number text-sm invoice-text-muted">
 								#{data.invoiceNumber}
 							</p>
 						</div>
-						{branding.logoUrl ? (
-							<img
-								src={branding.logoUrl}
-								alt="Company logo"
-								className="max-h-14 max-w-[10rem] self-start object-contain sm:max-h-16 sm:max-w-[12rem]"
-							/>
-						) : null}
 					</div>
 
-					<div className="mt-6 grid grid-cols-2 gap-4 text-xs sm:text-sm">
-						<div>
-							<p className="font-medium invoice-text-muted">Issue date</p>
-							<p className="font-number mt-0.5 font-semibold">
-								{data.issueDate
-									? format(data.issueDate, "MMM d, yyyy")
-									: "—"}
-							</p>
-						</div>
-						<div>
-							<p className="font-medium invoice-text-muted">Due date</p>
-							<p className="font-number mt-0.5 font-semibold">
-								{data.dueDate ? format(data.dueDate, "MMM d, yyyy") : "—"}
-							</p>
-						</div>
+					<div className="mb-6">
+						<PreviewLabelRow
+							label="Issue Date:"
+							value={
+								data.issueDate
+									? format(data.issueDate, "MMMM d, yyyy")
+									: "—"
+							}
+						/>
+						<PreviewLabelRow
+							label="Due Date:"
+							value={
+								data.dueDate ? format(data.dueDate, "MMMM d, yyyy") : "—"
+							}
+						/>
 					</div>
 
-					<div className="mt-8">
+					<div className="mb-6">
 						<p
-							className="text-[10px] font-semibold tracking-wider uppercase"
+							className="mb-2 text-sm font-bold"
 							style={{ color: textColors.accent }}
 						>
-							Bill to
+							Bill To:
 						</p>
 						{data.client ? (
-							<div className="mt-2 space-y-1">
-								<p className="text-base font-semibold">{data.client.name}</p>
+							<div>
+								<p className="mb-1 text-sm font-bold">{data.client.name}</p>
 								{data.client.contactPerson ? (
-									<p className="text-xs invoice-text-muted">
+									<p className="mb-1 text-sm">
 										Attn: {data.client.contactPerson}
 									</p>
 								) : null}
 								{data.client.email ? (
-									<p className="text-xs invoice-text-muted">
-										{data.client.email}
-									</p>
+									<p className="mb-1 text-sm">{data.client.email}</p>
 								) : null}
 								{clientAddress ? (
-									<p className="text-xs leading-relaxed invoice-text-muted">
-										{clientAddress}
-									</p>
+									<p className="text-sm invoice-text-muted">{clientAddress}</p>
 								) : null}
 							</div>
 						) : (
-							<p className="mt-2 text-sm italic invoice-text-muted">
+							<p className="text-sm italic invoice-text-muted">
 								Select a client to preview
 							</p>
 						)}
 					</div>
 
-					<div className="mt-8">
-						<table className="w-full border-collapse">
+					<div className="my-6">
+						<table className="w-full table-fixed border-collapse">
+							<colgroup>
+								<col />
+								<col className="w-14" />
+								<col className="w-[7.5rem]" />
+								<col className="w-[7.5rem]" />
+							</colgroup>
 							<thead>
 								<tr>
 									<PreviewTableHead color={textColors.accent}>
@@ -364,19 +390,19 @@ export function InvoiceEditorPreview({
 									</PreviewTableHead>
 									<PreviewTableHead
 										color={textColors.accent}
-										className="w-12 text-right"
+										className="text-right"
 									>
 										Qty
 									</PreviewTableHead>
 									<PreviewTableHead
 										color={textColors.accent}
-										className="w-20 text-right"
+										className="pl-3 text-right"
 									>
 										Rate
 									</PreviewTableHead>
 									<PreviewTableHead
 										color={textColors.accent}
-										className="w-20 text-right"
+										className="pl-3 text-right"
 									>
 										Amount
 									</PreviewTableHead>
@@ -385,13 +411,10 @@ export function InvoiceEditorPreview({
 							<tbody>
 								{hasLineItems ? (
 									data.lineItems.map((item, index) => (
-										<tr
-											key={index}
-											className="border-b last:border-0"
-											style={{ borderColor: `${textColors.border}99` }}
-										>
+										<tr key={index}>
 											<PreviewTableCell
 												className={cn(
+													"pr-3",
 													item.isPlaceholder && "italic invoice-text-muted",
 												)}
 											>
@@ -400,10 +423,10 @@ export function InvoiceEditorPreview({
 											<PreviewTableCell className="font-number text-right">
 												{item.quantity}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number text-right">
+											<PreviewTableCell className="font-number pl-3 text-right">
 												{formatInvoiceCurrency(item.unitPrice)}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number text-right font-medium">
+											<PreviewTableCell className="font-number pl-3 text-right">
 												{formatInvoiceCurrency(item.total)}
 											</PreviewTableCell>
 										</tr>
@@ -423,14 +446,19 @@ export function InvoiceEditorPreview({
 					</div>
 
 					{hasClaims ? (
-						<div className="mt-8">
+						<div className="my-6">
 							<p
-								className="mb-3 text-[10px] font-semibold tracking-wider uppercase"
+								className="mb-2 text-sm font-bold"
 								style={{ color: textColors.accent }}
 							>
-								Reimbursable expenses
+								Reimbursable Expenses
 							</p>
-							<table className="w-full border-collapse">
+							<table className="w-full table-fixed border-collapse">
+								<colgroup>
+									<col />
+									<col className="w-[6.5rem]" />
+									<col className="w-[7.5rem]" />
+								</colgroup>
 								<thead>
 									<tr>
 										<PreviewTableHead color={textColors.accent}>
@@ -438,13 +466,13 @@ export function InvoiceEditorPreview({
 										</PreviewTableHead>
 										<PreviewTableHead
 											color={textColors.accent}
-											className="w-24"
+											className="pl-3"
 										>
 											Date
 										</PreviewTableHead>
 										<PreviewTableHead
 											color={textColors.accent}
-											className="w-20 text-right"
+											className="pl-3 text-right"
 										>
 											Amount
 										</PreviewTableHead>
@@ -452,23 +480,19 @@ export function InvoiceEditorPreview({
 								</thead>
 								<tbody>
 									{data.claims.map((claim, index) => (
-										<tr
-											key={index}
-											className="border-b last:border-0"
-											style={{ borderColor: `${textColors.border}99` }}
-										>
-											<PreviewTableCell>
+										<tr key={index}>
+											<PreviewTableCell className="pr-3">
 												{claim.description}
 												{claim.hasReceipt ? (
-													<span className="mt-0.5 block text-[10px] invoice-text-muted">
+													<span className="mt-1 block text-xs invoice-text-muted">
 														Receipt attached
 													</span>
 												) : null}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number">
+											<PreviewTableCell className="font-number pl-3">
 												{format(claim.date, "MMM d, yyyy")}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number text-right font-medium">
+											<PreviewTableCell className="font-number pl-3 text-right">
 												{formatInvoiceCurrency(claim.amount)}
 											</PreviewTableCell>
 										</tr>
@@ -480,71 +504,75 @@ export function InvoiceEditorPreview({
 
 					<div
 						className={cn(
-							"mt-8 flex flex-col gap-6",
-							data.paymentInstructions &&
-								"sm:flex-row sm:items-start sm:justify-between",
+							"mt-6 flex flex-col gap-6",
+							data.paymentInstructions
+								? "sm:flex-row sm:items-start sm:justify-between"
+								: "sm:justify-end",
 						)}
 					>
 						{data.paymentInstructions ? (
-							<div className="max-w-[14rem] shrink-0">
+							<div className="max-w-[45%] shrink-0 sm:pr-5">
 								<p
-									className="text-[10px] font-semibold tracking-wider uppercase"
+									className="mb-2 text-sm font-bold"
 									style={{ color: textColors.accent }}
 								>
-									Payment information
+									Payment Information
 								</p>
-								<p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed invoice-text-muted">
+								<p className="whitespace-pre-wrap text-sm leading-relaxed invoice-text-muted">
 									{data.paymentInstructions}
 								</p>
 							</div>
 						) : null}
 
 						<div
-							className="ml-auto w-full max-w-[12rem] space-y-1.5 rounded-sm p-3 text-xs"
-							style={{ backgroundColor: `${secondaryColor}CC` }}
+							className="rounded p-3 sm:ml-auto"
+							style={{ backgroundColor: secondaryColor }}
 						>
-							<div className="flex justify-between gap-4">
-								<span className="invoice-text-muted">Subtotal</span>
-								<span className="font-number font-medium tabular-nums">
+							<div className="mb-2 flex w-full min-w-[16rem] sm:w-[15rem]">
+								<span className="mr-4 flex-1 text-right text-sm invoice-text-muted">
+									Subtotal:
+								</span>
+								<span className="font-number w-28 text-right text-sm">
 									{formatInvoiceCurrency(data.subtotal)}
 								</span>
 							</div>
-							{data.expensesTotal > 0 ? (
-								<div className="flex justify-between gap-4">
-									<span className="invoice-text-muted">Expenses</span>
-									<span className="font-number font-medium tabular-nums">
-										{formatInvoiceCurrency(data.expensesTotal)}
+							{data.tax > 0 ? (
+								<div className="mb-2 flex w-full min-w-[16rem] sm:w-[15rem]">
+									<span className="mr-4 flex-1 text-right text-sm invoice-text-muted">
+										Tax (
+										{data.subtotal > 0
+											? ((data.tax / data.subtotal) * 100).toFixed(1)
+											: "0.0"}
+										%):
 									</span>
-								</div>
-							) : null}
-							{data.taxRate > 0 ? (
-								<div className="flex justify-between gap-4">
-									<span className="invoice-text-muted">
-										Tax ({(data.taxRate * 100).toFixed(1)}%)
-									</span>
-									<span className="font-number font-medium tabular-nums">
+									<span className="font-number w-28 text-right text-sm">
 										{formatInvoiceCurrency(data.tax)}
 									</span>
 								</div>
 							) : null}
 							{showRounding ? (
-								<div className="flex justify-between gap-4">
-									<span className="invoice-text-muted">Rounding</span>
-									<span className="font-number font-medium tabular-nums">
+								<div className="mb-2 flex w-full min-w-[16rem] sm:w-[15rem]">
+									<span className="mr-4 flex-1 whitespace-nowrap text-right text-sm invoice-text-muted">
+										Rounding:
+									</span>
+									<span className="font-number w-28 text-right text-sm">
 										{data.roundingAdjustment! > 0 ? "+" : ""}
 										{formatInvoiceCurrency(data.roundingAdjustment!)}
 									</span>
 								</div>
 							) : null}
 							<div
-								className="flex justify-between gap-4 border-t pt-2"
+								className="flex w-full min-w-[16rem] border-t pt-2 sm:w-[15rem]"
 								style={{ borderColor: textColors.accent }}
 							>
-								<span className="font-semibold" style={{ color: textColors.accent }}>
-									Total
+								<span
+									className="mr-4 flex-1 text-right text-base font-bold"
+									style={{ color: textColors.accent }}
+								>
+									Total:
 								</span>
 								<span
-									className="font-number text-base font-bold tabular-nums"
+									className="font-number w-28 text-right text-base font-medium"
 									style={{ color: textColors.accent }}
 								>
 									{formatInvoiceCurrency(data.total)}
@@ -555,22 +583,26 @@ export function InvoiceEditorPreview({
 
 					{data.notes ? (
 						<div
-							className="mt-8 rounded-sm border-t pt-6"
-							style={{
-								borderColor: `${textColors.accent}33`,
-								backgroundColor: `${secondaryColor}99`,
-							}}
+							className="mt-8 rounded p-4"
+							style={{ backgroundColor: secondaryColor }}
 						>
 							<p
-								className="text-[10px] font-semibold tracking-wider uppercase"
+								className="mb-2 text-sm font-bold"
 								style={{ color: textColors.accent }}
 							>
 								Notes
 							</p>
-							<p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed">
+							<p className="whitespace-pre-wrap text-sm leading-relaxed">
 								{data.notes}
 							</p>
 						</div>
+					) : null}
+
+					{data.dueDate ? (
+						<p className="mt-8 text-center text-xs invoice-text-muted sm:text-sm">
+							Thank you for your business! • Payment is due by{" "}
+							{format(data.dueDate, "MMMM d, yyyy")}
+						</p>
 					) : null}
 				</div>
 			</div>
