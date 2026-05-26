@@ -44,21 +44,28 @@ export { formatInvoiceCurrency };
 export const invoiceFormSectionLabelClass =
 	"text-xs font-medium tracking-wide uppercase text-muted-foreground";
 
+export const INVOICE_EDITOR_FORM_ID = "invoice-editor-form";
+
 export function InvoiceFormPage({
 	backLink,
 	title,
+	actions,
 	children,
 }: {
 	backLink: ReactNode;
 	title: string;
+	actions?: ReactNode;
 	children: ReactNode;
 }) {
 	return (
 		<div className="px-4 py-6 pb-28 sm:px-6 sm:py-8 sm:pb-8 lg:px-8">
 			<div className="-ml-2 mb-2">{backLink}</div>
-			<h1 className="font-heading text-xl font-semibold leading-tight sm:text-2xl">
-				{title}
-			</h1>
+			<div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+				<h1 className="font-heading text-xl font-semibold leading-tight sm:text-2xl">
+					{title}
+				</h1>
+				{actions}
+			</div>
 			<p className="mt-1 text-sm text-muted-foreground">
 				Edit on the left — preview updates as you type.
 			</p>
@@ -80,7 +87,11 @@ export function InvoiceEditorLayout({
 	const [previewOpen, setPreviewOpen] = useState(false);
 
 	return (
-		<form onSubmit={onSubmit} className="relative mt-6">
+		<form
+			id={INVOICE_EDITOR_FORM_ID}
+			onSubmit={onSubmit}
+			className="relative mt-6"
+		>
 			{isMobile ? (
 				<div className="mb-4 flex justify-end">
 					<Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
@@ -295,66 +306,72 @@ export function InvoiceFormActions({
 	cancelLabel = "Cancel",
 	submitLabel,
 	isSubmitting,
+	placement,
 }: {
 	onCancel: () => void;
 	cancelLabel?: string;
 	submitLabel: string;
 	isSubmitting: boolean;
+	placement: "header" | "mobile";
 }) {
-	const isMobile = useIsMobile();
-
-	if (isMobile) {
+	if (placement === "header") {
 		return (
-			<div className="fixed inset-x-0 bottom-16 z-20 border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm md:static md:z-auto md:border-t md:bg-transparent md:px-0 md:py-0 md:backdrop-blur-none">
-				<div className="flex gap-2">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={onCancel}
-						disabled={isSubmitting}
-						className="h-11 flex-1 rounded-none"
-					>
-						{cancelLabel}
-					</Button>
-					<Button
-						type="submit"
-						disabled={isSubmitting}
-						className="h-11 flex-1 rounded-none"
-					>
-						{isSubmitting ? (
-							<>
-								<Spinner className="h-4 w-4 mr-2" />
-								{submitLabel}…
-							</>
-						) : (
-							submitLabel
-						)}
-					</Button>
-				</div>
+			<div className="hidden shrink-0 flex-wrap items-center gap-2 sm:gap-3 md:flex">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={onCancel}
+					disabled={isSubmitting}
+				>
+					{cancelLabel}
+				</Button>
+				<Button
+					type="submit"
+					size="sm"
+					form={INVOICE_EDITOR_FORM_ID}
+					disabled={isSubmitting}
+				>
+					{isSubmitting ? (
+						<>
+							<Spinner className="h-4 w-4 mr-2" />
+							{submitLabel}…
+						</>
+					) : (
+						submitLabel
+					)}
+				</Button>
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex flex-wrap gap-3 border-t border-border pt-6">
-			<Button
-				type="button"
-				variant="outline"
-				onClick={onCancel}
-				disabled={isSubmitting}
-			>
-				{cancelLabel}
-			</Button>
-			<Button type="submit" disabled={isSubmitting}>
-				{isSubmitting ? (
-					<>
-						<Spinner className="h-4 w-4 mr-2" />
-						{submitLabel}…
-					</>
-				) : (
-					submitLabel
-				)}
-			</Button>
+		<div className="fixed inset-x-0 bottom-16 z-20 border-t border-border bg-card/95 px-4 py-3 backdrop-blur-sm md:hidden">
+			<div className="flex gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					onClick={onCancel}
+					disabled={isSubmitting}
+					className="h-11 flex-1 rounded-none"
+				>
+					{cancelLabel}
+				</Button>
+				<Button
+					type="submit"
+					disabled={isSubmitting}
+					className="h-11 flex-1 rounded-none"
+				>
+					{isSubmitting ? (
+						<>
+							<Spinner className="h-4 w-4 mr-2" />
+							{submitLabel}…
+						</>
+					) : (
+						submitLabel
+					)}
+				</Button>
+			</div>
 		</div>
 	);
 }

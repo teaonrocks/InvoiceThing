@@ -408,6 +408,14 @@ function NewInvoicePage() {
 					</Button>
 				</Link>
 			}
+			actions={
+				<InvoiceFormActions
+					placement="header"
+					onCancel={() => navigate({ to: "/invoices" })}
+					submitLabel="Create invoice"
+					isSubmitting={isSubmitting}
+				/>
+			}
 		>
 			<InvoiceEditorLayout
 				onSubmit={handleSubmit}
@@ -450,6 +458,7 @@ function NewInvoicePage() {
 						/>
 						<InvoiceNotesSection notes={notes} onNotesChange={setNotes} />
 						<InvoiceFormActions
+							placement="mobile"
 							onCancel={() => navigate({ to: "/invoices" })}
 							submitLabel="Create invoice"
 							isSubmitting={isSubmitting}

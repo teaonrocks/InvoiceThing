@@ -365,6 +365,14 @@ function EditInvoicePage() {
 					</Button>
 				</Link>
 			}
+			actions={
+				<InvoiceFormActions
+					placement="header"
+					onCancel={() => navigate({ to: "/invoices/$id", params: { id } })}
+					submitLabel="Update invoice"
+					isSubmitting={isSubmitting}
+				/>
+			}
 		>
 			<InvoiceEditorLayout
 				onSubmit={handleSubmit}
@@ -402,6 +410,7 @@ function EditInvoicePage() {
 						/>
 						<InvoiceNotesSection notes={notes} onNotesChange={setNotes} />
 						<InvoiceFormActions
+							placement="mobile"
 							onCancel={() =>
 								navigate({ to: "/invoices/$id", params: { id } })
 							}
