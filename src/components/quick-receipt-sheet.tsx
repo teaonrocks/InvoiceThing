@@ -74,15 +74,6 @@ export function QuickReceiptSheet({
 		[invoices],
 	);
 
-	useEffect(() => {
-		if (!open) return;
-		if (defaultInvoiceId) {
-			setInvoiceId(defaultInvoiceId);
-		} else if (sortedInvoices.length === 1) {
-			setInvoiceId(sortedInvoices[0]._id);
-		}
-	}, [open, defaultInvoiceId, sortedInvoices]);
-
 	const resetForm = () => {
 		setDescription("");
 		setAmount("");
@@ -92,6 +83,18 @@ export function QuickReceiptSheet({
 			setInvoiceId("");
 		}
 	};
+
+	useEffect(() => {
+		if (!open) {
+			resetForm();
+			return;
+		}
+		if (defaultInvoiceId) {
+			setInvoiceId(defaultInvoiceId);
+		} else if (sortedInvoices.length === 1) {
+			setInvoiceId(sortedInvoices[0]._id);
+		}
+	}, [open, defaultInvoiceId, sortedInvoices]);
 
 	const handleFileChange = async (file: File | undefined) => {
 		if (!file) return;

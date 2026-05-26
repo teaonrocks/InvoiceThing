@@ -82,6 +82,14 @@ export const upsert = mutation({
 			return existing._id;
 		}
 
+		// Compute logoStorageId with same precedence as update path
+		let logoStorageId: Id<"_storage"> | undefined = undefined;
+		if (args.logoStorageId !== undefined) {
+			logoStorageId = args.logoStorageId;
+		} else if (args.clearLogo) {
+			logoStorageId = undefined;
+		}
+
 		const settingsId = await ctx.db.insert("settings", {
 			userId: args.userId,
 			invoicePrefix: args.invoicePrefix ?? "INV",
@@ -91,7 +99,7 @@ export const upsert = mutation({
 			paymentInstructions: args.paymentInstructions,
 			enableRounding: args.enableRounding ?? false,
 			roundingIncrement: args.roundingIncrement ?? 0.05,
-			logoStorageId: args.clearLogo ? undefined : args.logoStorageId,
+			logoStorageId,
 			invoiceAccentColor: args.invoiceAccentColor,
 			invoiceSecondaryColor: args.invoiceSecondaryColor,
 			invoiceFontFamily: args.invoiceFontFamily,

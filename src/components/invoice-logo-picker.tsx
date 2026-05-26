@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { ImageIcon, Upload, X } from "lucide-react";
+import { useState } from "react";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/svg+xml"];
 
 type InvoiceLogoPickerProps = {
 	idPrefix: string;
@@ -20,9 +24,30 @@ export function InvoiceLogoPicker({
 	disabled,
 	isUploading,
 }: InvoiceLogoPickerProps) {
+	const [error, setError] = useState<string | null>(null);
+
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (file) onFileSelect(file);
+		setError(null);
+
+		if (!file) {
+			e.target.value = "";
+			return;
+		}
+
+		if (file.size > MAX_FILE_SIZE) {
+			setError("File size must be 5MB or smaller");
+			e.target.value = "";
+			return;
+		}
+
+		if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+			setError("File must be PNG, JPEG, or SVG");
+			e.target.value = "";
+			return;
+		}
+
+		onFileSelect(file);
 		e.target.value = "";
 	};
 
@@ -38,6 +63,9 @@ export function InvoiceLogoPicker({
 	if (logoUrl) {
 		return (
 			<div className="space-y-3">
+				{error ? (
+					<p className="text-sm text-destructive">{error}</p>
+				) : null}
 				<div className="flex items-center gap-4 border border-border bg-muted/20 p-4">
 					<img
 						src={logoUrl}
@@ -91,24 +119,29 @@ export function InvoiceLogoPicker({
 	}
 
 	return (
-		<label
-			htmlFor={`${idPrefix}-file`}
-			className={cn(
-				"flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-muted/20 px-4 py-8 transition-colors hover:border-brand hover:bg-muted/40",
-				disabled && "pointer-events-none opacity-50",
-			)}
-		>
-			<Upload className="h-5 w-5 text-brand" />
-			<span className="text-sm font-medium">Upload logo</span>
-			<span className="text-xs text-muted-foreground">PNG, JPG, or SVG recommended</span>
-			<input
-				id={`${idPrefix}-file`}
-				type="file"
-				accept="image/*,.heic,.heif"
-				className="hidden"
-				disabled={disabled}
-				onChange={handleChange}
-			/>
-		</label>
+		<div className="space-y-2">
+			{error ? (
+				<p className="text-sm text-destructive">{error}</p>
+			) : null}
+			<label
+				htmlFor={`${idPrefix}-file`}
+				className={cn(
+					"flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-muted/20 px-4 py-8 transition-colors hover:border-brand hover:bg-muted/40",
+					disabled && "pointer-events-none opacity-50",
+				)}
+			>
+				<Upload className="h-5 w-5 text-brand" />
+				<span className="text-sm font-medium">Upload logo</span>
+				<span className="text-xs text-muted-foreground">PNG, JPG, or SVG recommended</span>
+				<input
+					id={`${idPrefix}-file`}
+					type="file"
+					accept="image/*,.heic,.heif"
+					className="hidden"
+					disabled={disabled}
+					onChange={handleChange}
+				/>
+			</label>
+		</div>
 	);
 }

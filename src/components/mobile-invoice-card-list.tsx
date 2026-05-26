@@ -109,7 +109,7 @@ export function MobileInvoiceCardList({
 										invoice.claimsMissingReceipt > 0 ? (
 											<>
 												<ImageOff className="h-3.5 w-3.5" />
-												{invoice.claimsMissingReceipt} missing receipt
+												{invoice.claimsMissingReceipt} missing {invoice.claimsMissingReceipt === 1 ? "receipt" : "receipts"}
 											</>
 										) : (
 											<>
