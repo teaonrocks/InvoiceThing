@@ -196,7 +196,7 @@ function Home() {
 									animate="visible"
 									className="font-dm mb-8 text-xs font-600 tracking-[0.25em] uppercase text-brand"
 								>
-									Invoice Management
+									Built to solve my own problem
 								</motion.p>
 								<motion.h1
 									custom={1}
@@ -205,11 +205,11 @@ function Home() {
 									animate="visible"
 									className="font-instrument text-5xl sm:text-6xl lg:text-7xl xl:text-[5.5rem] leading-[0.95] mb-8"
 								>
-									Professional invoicing
+									Lightweight invoicing
 									<br />
-									for serious
+									for your
 									<br />
-									<span className="italic">freelancers</span>
+									<span className="italic">side gig</span>
 									<span className="text-brand">.</span>
 								</motion.h1>
 								<motion.p
@@ -219,8 +219,10 @@ function Home() {
 									animate="visible"
 									className="font-dm mb-10 max-w-lg text-base font-300 leading-relaxed text-muted-foreground sm:text-lg"
 								>
-									No clutter. No bloat. A precise tool for creating invoices,
-									managing clients, and tracking every payment.
+									I freelance as a live sound engineer on weekends and needed a
+									simple way to send and manage invoices. I couldn't find
+									anything I liked—so I built a tool without the bloat or the
+									subscription.
 								</motion.p>
 								<motion.div
 									custom={3}
@@ -263,10 +265,10 @@ function Home() {
 									viewport={{ once: true, margin: "-40px" }}
 								>
 									{[
-										{ num: "2.4K+", label: "Active Users" },
-										{ num: "$12M+", label: "Invoiced" },
-										{ num: "98%", label: "Collection Rate" },
-										{ num: "< 2min", label: "Avg. Invoice Time" },
+										{ num: "Weekly", label: "Shipped & Used" },
+										{ num: "$0", label: "No Subscription" },
+										{ num: "Free", label: "Full Access" },
+										{ num: "< 2min", label: "First Invoice" },
 									].map((stat, i) => (
 										<motion.div
 											key={i}
@@ -306,14 +308,20 @@ function Home() {
 									<div className="grid lg:grid-cols-2 gap-16">
 										<div>
 											<p className="font-dm text-xs font-600 tracking-[0.25em] uppercase mb-6 text-brand">
-												Capabilities
+												Built for real use
 											</p>
 											<h2 className="font-instrument text-4xl sm:text-5xl leading-[0.95] mb-4">
-												Built with
+												Features I
 												<br />
-												<span className="italic">precision</span>
+												<span className="italic">actually needed</span>
 												<span className="text-brand">.</span>
 											</h2>
+											<p className="font-dm max-w-md text-sm font-300 leading-relaxed text-muted-foreground">
+												I use this every week, which keeps me shipping things
+												that matter. What started as a tool for my audio work
+												now helps dance instructors, production crews, and
+												anyone who invoices occasionally.
+											</p>
 										</div>
 										<motion.div
 											className="space-y-0 divide-y divide-border/50"
@@ -326,22 +334,22 @@ function Home() {
 												{
 													num: "01",
 													title: "Invoice Creation",
-													desc: "Line items, taxes, discounts, notes. Every detail accounted for in clean, professional documents.",
+													desc: "Line items, taxes, and notes in clean, professional documents. Everything you need to get paid—nothing you don't.",
 												},
 												{
 													num: "02",
-													title: "Client Management",
-													desc: "Organized client profiles with full invoice history, contact details, and payment records.",
+													title: "Expense Reimbursements",
+													desc: "The first version didn't have this. I built it because I needed it before I could send an invoice. Attach receipts and roll claims into your total.",
 												},
 												{
 													num: "03",
-													title: "Payment Tracking",
-													desc: "Real-time status updates. Know instantly when invoices are viewed, paid, or overdue.",
+													title: "Client Management",
+													desc: "Keep client details and invoice history in one place. From production companies to students—whoever you bill.",
 												},
 												{
 													num: "04",
-													title: "Revenue Analytics",
-													desc: "Clear visualizations of your earnings, outstanding amounts, and financial trends.",
+													title: "Payment Tracking",
+													desc: "See what's outstanding and what's been paid. Simple status tracking without dashboard overload.",
 												},
 											].map((item) => (
 												<motion.div
@@ -423,8 +431,9 @@ function Home() {
 											</span>
 										</div>
 										<p className="font-dm mb-8 text-sm font-300 text-muted-foreground">
-											Full access to every feature. No limits. No catches. Free
-											while in beta.
+											I didn't want to pay for invoicing software I'd only use
+											once in a while. Full access to every feature—no limits,
+											no catches. Free while in beta.
 										</p>
 										<Link to="/sign-up">
 											<Button
@@ -453,7 +462,7 @@ function Home() {
 								&copy; 2026 InvoiceThing
 							</span>
 							<span className="font-instrument text-sm italic text-muted-foreground/50">
-								Designed with intent<span className="text-brand">.</span>
+								Built because I needed it<span className="text-brand">.</span>
 							</span>
 						</div>
 					</motion.footer>
