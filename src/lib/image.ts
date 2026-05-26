@@ -205,3 +205,90 @@ export const compressImageFile = async (
 		lastModified: file.lastModified,
 	});
 };
+
+type FetchImageDataUrlOptions = {
+	maxDimension?: number;
+	/** Keep PNG alpha for logos; receipts should stay JPEG. */
+	preserveTransparency?: boolean;
+};
+
+/** Fetch a remote image and return a data URL suitable for react-pdf. */
+export async function fetchImageDataUrl(
+	url: string,
+	{
+		maxDimension = 1200,
+		preserveTransparency = false,
+	}: FetchImageDataUrlOptions = {},
+): Promise<string | undefined> {
+	if (typeof document === "undefined") {
+		return undefined;
+	}
+
+	try {
+		const response = await fetch(url, { cache: "no-cache" });
+		if (!response.ok) {
+			return undefined;
+		}
+
+		const blob = await response.blob();
+		if (!blob.size) {
+			return undefined;
+		}
+
+		const objectUrl = URL.createObjectURL(blob);
+		try {
+			const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+				const img = new Image();
+				img.onload = () => resolve(img);
+				img.onerror = () => reject(new Error("Failed to decode image"));
+				img.src = objectUrl;
+			});
+
+			const scale = Math.min(
+				1,
+				maxDimension / Math.max(image.naturalWidth, image.naturalHeight, 1),
+			);
+			const width = Math.max(1, Math.round(image.naturalWidth * scale));
+			const height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+			const canvas = document.createElement("canvas");
+			canvas.width = width;
+			canvas.height = height;
+
+			const context = canvas.getContext("2d");
+			if (!context) {
+				return undefined;
+			}
+
+			const outputMime = preserveTransparency ? "image/png" : "image/jpeg";
+			if (preserveTransparency) {
+				context.clearRect(0, 0, width, height);
+			}
+
+			context.drawImage(image, 0, 0, width, height);
+
+			return await new Promise((resolve, reject) => {
+				canvas.toBlob(
+					(result) => {
+						if (!result) {
+							reject(new Error("Failed to encode image for PDF"));
+							return;
+						}
+
+						const reader = new FileReader();
+						reader.onload = () => resolve(reader.result as string);
+						reader.onerror = () => reject(reader.error);
+						reader.readAsDataURL(result);
+					},
+					outputMime,
+					preserveTransparency ? undefined : 0.82,
+				);
+			});
+		} finally {
+			URL.revokeObjectURL(objectUrl);
+		}
+	} catch (error) {
+		console.warn("Failed to fetch image for PDF:", error);
+		return undefined;
+	}
+}

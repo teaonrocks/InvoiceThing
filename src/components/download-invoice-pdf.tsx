@@ -10,6 +10,9 @@ import { FileDown, Loader2 } from "lucide-react";
 import { InvoicePDF } from "./invoice-pdf";
 import { format } from "date-fns";
 import { buildInvoiceBranding } from "@/lib/invoice-branding";
+import { fetchImageDataUrl } from "@/lib/image";
+import { useToast } from "@/hooks/use-toast";
+import type { InvoicePdfData } from "./invoice-pdf";
 
 export type DownloadInvoiceData = {
 	_id: string;
@@ -125,28 +128,28 @@ export async function downloadInvoicePdf(
 	invoice: DownloadInvoiceData,
 	paymentInstructions?: string,
 ): Promise<void> {
-	let data = invoice;
-	if (!data.lineItems.length) {
-		const full = await convex.query(api.invoices.get, {
-			invoiceId: data._id as Id<"invoices">,
-		});
-		if (!full?.client) {
-			throw new Error("Invoice not found");
-		}
-		data = mapConvexInvoiceToDownload(full as ConvexInvoice);
+	const full = await convex.query(api.invoices.get, {
+		invoiceId: invoice._id as Id<"invoices">,
+	});
+	if (!full?.client) {
+		throw new Error("Invoice not found");
 	}
 
-	if (!data.client) {
-		throw new Error("Invoice client is required");
-	}
+	const data = mapConvexInvoiceToDownload(full as ConvexInvoice);
 
 	const claimImageUrls = await Promise.all(
 		(data.claims ?? []).map(async (claim) => {
 			if (!claim.imageStorageId) return undefined;
-			const url = await convex.query(api.files.getFileUrl, {
-				storageId: claim.imageStorageId,
-			});
-			return url ?? undefined;
+			try {
+				const url = await convex.query(api.files.getFileUrl, {
+					storageId: claim.imageStorageId,
+				});
+				if (!url) return undefined;
+				return fetchImageDataUrl(url);
+			} catch (error) {
+				console.warn("Failed to load receipt image for PDF:", error);
+				return undefined;
+			}
 		}),
 	);
 
@@ -156,26 +159,32 @@ export async function downloadInvoicePdf(
 		const settings = await convex.query(api.settings.get, { userId });
 		let logoUrl: string | undefined;
 		if (settings?.logoStorageId) {
-			logoUrl =
-				(await convex.query(api.files.getFileUrl, {
-					storageId: settings.logoStorageId,
-				})) ?? undefined;
+			const remoteLogoUrl = await convex.query(api.files.getFileUrl, {
+				storageId: settings.logoStorageId,
+			});
+			if (remoteLogoUrl) {
+				logoUrl =
+					(await fetchImageDataUrl(remoteLogoUrl, {
+						preserveTransparency: true,
+					})) ?? undefined;
+			}
 		}
 		branding = buildInvoiceBranding(settings, logoUrl);
 	}
 
-	const pdfData = {
+	const buildPdfData = (includeReceiptImages: boolean): InvoicePdfData => ({
 		invoiceNumber: data.invoiceNumber,
 		issueDate: format(new Date(data.issueDate), "MMMM d, yyyy"),
 		dueDate: format(new Date(data.dueDate), "MMMM d, yyyy"),
-		status: data.status,
-		client: data.client,
+		client: data.client!,
 		lineItems: data.lineItems,
 		claims: data.claims?.map((claim, index) => ({
 			description: claim.description,
 			amount: claim.amount,
 			date: format(new Date(claim.date), "MMM d, yyyy"),
-			imageUrl: claimImageUrls[index] ?? undefined,
+			imageUrl: includeReceiptImages
+				? (claimImageUrls[index] ?? undefined)
+				: undefined,
 		})),
 		subtotal: data.subtotal,
 		tax: data.tax,
@@ -184,17 +193,40 @@ export async function downloadInvoicePdf(
 		notes: data.notes,
 		paymentInstructions,
 		branding,
+	});
+
+	const triggerDownload = (blob: Blob) => {
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `invoice-${data.invoiceNumber}.pdf`;
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+		URL.revokeObjectURL(url);
 	};
 
-	const blob = await pdf(<InvoicePDF invoice={pdfData} />).toBlob();
-	const url = URL.createObjectURL(blob);
-	const link = document.createElement("a");
-	link.href = url;
-	link.download = `invoice-${data.invoiceNumber}.pdf`;
-	document.body.appendChild(link);
-	link.click();
-	link.remove();
-	URL.revokeObjectURL(url);
+	const hasReceiptImages = claimImageUrls.some(Boolean);
+
+	try {
+		const blob = await pdf(
+			<InvoicePDF invoice={buildPdfData(true)} />,
+		).toBlob();
+		triggerDownload(blob);
+	} catch (error) {
+		if (!hasReceiptImages) {
+			throw error;
+		}
+
+		console.warn(
+			"Failed to generate invoice PDF with receipt images, retrying without images:",
+			error,
+		);
+		const blob = await pdf(
+			<InvoicePDF invoice={buildPdfData(false)} />,
+		).toBlob();
+		triggerDownload(blob);
+	}
 }
 
 export async function downloadInvoicePdfById(
@@ -229,6 +261,7 @@ export function DownloadInvoicePDF({
 	compactLabel?: boolean;
 }) {
 	const convex = useConvex();
+	const { toast } = useToast();
 	const [isGenerating, setIsGenerating] = useState(false);
 
 	const handleDownload = useCallback(async () => {
@@ -239,10 +272,16 @@ export function DownloadInvoicePDF({
 			await downloadInvoicePdf(convex, invoice, paymentInstructions);
 		} catch (error) {
 			console.error("Failed to generate invoice PDF:", error);
+			toast({
+				title: "Unable to download PDF",
+				description:
+					"We couldn't generate this invoice PDF. Please try again.",
+				variant: "destructive",
+			});
 		} finally {
 			setIsGenerating(false);
 		}
-	}, [convex, invoice, paymentInstructions, isGenerating]);
+	}, [convex, invoice, paymentInstructions, isGenerating, toast]);
 
 	return (
 		<Button

@@ -213,13 +213,12 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			fontSize: 8,
 			color: "#666",
 			marginTop: 4,
-			fontStyle: "italic",
 		},
 		receiptPage: {
 			padding: 40,
 			fontSize: 11,
 			...body,
-			justifyContent: "space-between",
+			backgroundColor: secondary,
 		},
 		receiptPageHeader: {
 			marginBottom: 20,
@@ -237,17 +236,16 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			...mono,
 		},
 		receiptImageFull: {
-			flexGrow: 1,
+			width: 515,
+			maxHeight: 680,
 			objectFit: "contain",
 		},
 		receiptImageWrapper: {
-			flexGrow: 1,
+			marginTop: 12,
 			borderWidth: 1,
 			borderColor: "#ddd",
-			borderStyle: "dashed",
 			padding: 12,
 			alignItems: "center",
-			justifyContent: "center",
 		},
 	});
 }
