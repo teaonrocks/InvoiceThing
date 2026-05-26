@@ -3,6 +3,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { ImageIcon, Upload, X } from "lucide-react";
 
+const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/svg+xml"] as const;
+const ACCEPT = ALLOWED_MIME_TYPES.join(",");
+
 type InvoiceLogoPickerProps = {
 	idPrefix: string;
 	logoUrl?: string;
@@ -66,7 +69,7 @@ export function InvoiceLogoPicker({
 						<input
 							id={`${idPrefix}-replace`}
 							type="file"
-							accept="image/*,.heic,.heif"
+							accept={ACCEPT}
 							className="hidden"
 							disabled={disabled}
 							onChange={handleChange}
@@ -104,7 +107,7 @@ export function InvoiceLogoPicker({
 			<input
 				id={`${idPrefix}-file`}
 				type="file"
-				accept="image/*,.heic,.heif"
+				accept={ACCEPT}
 				className="hidden"
 				disabled={disabled}
 				onChange={handleChange}
