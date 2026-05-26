@@ -22,7 +22,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 	} = options;
 	const { toast } = useToast();
 	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-	const [isUploading, setIsUploading] = useState(false);
+	const [activeUploads, setActiveUploads] = useState(0);
 
 	const uploadImage = useCallback(
 		async (file: File): Promise<Id<"_storage"> | null> => {
@@ -49,7 +49,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 				return null;
 			}
 
-			setIsUploading(true);
+			setActiveUploads((n) => n + 1);
 			try {
 				let uploadFile = file;
 				if (compress) {
@@ -93,7 +93,13 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 					throw new Error("Upload failed. Please try again.");
 				}
 
-				const { storageId } = await response.json();
+				const json = await response.json();
+				const { storageId } = json;
+
+				if (!storageId || typeof storageId !== "string") {
+					throw new Error("Invalid storage ID received from server.");
+				}
+
 				return storageId as Id<"_storage">;
 			} catch (error) {
 				console.error("Error uploading image:", error);
@@ -104,7 +110,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 				});
 				return null;
 			} finally {
-				setIsUploading(false);
+				setActiveUploads((n) => n - 1);
 			}
 		},
 		[
@@ -117,5 +123,6 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
 		],
 	);
 
+	const isUploading = activeUploads > 0;
 	return { uploadImage, isUploading };
 }

@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { InvoiceStatus } from "@/components/invoice-status-badge";
+import { useState } from "react";
 
 export type InvoiceStatusOption = {
 	value: InvoiceStatus;
@@ -34,16 +35,24 @@ export function InvoiceStatusSelect({
 	disabled?: boolean;
 	triggerClassName?: string;
 }) {
-	const selectedValue = value ?? defaultValue;
+	const [selectedValueState, setSelectedValueState] = useState<InvoiceStatus | undefined>(defaultValue);
+	const selectedValue = value ?? selectedValueState;
 	const selectedOption = INVOICE_STATUS_OPTIONS.find(
 		(option) => option.value === selectedValue,
 	);
+
+	const handleValueChange = (nextValue: InvoiceStatus) => {
+		if (value === undefined) {
+			setSelectedValueState(nextValue);
+		}
+		onValueChange(nextValue);
+	};
 
 	return (
 		<Select
 			value={value}
 			defaultValue={defaultValue}
-			onValueChange={(next) => onValueChange(next as InvoiceStatus)}
+			onValueChange={(next) => handleValueChange(next as InvoiceStatus)}
 			disabled={disabled}
 		>
 			<SelectTrigger className={cn("h-8 w-[140px]", triggerClassName)}>

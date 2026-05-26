@@ -44,7 +44,7 @@ export function MobileAppShell({ children }: { children: ReactNode }) {
 	const invoiceOptions = useMemo(
 		() =>
 			(invoices ?? []).map((inv) => ({
-				_id: inv._id as Id<"invoices">,
+				_id: inv._id,
 				invoiceNumber: inv.invoiceNumber,
 				clientName: inv.client?.name ?? "Unknown client",
 			})),

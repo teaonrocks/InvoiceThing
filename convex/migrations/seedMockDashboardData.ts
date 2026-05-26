@@ -216,7 +216,6 @@ async function ensureSettings(ctx: MutationCtx, userId: Id<"users">) {
 	if (existing) {
 		await ctx.db.patch(existing._id, {
 			invoicePrefix: existing.invoicePrefix || "INV",
-			invoiceNumberStart: 1008,
 			dueDateDays: existing.dueDateDays ?? 14,
 			taxRate: existing.taxRate ?? 0,
 			updatedAt: now,
