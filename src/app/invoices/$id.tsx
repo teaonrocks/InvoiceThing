@@ -29,6 +29,8 @@ import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import { formatInvoiceCurrency } from "@/lib/invoice-format";
 import { format } from "date-fns";
 import { useInvoiceSettingsBranding } from "@/hooks/use-invoice-settings-branding";
+import { useInvoiceBrandingFont } from "@/hooks/use-invoice-branding-font";
+import { useAppData } from "@/context/app-data-provider";
 
 export const Route = createFileRoute("/invoices/$id")({
 	component: InvoiceDetailPage,
@@ -52,6 +54,7 @@ function InvoiceDetailPage() {
 	const navigate = useNavigate();
 	const { id } = Route.useParams();
 	const { openReceiptSheet } = useMobileReceipt();
+	const { currentUser } = useAppData();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
@@ -60,15 +63,16 @@ function InvoiceDetailPage() {
 	});
 	const settings = useQuery(
 		api.settings.get,
-		invoice?.userId ? { userId: invoice.userId } : "skip",
+		currentUser?._id ? { userId: currentUser._id } : "skip",
 	);
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const deleteInvoice = useMutation(api.invoices.remove);
-	const branding = useInvoiceSettingsBranding(invoice?.userId);
+	const branding = useInvoiceSettingsBranding(currentUser?._id);
+	useInvoiceBrandingFont(branding?.fontKey);
 
 	const previewData = useMemo(
 		() =>
-			invoice
+			invoice && branding
 				? buildInvoicePreviewDataFromRecord(
 						invoice,
 						settings?.paymentInstructions,
@@ -106,7 +110,7 @@ function InvoiceDetailPage() {
 		}
 	};
 
-	if (!invoice || !previewData) {
+	if (!invoice || !branding || !previewData) {
 		return <InvoiceDetailSkeleton />;
 	}
 

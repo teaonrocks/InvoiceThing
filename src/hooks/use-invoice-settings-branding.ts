@@ -19,5 +19,8 @@ export function useInvoiceSettingsBranding(
 
 	if (!settings) return undefined;
 
+	// Wait for logo URL when a logo is configured so the preview doesn't pop in later.
+	if (settings.logoStorageId && logoUrl === undefined) return undefined;
+
 	return buildInvoiceBranding(settings, logoUrl ?? undefined);
 }
