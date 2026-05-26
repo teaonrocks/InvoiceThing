@@ -68,6 +68,13 @@ function EditInvoicePage() {
 		new Set()
 	);
 
+	const lineItemHistory = useQuery(
+		api.invoices.getLineItemHistoryByClient,
+		currentUser && selectedClientId
+			? { userId: currentUser._id, clientId: selectedClientId as Id<"clients"> }
+			: "skip",
+	);
+
 	// Load invoice data when available
 	useEffect(() => {
 		if (invoice && clients && !isLoaded) {
@@ -131,6 +138,27 @@ function EditInvoicePage() {
 			)
 		)
 	}
+
+	const selectLineItemSuggestion = (
+		id: string,
+		description: string,
+		rate: number,
+	) => {
+		setLineItems(
+			lineItems.map((item) =>
+				item.id === id ? { ...item, description, rate } : item
+			),
+		);
+	};
+
+	const lineItemSuggestions = useMemo(
+		() =>
+			lineItemHistory?.map((item) => ({
+				description: item.description,
+				unitPrice: item.unitPrice,
+			})) ?? [],
+		[lineItemHistory],
+	);
 
 	const calculateSubtotal = () => {
 		return lineItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
@@ -359,6 +387,9 @@ function EditInvoicePage() {
 							onAdd={addLineItem}
 							onRemove={removeLineItem}
 							onUpdate={updateLineItem}
+							onSelectSuggestion={selectLineItemSuggestion}
+							lineItemSuggestions={lineItemSuggestions}
+							clientSelected={Boolean(selectedClientId)}
 						/>
 						<InvoiceClaimsEditor
 							claims={claims}

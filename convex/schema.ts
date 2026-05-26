@@ -50,6 +50,21 @@ export default defineSchema({
 		.index("by_client", ["clientId"])
 		.index("by_invoice_number", ["invoiceNumber"]),
 
+	// Reusable line item history per client
+	clientLineItemHistory: defineTable({
+		userId: v.id("users"),
+		clientId: v.id("clients"),
+		description: v.string(),
+		unitPrice: v.number(),
+		normalizedDescription: v.string(),
+		lastUsedAt: v.number(),
+		usageCount: v.number(),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_client", ["clientId"])
+		.index("by_user_client", ["userId", "clientId"]),
+
 	// Invoice line items table
 	lineItems: defineTable({
 		invoiceId: v.id("invoices"),

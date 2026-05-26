@@ -8,7 +8,8 @@
     "build": "vite build",
     "start": "node .output/server/index.mjs",
     "lint": "eslint",
-    "seed:mock": "convex run migrations/seedMockDashboardData:seedMockDashboardData"
+    "seed:mock": "convex run migrations/seedMockDashboardData:seedMockDashboardData",
+    "backfill:line-item-history": "convex run migrations/backfillClientLineItemHistory:backfillClientLineItemHistory"
   },
   "dependencies": {
     "@clerk/backend": "^2.19.1",

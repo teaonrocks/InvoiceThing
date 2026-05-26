@@ -87,6 +87,13 @@ function NewInvoicePage() {
 	const [newClientContactPerson, setNewClientContactPerson] = useState("");
 	const [isCreatingClient, setIsCreatingClient] = useState(false);
 
+	const lineItemHistory = useQuery(
+		api.invoices.getLineItemHistoryByClient,
+		currentUser && selectedClientId
+			? { userId: currentUser._id, clientId: selectedClientId as Id<"clients"> }
+			: "skip",
+	);
+
 	// Auto-populate invoice number and due date from settings
 	useEffect(() => {
 		if (nextInvoiceNumber && !invoiceNumber) {
@@ -190,6 +197,27 @@ function NewInvoicePage() {
 			)
 		);
 	};
+
+	const selectLineItemSuggestion = (
+		id: string,
+		description: string,
+		rate: number,
+	) => {
+		setLineItems(
+			lineItems.map((item) =>
+				item.id === id ? { ...item, description, rate } : item
+			),
+		);
+	};
+
+	const lineItemSuggestions = useMemo(
+		() =>
+			lineItemHistory?.map((item) => ({
+				description: item.description,
+				unitPrice: item.unitPrice,
+			})) ?? [],
+		[lineItemHistory],
+	);
 
 	const addClaim = () => {
 		setClaims([
@@ -407,6 +435,9 @@ function NewInvoicePage() {
 							onAdd={addLineItem}
 							onRemove={removeLineItem}
 							onUpdate={updateLineItem}
+							onSelectSuggestion={selectLineItemSuggestion}
+							lineItemSuggestions={lineItemSuggestions}
+							clientSelected={Boolean(selectedClientId)}
 						/>
 						<InvoiceClaimsEditor
 							claims={claims}

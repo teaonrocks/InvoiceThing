@@ -47,3 +47,28 @@ CLERK_ID=user_REPLACE_ME pnpm seed:mock
 - **Settings** updated so the next invoice number starts at `INV-1008`
 
 Issue dates are spread across the last ~7 weeks so the revenue chart populates.
+
+## Backfill client line item history
+
+Populates `clientLineItemHistory` from line items on existing invoices so the line item picker works for invoices created before that feature shipped.
+
+Safe to re-run: existing rows are updated with aggregated usage counts and latest invoice timestamps.
+
+**Run the backfill**
+
+```bash
+npx convex run migrations/backfillClientLineItemHistory:backfillClientLineItemHistory
+```
+
+Re-run and remove history rows that no longer appear on any invoice:
+
+```bash
+npx convex run migrations/backfillClientLineItemHistory:backfillClientLineItemHistory \
+  '{"force":true}'
+```
+
+Or use the npm script:
+
+```bash
+pnpm backfill:line-item-history
+```

@@ -9,6 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { ClientSelector } from "@/components/client-selector";
 import {
+	LineItemSelector,
+	type LineItemSuggestion,
+} from "@/components/line-item-selector";
+import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
@@ -355,16 +359,24 @@ export function InvoiceFormActions({
 	);
 }
 
+export type { LineItemSuggestion };
+
 export function InvoiceLineItemsEditor({
 	lineItems,
 	onAdd,
 	onRemove,
 	onUpdate,
+	onSelectSuggestion,
+	lineItemSuggestions,
+	clientSelected,
 }: {
 	lineItems: InvoiceFormLineItem[];
 	onAdd: () => void;
 	onRemove: (id: string) => void;
 	onUpdate: (id: string, field: keyof InvoiceFormLineItem, value: string | number) => void;
+	onSelectSuggestion: (id: string, description: string, rate: number) => void;
+	lineItemSuggestions?: LineItemSuggestion[];
+	clientSelected: boolean;
 }) {
 	return (
 		<InvoiceFormSection
@@ -387,15 +399,18 @@ export function InvoiceLineItemsEditor({
 								Description {index === 0 && "*"}
 							</Label>
 							<div className="flex items-center gap-2 sm:block">
-								<Input
+								<LineItemSelector
 									id={`desc-${item.id}`}
-									className="min-w-0 flex-1"
-									placeholder="Service or product description"
 									value={item.description}
-									onChange={(e) =>
-										onUpdate(item.id, "description", e.target.value)
+									onValueChange={(value) =>
+										onUpdate(item.id, "description", value)
 									}
-									required
+									onSelectSuggestion={(description, rate) =>
+										onSelectSuggestion(item.id, description, rate)
+									}
+									suggestions={lineItemSuggestions}
+									clientSelected={clientSelected}
+									required={index === 0}
 								/>
 								<Button
 									type="button"

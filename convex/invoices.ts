@@ -72,6 +72,77 @@ async function patchInvoiceTotals(
 	return totals;
 }
 
+function normalizeDescription(description: string): string {
+	return description.trim().toLowerCase();
+}
+
+async function upsertClientLineItemHistory(
+	ctx: MutationCtx,
+	userId: Id<"users">,
+	clientId: Id<"clients">,
+	lineItems: Array<{ description: string; unitPrice: number }>,
+) {
+	const now = Date.now();
+
+	for (const item of lineItems) {
+		const description = item.description.trim();
+		if (!description || item.unitPrice <= 0) continue;
+
+		const normalizedDescription = normalizeDescription(description);
+
+		const existing = await ctx.db
+			.query("clientLineItemHistory")
+			.withIndex("by_user_client", (q) =>
+				q.eq("userId", userId).eq("clientId", clientId),
+			)
+			.filter((q) =>
+				q.and(
+					q.eq(q.field("normalizedDescription"), normalizedDescription),
+					q.eq(q.field("unitPrice"), item.unitPrice),
+				),
+			)
+			.first();
+
+		if (existing) {
+			await ctx.db.patch(existing._id, {
+				description,
+				lastUsedAt: now,
+				usageCount: existing.usageCount + 1,
+				updatedAt: now,
+			});
+		} else {
+			await ctx.db.insert("clientLineItemHistory", {
+				userId,
+				clientId,
+				description,
+				unitPrice: item.unitPrice,
+				normalizedDescription,
+				lastUsedAt: now,
+				usageCount: 1,
+				createdAt: now,
+				updatedAt: now,
+			});
+		}
+	}
+}
+
+export const getLineItemHistoryByClient = query({
+	args: {
+		userId: v.id("users"),
+		clientId: v.id("clients"),
+	},
+	handler: async (ctx, args) => {
+		const items = await ctx.db
+			.query("clientLineItemHistory")
+			.withIndex("by_user_client", (q) =>
+				q.eq("userId", args.userId).eq("clientId", args.clientId),
+			)
+			.collect();
+
+		return items.sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+	},
+});
+
 // Create a new invoice with line items
 export const create = mutation({
 	args: {
@@ -191,6 +262,16 @@ export const create = mutation({
 				imageStorageId: claim.imageStorageId,
 			});
 		}
+
+		await upsertClientLineItemHistory(
+			ctx,
+			args.userId,
+			args.clientId,
+			args.lineItems.map((item) => ({
+				description: item.description,
+				unitPrice: item.unitPrice,
+			})),
+		);
 
 		return invoiceId;
 	},
@@ -437,6 +518,16 @@ export const update = mutation({
 				imageStorageId: claim.imageStorageId,
 			});
 		}
+
+		await upsertClientLineItemHistory(
+			ctx,
+			args.userId,
+			args.clientId,
+			args.lineItems.map((item) => ({
+				description: item.description,
+				unitPrice: item.unitPrice,
+			})),
+		);
 
 		return args.invoiceId;
 	},
