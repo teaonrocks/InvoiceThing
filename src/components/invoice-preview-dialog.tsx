@@ -456,12 +456,15 @@ export function InvoicePreviewDialog({
 																				asChild
 																				aria-label="Receipt attached"
 																			>
-																				<span className="mx-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground">
+																				<button
+																					type="button"
+																					className="mx-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+																				>
 																					<ReceiptIcon
 																						className="h-4 w-4"
 																						aria-hidden="true"
 																					/>
-																				</span>
+																				</button>
 																			</TooltipTrigger>
 																			<TooltipContent side="top">
 																				Receipt attached
@@ -473,12 +476,15 @@ export function InvoicePreviewDialog({
 																				asChild
 																				aria-label="No receipt"
 																			>
-																				<span className="mx-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground">
+																				<button
+																					type="button"
+																					className="mx-auto inline-flex h-6 w-6 items-center justify-center text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+																				>
 																					<ReceiptOffIcon
 																						className="h-4 w-4"
 																						aria-hidden="true"
 																					/>
-																				</span>
+																				</button>
 																			</TooltipTrigger>
 																			<TooltipContent side="top">
 																				No receipt uploaded
