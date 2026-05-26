@@ -7,299 +7,252 @@ import {
 	View,
 	StyleSheet,
 	Image,
-	Font,
 } from "@react-pdf/renderer";
 import { formatAddressParts } from "@/lib/utils";
+import {
+	buildInvoiceBranding,
+	type InvoiceBranding,
+} from "@/lib/invoice-branding";
+import { ensureInvoicePdfFont } from "@/lib/register-invoice-pdf-fonts";
 
-const FONT_CDN = "https://cdn.jsdelivr.net/npm";
+function createInvoicePdfStyles(branding: InvoiceBranding) {
+	const font = ensureInvoicePdfFont(branding.fontKey);
+	const accent = branding.accentColor;
+	const secondary = branding.secondaryColor;
+	const heading = { fontFamily: font.pdfFamily, fontWeight: 700 as const };
+	const body = { fontFamily: font.pdfFamily };
+	const mono = { fontFamily: "DM Mono" };
 
-Font.register({
-	family: "Space Grotesk",
-	fonts: [
-		{
-			src: `${FONT_CDN}/@fontsource/space-grotesk@5/files/space-grotesk-latin-500-normal.woff`,
-			fontWeight: 500,
+	return StyleSheet.create({
+		page: {
+			padding: 40,
+			fontSize: 11,
+			...body,
+			backgroundColor: secondary,
 		},
-		{
-			src: `${FONT_CDN}/@fontsource/space-grotesk@5/files/space-grotesk-latin-700-normal.woff`,
+		header: {
+			marginBottom: 30,
+			flexDirection: "row",
+			justifyContent: "space-between",
+			alignItems: "flex-start",
+		},
+		logo: {
+			maxWidth: 120,
+			maxHeight: 48,
+			objectFit: "contain",
+		},
+		title: {
+			fontSize: 28,
+			...heading,
+			marginBottom: 10,
+			color: accent,
+		},
+		invoiceNumber: {
+			fontSize: 12,
+			color: "#666",
+			marginBottom: 4,
+			...mono,
+		},
+		section: {
+			marginBottom: 20,
+		},
+		sectionTitle: {
+			fontSize: 12,
+			...heading,
+			marginBottom: 8,
+			color: accent,
+		},
+		row: {
+			flexDirection: "row",
+			marginBottom: 4,
+		},
+		label: {
+			width: 100,
+			...body,
+			fontWeight: 700,
+			color: "#666",
+		},
+		value: {
+			flex: 1,
+			...mono,
+		},
+		table: {
+			marginTop: 20,
+			marginBottom: 20,
+		},
+		tableHeader: {
+			flexDirection: "row",
+			borderBottomWidth: 2,
+			borderBottomColor: accent,
+			paddingBottom: 8,
+			marginBottom: 8,
+		},
+		tableHeaderCell: {
+			...heading,
+			fontSize: 10,
+			textTransform: "uppercase",
+			color: accent,
+		},
+		tableRow: {
+			flexDirection: "row",
+			paddingVertical: 6,
+			borderBottomWidth: 1,
+			borderBottomColor: "#eee",
+		},
+		tableCell: {
+			fontSize: 10,
+		},
+		descriptionCell: {
+			flex: 3,
+		},
+		quantityCell: {
+			flex: 1,
+			textAlign: "right",
+			...mono,
+		},
+		rateCell: {
+			flex: 1,
+			textAlign: "right",
+			...mono,
+		},
+		amountCell: {
+			flex: 1,
+			textAlign: "right",
+			...mono,
+		},
+		totalsContainer: {
+			marginTop: 20,
+			flexDirection: "row",
+			justifyContent: "space-between",
+			alignItems: "flex-start",
+		},
+		totals: {
+			alignItems: "flex-end",
+			backgroundColor: secondary,
+			padding: 10,
+			borderRadius: 4,
+		},
+		totalRow: {
+			flexDirection: "row",
+			marginBottom: 6,
+			width: 200,
+		},
+		totalLabel: {
+			flex: 1,
+			textAlign: "right",
+			marginRight: 20,
+		},
+		totalLabelNoWrap: {
+			flex: 1,
+			textAlign: "right",
+			marginRight: 20,
+			whiteSpace: "nowrap",
+		},
+		totalValue: {
+			width: 80,
+			textAlign: "right",
+			...mono,
+		},
+		grandTotal: {
+			fontSize: 14,
+			...mono,
+			fontWeight: 500,
+			paddingTop: 8,
+			borderTopWidth: 2,
+			borderTopColor: accent,
+		},
+		grandTotalLabel: {
+			color: accent,
 			fontWeight: 700,
 		},
-	],
-});
-
-Font.register({
-	family: "DM Sans",
-	fonts: [
-		{
-			src: `${FONT_CDN}/@fontsource/dm-sans@5/files/dm-sans-latin-400-normal.woff`,
-			fontWeight: 400,
+		grandTotalValue: {
+			color: accent,
 		},
-		{
-			src: `${FONT_CDN}/@fontsource/dm-sans@5/files/dm-sans-latin-700-normal.woff`,
-			fontWeight: 700,
+		paymentInfo: {
+			flex: 1,
+			maxWidth: "45%",
+			paddingRight: 20,
 		},
-	],
-});
-
-Font.register({
-	family: "DM Mono",
-	fonts: [
-		{
-			src: `${FONT_CDN}/@fontsource/dm-mono@5/files/dm-mono-latin-400-normal.woff`,
-			fontWeight: 400,
+		paymentTitle: {
+			...heading,
+			marginBottom: 8,
+			fontSize: 11,
+			color: accent,
 		},
-		{
-			src: `${FONT_CDN}/@fontsource/dm-mono@5/files/dm-mono-latin-500-normal.woff`,
-			fontWeight: 500,
+		paymentText: {
+			fontSize: 9,
+			lineHeight: 1.5,
+			whiteSpace: "pre-wrap",
+			color: "#333",
 		},
-	],
-});
+		notes: {
+			marginTop: 30,
+			padding: 15,
+			backgroundColor: secondary,
+			borderRadius: 4,
+		},
+		notesTitle: {
+			...heading,
+			marginBottom: 8,
+			color: accent,
+		},
+		notesText: {
+			fontSize: 10,
+			lineHeight: 1.5,
+		},
+		footer: {
+			position: "absolute",
+			bottom: 40,
+			left: 40,
+			right: 40,
+			textAlign: "center",
+			fontSize: 9,
+			color: "#999",
+		},
+		receiptLabel: {
+			fontSize: 8,
+			color: "#666",
+			marginTop: 4,
+			fontStyle: "italic",
+		},
+		receiptPage: {
+			padding: 40,
+			fontSize: 11,
+			...body,
+			justifyContent: "space-between",
+		},
+		receiptPageHeader: {
+			marginBottom: 20,
+		},
+		receiptPageTitle: {
+			fontSize: 20,
+			...heading,
+			marginBottom: 4,
+			color: accent,
+		},
+		receiptPageMeta: {
+			fontSize: 10,
+			color: "#555",
+			marginBottom: 4,
+			...mono,
+		},
+		receiptImageFull: {
+			flexGrow: 1,
+			objectFit: "contain",
+		},
+		receiptImageWrapper: {
+			flexGrow: 1,
+			borderWidth: 1,
+			borderColor: "#ddd",
+			borderStyle: "dashed",
+			padding: 12,
+			alignItems: "center",
+			justifyContent: "center",
+		},
+	});
+}
 
-const heading = { fontFamily: "Space Grotesk", fontWeight: 700 as const };
-const body = { fontFamily: "DM Sans" };
-const mono = { fontFamily: "DM Mono" };
-
-// Define styles
-const styles = StyleSheet.create({
-	page: {
-		padding: 40,
-		fontSize: 11,
-		...body,
-	},
-	header: {
-		marginBottom: 30,
-		flexDirection: "row",
-		justifyContent: "space-between",
-	},
-	title: {
-		fontSize: 28,
-		...heading,
-		marginBottom: 10,
-	},
-	invoiceNumber: {
-		fontSize: 12,
-		color: "#666",
-		marginBottom: 4,
-		...mono,
-	},
-	section: {
-		marginBottom: 20,
-	},
-	sectionTitle: {
-		fontSize: 12,
-		...heading,
-		marginBottom: 8,
-		color: "#333",
-	},
-	row: {
-		flexDirection: "row",
-		marginBottom: 4,
-	},
-	label: {
-		width: 100,
-		...body,
-		fontWeight: 700,
-		color: "#666",
-	},
-	value: {
-		flex: 1,
-		...mono,
-	},
-	table: {
-		marginTop: 20,
-		marginBottom: 20,
-	},
-	tableHeader: {
-		flexDirection: "row",
-		borderBottomWidth: 2,
-		borderBottomColor: "#333",
-		paddingBottom: 8,
-		marginBottom: 8,
-	},
-	tableHeaderCell: {
-		...heading,
-		fontSize: 10,
-		textTransform: "uppercase",
-	},
-	tableRow: {
-		flexDirection: "row",
-		paddingVertical: 6,
-		borderBottomWidth: 1,
-		borderBottomColor: "#eee",
-	},
-	tableCell: {
-		fontSize: 10,
-	},
-	descriptionCell: {
-		flex: 3,
-	},
-	quantityCell: {
-		flex: 1,
-		textAlign: "right",
-		...mono,
-	},
-	rateCell: {
-		flex: 1,
-		textAlign: "right",
-		...mono,
-	},
-	amountCell: {
-		flex: 1,
-		textAlign: "right",
-		...mono,
-	},
-	totalsContainer: {
-		marginTop: 20,
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "flex-start",
-	},
-	totals: {
-		alignItems: "flex-end",
-	},
-	totalRow: {
-		flexDirection: "row",
-		marginBottom: 6,
-		width: 200,
-	},
-	totalLabel: {
-		flex: 1,
-		textAlign: "right",
-		marginRight: 20,
-	},
-	totalLabelNoWrap: {
-		flex: 1,
-		textAlign: "right",
-		marginRight: 20,
-		whiteSpace: "nowrap",
-	},
-	totalValue: {
-		width: 80,
-		textAlign: "right",
-		...mono,
-	},
-	grandTotal: {
-		fontSize: 14,
-		...mono,
-		fontWeight: 500,
-		paddingTop: 8,
-		borderTopWidth: 2,
-		borderTopColor: "#333",
-	},
-	paymentInfo: {
-		flex: 1,
-		maxWidth: "45%",
-		paddingRight: 20,
-	},
-	paymentTitle: {
-		...heading,
-		marginBottom: 8,
-		fontSize: 11,
-	},
-	paymentText: {
-		fontSize: 9,
-		lineHeight: 1.5,
-		whiteSpace: "pre-wrap",
-		color: "#333",
-	},
-	notes: {
-		marginTop: 30,
-		padding: 15,
-		backgroundColor: "#f9f9f9",
-		borderRadius: 4,
-	},
-	notesTitle: {
-		...heading,
-		marginBottom: 8,
-	},
-	notesText: {
-		fontSize: 10,
-		lineHeight: 1.5,
-	},
-	footer: {
-		position: "absolute",
-		bottom: 40,
-		left: 40,
-		right: 40,
-		textAlign: "center",
-		fontSize: 9,
-		color: "#999",
-	},
-	status: {
-		position: "absolute",
-		top: 40,
-		right: 40,
-		padding: 8,
-		borderRadius: 4,
-		fontSize: 10,
-		...heading,
-		textTransform: "uppercase",
-	},
-	statusDraft: {
-		backgroundColor: "#f3f4f6",
-		color: "#6b7280",
-	},
-	statusSent: {
-		backgroundColor: "#dbeafe",
-		color: "#1d4ed8",
-	},
-	statusPaid: {
-		backgroundColor: "#d1fae5",
-		color: "#065f46",
-	},
-	statusOverdue: {
-		backgroundColor: "#fee2e2",
-		color: "#991b1b",
-	},
-	receiptImage: {
-		marginTop: 8,
-		marginBottom: 8,
-		maxWidth: 200,
-		maxHeight: 150,
-		objectFit: "contain",
-	},
-	receiptLabel: {
-		fontSize: 8,
-		color: "#666",
-		marginTop: 4,
-		fontStyle: "italic",
-	},
-	receiptPage: {
-		padding: 40,
-		fontSize: 11,
-		...body,
-		justifyContent: "space-between",
-	},
-	receiptPageHeader: {
-		marginBottom: 20,
-	},
-	receiptPageTitle: {
-		fontSize: 20,
-		...heading,
-		marginBottom: 4,
-	},
-	receiptPageMeta: {
-		fontSize: 10,
-		color: "#555",
-		marginBottom: 4,
-		...mono,
-	},
-	receiptImageFull: {
-		flexGrow: 1,
-		objectFit: "contain",
-	},
-	receiptImageWrapper: {
-		flexGrow: 1,
-		borderWidth: 1,
-		borderColor: "#ddd",
-		borderStyle: "dashed",
-		padding: 12,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-});
-
-type InvoiceData = {
+export type InvoicePdfData = {
 	invoiceNumber: string;
 	issueDate: string;
 	dueDate: string;
@@ -330,9 +283,12 @@ type InvoiceData = {
 	total: number;
 	notes?: string;
 	paymentInstructions?: string;
+	branding?: InvoiceBranding;
 };
 
-export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
+export const InvoicePDF = ({ invoice }: { invoice: InvoicePdfData }) => {
+	const branding = invoice.branding ?? buildInvoiceBranding();
+	const styles = createInvoicePdfStyles(branding);
 	const claims = invoice.claims ?? [];
 	const claimsWithImages = claims.filter((claim) => Boolean(claim.imageUrl));
 	const receiptPageMap = new Map<(typeof claims)[number], number>();
@@ -347,18 +303,25 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 		postalCode: invoice.client.postalCode,
 	});
 
+	const heading = {
+		fontFamily: branding.fontFamily,
+		fontWeight: 700 as const,
+	};
+
 	return (
 		<Document>
 			<Page size="A4" style={styles.page}>
-				{/* Header */}
 				<View style={styles.header}>
 					<View>
 						<Text style={styles.title}>INVOICE</Text>
 						<Text style={styles.invoiceNumber}>#{invoice.invoiceNumber}</Text>
 					</View>
+					{branding.logoUrl ? (
+						// eslint-disable-next-line jsx-a11y/alt-text
+						<Image src={branding.logoUrl} style={styles.logo} />
+					) : null}
 				</View>
 
-				{/* Invoice Details */}
 				<View style={styles.section}>
 					<View style={styles.row}>
 						<Text style={styles.label}>Issue Date:</Text>
@@ -370,7 +333,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 					</View>
 				</View>
 
-				{/* Bill To */}
 				<View style={styles.section}>
 					<Text style={styles.sectionTitle}>Bill To:</Text>
 					<Text style={{ marginBottom: 4, ...heading }}>
@@ -393,7 +355,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 					)}
 				</View>
 
-				{/* Line Items Table */}
 				<View style={styles.table}>
 					<View style={styles.tableHeader}>
 						<Text style={[styles.tableHeaderCell, styles.descriptionCell]}>
@@ -426,7 +387,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 					))}
 				</View>
 
-				{/* Claims/Expenses Table */}
 				{claims.length > 0 && (
 					<View style={styles.table}>
 						<Text style={styles.sectionTitle}>Reimbursable Expenses</Text>
@@ -460,14 +420,18 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 											</Text>
 										)}
 									</View>
-									<Text style={[styles.tableCell, { flex: 1 }, mono]}>
+									<Text
+										style={[
+											styles.tableCell,
+											{ flex: 1, fontFamily: "DM Mono" },
+										]}
+									>
 										{claim.date}
 									</Text>
 									<Text
 										style={[
 											styles.tableCell,
-											{ flex: 1, textAlign: "right" },
-											mono,
+											{ flex: 1, textAlign: "right", fontFamily: "DM Mono" },
 										]}
 									>
 										${claim.amount.toFixed(2)}
@@ -478,7 +442,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 					</View>
 				)}
 
-				{/* Totals and Payment Information Section */}
 				<View
 					style={
 						invoice.paymentInstructions
@@ -486,7 +449,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 							: { marginTop: 20, alignItems: "flex-end" }
 					}
 				>
-					{/* Payment Instructions (Left Side) */}
 					{invoice.paymentInstructions && (
 						<View style={styles.paymentInfo}>
 							<Text style={styles.paymentTitle}>Payment Information</Text>
@@ -496,7 +458,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 						</View>
 					)}
 
-					{/* Totals (Right Side) */}
 					<View style={styles.totals}>
 						<View style={styles.totalRow}>
 							<Text style={styles.totalLabel}>Subtotal:</Text>
@@ -512,22 +473,27 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 								<Text style={styles.totalValue}>${invoice.tax.toFixed(2)}</Text>
 							</View>
 						)}
-						{invoice.roundingAdjustment && Math.abs(invoice.roundingAdjustment) >= 0.001 && (
-							<View style={styles.totalRow}>
-								<Text style={styles.totalLabelNoWrap}>Rounding:</Text>
-								<Text style={styles.totalValue}>
-									{invoice.roundingAdjustment > 0 ? '+' : ''}${invoice.roundingAdjustment.toFixed(2)}
-								</Text>
-							</View>
-						)}
+						{invoice.roundingAdjustment &&
+							Math.abs(invoice.roundingAdjustment) >= 0.001 && (
+								<View style={styles.totalRow}>
+									<Text style={styles.totalLabelNoWrap}>Rounding:</Text>
+									<Text style={styles.totalValue}>
+										{invoice.roundingAdjustment > 0 ? "+" : ""}$
+										{invoice.roundingAdjustment.toFixed(2)}
+									</Text>
+								</View>
+							)}
 						<View style={[styles.totalRow, styles.grandTotal]}>
-							<Text style={styles.totalLabel}>Total:</Text>
-							<Text style={styles.totalValue}>${invoice.total.toFixed(2)}</Text>
+							<Text style={[styles.totalLabel, styles.grandTotalLabel]}>
+								Total:
+							</Text>
+							<Text style={[styles.totalValue, styles.grandTotalValue]}>
+								${invoice.total.toFixed(2)}
+							</Text>
 						</View>
 					</View>
 				</View>
 
-				{/* Notes */}
 				{invoice.notes && (
 					<View style={styles.notes}>
 						<Text style={styles.notesTitle}>Notes</Text>
@@ -535,7 +501,6 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoiceData }) => {
 					</View>
 				)}
 
-				{/* Footer */}
 				<Text style={styles.footer}>
 					Thank you for your business! • Payment is due by {invoice.dueDate}
 				</Text>

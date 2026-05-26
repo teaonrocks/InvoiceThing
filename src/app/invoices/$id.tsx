@@ -28,6 +28,7 @@ import {
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import { formatInvoiceCurrency } from "@/lib/invoice-format";
 import { format } from "date-fns";
+import { useInvoiceSettingsBranding } from "@/hooks/use-invoice-settings-branding";
 
 export const Route = createFileRoute("/invoices/$id")({
 	component: InvoiceDetailPage,
@@ -63,6 +64,7 @@ function InvoiceDetailPage() {
 	);
 	const updateStatus = useMutation(api.invoices.updateStatus);
 	const deleteInvoice = useMutation(api.invoices.remove);
+	const branding = useInvoiceSettingsBranding(invoice?.userId);
 
 	const previewData = useMemo(
 		() =>
@@ -70,9 +72,10 @@ function InvoiceDetailPage() {
 				? buildInvoicePreviewDataFromRecord(
 						invoice,
 						settings?.paymentInstructions,
+						branding,
 					)
 				: null,
-		[invoice, settings?.paymentInstructions],
+		[invoice, settings?.paymentInstructions, branding],
 	);
 
 	const claimsSummary = useMemo(() => {

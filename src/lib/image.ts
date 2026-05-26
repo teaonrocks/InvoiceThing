@@ -2,7 +2,19 @@ type CompressImageOptions = {
 	maxDimension?: number;
 	quality?: number;
 	mimeType?: string;
+	/** Keep PNG/WebP alpha instead of converting to JPEG (avoids black backgrounds). */
+	preserveTransparency?: boolean;
 };
+
+const isSvgFile = (file: File) =>
+	file.type === "image/svg+xml" || /\.svg$/i.test(file.name);
+
+const shouldOutputPng = (file: File, preserveTransparency: boolean) =>
+	preserveTransparency &&
+	(file.type === "image/png" ||
+		file.type === "image/webp" ||
+		/\.png$/i.test(file.name) ||
+		/\.webp$/i.test(file.name));
 
 const DEFAULT_MAX_DIMENSION = 1600;
 const DEFAULT_QUALITY = 0.8;
@@ -87,8 +99,17 @@ export const compressImageFile = async (
 		maxDimension = DEFAULT_MAX_DIMENSION,
 		quality = DEFAULT_QUALITY,
 		mimeType = DEFAULT_MIME_TYPE,
+		preserveTransparency = false,
 	}: CompressImageOptions = {},
 ): Promise<File> => {
+	if (isSvgFile(file)) {
+		return file;
+	}
+
+	const outputMime = shouldOutputPng(file, preserveTransparency)
+		? "image/png"
+		: mimeType;
+
 	let sourceBlob: Blob = file;
 	let sourceWidth = 0;
 	let sourceHeight = 0;
@@ -154,6 +175,9 @@ export const compressImageFile = async (
 		throw new Error("Failed to create canvas context for compression.");
 	}
 
+	if (outputMime === "image/png") {
+		context.clearRect(0, 0, targetWidth, targetHeight);
+	}
 	context.drawImage(drawTarget, 0, 0, targetWidth, targetHeight);
 	if (releaseObjectUrl) {
 		URL.revokeObjectURL(releaseObjectUrl);
@@ -168,15 +192,16 @@ export const compressImageFile = async (
 				}
 				resolve(result);
 			},
-			mimeType,
+			outputMime,
 			quality,
 		);
 	});
 
-	const baseName = file.name.replace(/\.[^.]+$/, "") || "receipt";
-	const fileName = `${baseName}.jpg`;
+	const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
+	const extension = outputMime === "image/png" ? "png" : "jpg";
+	const fileName = `${baseName}.${extension}`;
 	return new File([blob], fileName, {
-		type: mimeType,
+		type: outputMime,
 		lastModified: file.lastModified,
 	});
 };

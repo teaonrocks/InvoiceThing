@@ -26,6 +26,7 @@ import { useStoreUser } from "@/hooks/use-store-user";
 import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/context/app-data-provider";
 import { useReceiptUpload } from "@/hooks/use-receipt-upload";
+import { useInvoiceSettingsBranding } from "@/hooks/use-invoice-settings-branding";
 
 export const Route = createFileRoute("/invoices_/$id/edit")({
 	component: EditInvoicePage,
@@ -50,6 +51,7 @@ function EditInvoicePage() {
 	// Update mutation
 	const updateInvoice = useMutation(api.invoices.update);
 	const { uploadReceipt } = useReceiptUpload();
+	const branding = useInvoiceSettingsBranding(currentUser?._id);
 
 	const [selectedClientId, setSelectedClientId] = useState("");
 	const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -297,6 +299,7 @@ function EditInvoicePage() {
 				paymentInstructions: settings?.paymentInstructions,
 				enableRounding: settings?.enableRounding,
 				roundingIncrement: settings?.roundingIncrement,
+				branding,
 			}),
 		[
 			invoiceNumber,
@@ -311,6 +314,7 @@ function EditInvoicePage() {
 			settings?.enableRounding,
 			settings?.roundingIncrement,
 			taxRate,
+			branding,
 		],
 	);
 

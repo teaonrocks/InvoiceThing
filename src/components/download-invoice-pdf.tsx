@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { FileDown, Loader2 } from "lucide-react";
 import { InvoicePDF } from "./invoice-pdf";
 import { format } from "date-fns";
+import { buildInvoiceBranding } from "@/lib/invoice-branding";
 
 export type DownloadInvoiceData = {
 	_id: string;
+	userId?: Id<"users">;
 	invoiceNumber: string;
 	issueDate: number;
 	dueDate: number;
@@ -47,6 +49,7 @@ export type DownloadInvoiceData = {
 };
 
 type ConvexInvoice = DownloadInvoiceData & {
+	userId?: Id<"users">;
 	client?: DownloadInvoiceData["client"] | null;
 	lineItems?: DownloadInvoiceData["lineItems"];
 	claims?: DownloadInvoiceData["claims"];
@@ -57,6 +60,7 @@ export function mapConvexInvoiceToDownload(
 ): DownloadInvoiceData {
 	return {
 		_id: invoice._id,
+		userId: invoice.userId,
 		invoiceNumber: invoice.invoiceNumber,
 		issueDate: invoice.issueDate,
 		dueDate: invoice.dueDate,
@@ -146,6 +150,20 @@ export async function downloadInvoicePdf(
 		}),
 	);
 
+	const userId = data.userId;
+	let branding = buildInvoiceBranding();
+	if (userId) {
+		const settings = await convex.query(api.settings.get, { userId });
+		let logoUrl: string | undefined;
+		if (settings?.logoStorageId) {
+			logoUrl =
+				(await convex.query(api.files.getFileUrl, {
+					storageId: settings.logoStorageId,
+				})) ?? undefined;
+		}
+		branding = buildInvoiceBranding(settings, logoUrl);
+	}
+
 	const pdfData = {
 		invoiceNumber: data.invoiceNumber,
 		issueDate: format(new Date(data.issueDate), "MMMM d, yyyy"),
@@ -165,6 +183,7 @@ export async function downloadInvoicePdf(
 		total: data.total,
 		notes: data.notes,
 		paymentInstructions,
+		branding,
 	};
 
 	const blob = await pdf(<InvoicePDF invoice={pdfData} />).toBlob();

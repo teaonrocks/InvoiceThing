@@ -35,6 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { useAppData } from "@/context/app-data-provider";
 import { useReceiptUpload } from "@/hooks/use-receipt-upload";
+import { useInvoiceSettingsBranding } from "@/hooks/use-invoice-settings-branding";
 
 export const Route = createFileRoute("/invoices/new")({
 	component: NewInvoicePage,
@@ -59,6 +60,7 @@ function NewInvoicePage() {
 	const createInvoice = useMutation(api.invoices.create);
 	const createClient = useMutation(api.clients.create);
 	const { uploadReceipt } = useReceiptUpload();
+	const branding = useInvoiceSettingsBranding(currentUser?._id);
 
 	const [selectedClientId, setSelectedClientId] = useState("");
 	const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -340,6 +342,7 @@ function NewInvoicePage() {
 				paymentInstructions: settings?.paymentInstructions,
 				enableRounding: settings?.enableRounding,
 				roundingIncrement: settings?.roundingIncrement,
+				branding,
 			}),
 		[
 			invoiceNumber,
@@ -354,6 +357,7 @@ function NewInvoicePage() {
 			settings?.enableRounding,
 			settings?.roundingIncrement,
 			taxRate,
+			branding,
 		],
 	);
 
