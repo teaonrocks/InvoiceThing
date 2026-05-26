@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input, inputShellClassName } from "@/components/ui/input";
 import {
 	Command,
-	CommandEmpty,
 	CommandGroup,
 	CommandItem,
 	CommandList,
@@ -40,6 +39,18 @@ function suggestionValue(item: LineItemSuggestion) {
 	return `${item.description}::${item.unitPrice}`;
 }
 
+function filterSuggestions(
+	suggestions: LineItemSuggestion[] | undefined,
+	query: string,
+): LineItemSuggestion[] {
+	const items = suggestions ?? [];
+	const trimmed = query.trim();
+	if (!trimmed) return items;
+	return items.filter((item) =>
+		item.description.toLowerCase().includes(trimmed.toLowerCase()),
+	);
+}
+
 export function LineItemSelector({
 	value,
 	onValueChange,
@@ -51,20 +62,21 @@ export function LineItemSelector({
 	id,
 }: LineItemSelectorProps) {
 	const [comboboxOpen, setComboboxOpen] = useState(false);
+	const [browseAllSaved, setBrowseAllSaved] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [popoverWidth, setPopoverWidth] = useState<number>();
 
-	const trimmedValue = value.trim();
-	const filteredSuggestions = useMemo(() => {
-		if (!clientSelected) return [];
-		return (
-			suggestions?.filter((item) => {
-				if (!trimmedValue) return true;
-				return item.description.toLowerCase().includes(trimmedValue.toLowerCase());
-			}) ?? []
-		);
-	}, [clientSelected, suggestions, trimmedValue]);
+	const filteredSuggestions = useMemo(
+		() => (clientSelected ? filterSuggestions(suggestions, value) : []),
+		[clientSelected, suggestions, value],
+	);
+
+	const listSuggestions = browseAllSaved
+		? (suggestions ?? [])
+		: filteredSuggestions;
+
+	const popoverOpen = comboboxOpen && listSuggestions.length > 0;
 
 	useEffect(() => {
 		if (!comboboxOpen || !containerRef.current) return;
@@ -78,7 +90,13 @@ export function LineItemSelector({
 		updateWidth();
 		window.addEventListener("resize", updateWidth);
 		return () => window.removeEventListener("resize", updateWidth);
-	}, [comboboxOpen]);
+	}, [popoverOpen]);
+
+	useEffect(() => {
+		if (!browseAllSaved && comboboxOpen && filteredSuggestions.length === 0) {
+			setComboboxOpen(false);
+		}
+	}, [browseAllSaved, comboboxOpen, filteredSuggestions.length]);
 
 	if (!clientSelected) {
 		return (
@@ -94,17 +112,21 @@ export function LineItemSelector({
 	}
 
 	const hasSavedItems = (suggestions?.length ?? 0) > 0;
-	const showNoMatches =
-		hasSavedItems && trimmedValue.length > 0 && filteredSuggestions.length === 0;
 
 	const handleSelectSuggestion = (description: string, rate: number) => {
 		onSelectSuggestion(description, rate);
 		setComboboxOpen(false);
+		setBrowseAllSaved(false);
 		inputRef.current?.focus();
 	};
 
+	const handleOpenChange = (open: boolean) => {
+		setComboboxOpen(open);
+		if (!open) setBrowseAllSaved(false);
+	};
+
 	return (
-		<Popover open={comboboxOpen} onOpenChange={setComboboxOpen} modal={false}>
+		<Popover open={popoverOpen} onOpenChange={handleOpenChange} modal={false}>
 			<Command shouldFilter={false} loop className="overflow-visible bg-transparent">
 				<PopoverAnchor asChild>
 					<div
@@ -118,9 +140,17 @@ export function LineItemSelector({
 							value={value}
 							onValueChange={(nextValue) => {
 								onValueChange(nextValue);
-								setComboboxOpen(true);
+								setBrowseAllSaved(false);
+								setComboboxOpen(
+									filterSuggestions(suggestions, nextValue).length > 0,
+								);
 							}}
-							onFocus={() => setComboboxOpen(true)}
+							onFocus={() => {
+								setBrowseAllSaved(false);
+								if (filteredSuggestions.length > 0) {
+									setComboboxOpen(true);
+								}
+							}}
 							placeholder={placeholder}
 							required={required}
 							autoComplete="off"
@@ -137,7 +167,18 @@ export function LineItemSelector({
 							aria-label="Show saved line items"
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => {
-								setComboboxOpen((open) => !open);
+								const nextOpen = !comboboxOpen;
+								if (!nextOpen) {
+									setBrowseAllSaved(false);
+								} else if (
+									filteredSuggestions.length === 0 &&
+									hasSavedItems
+								) {
+									setBrowseAllSaved(true);
+								} else {
+									setBrowseAllSaved(false);
+								}
+								setComboboxOpen(nextOpen);
 								inputRef.current?.focus();
 							}}
 						>
@@ -158,33 +199,26 @@ export function LineItemSelector({
 					}}
 				>
 					<CommandList>
-						<CommandEmpty>
-							{showNoMatches
-								? "No saved match — keep typing and set a rate. It will be saved when you submit the invoice."
-								: "No saved items for this client yet. Type a description and rate to create one."}
-						</CommandEmpty>
-						{filteredSuggestions.length > 0 ? (
-							<CommandGroup>
-								{filteredSuggestions.map((item) => (
-									<CommandItem
-										key={suggestionValue(item)}
-										value={suggestionValue(item)}
-										keywords={[item.description]}
-										onMouseDown={(e) => e.preventDefault()}
-										onSelect={() =>
-											handleSelectSuggestion(item.description, item.unitPrice)
-										}
-									>
-										<div className="flex w-full items-center justify-between gap-3">
-											<span className="truncate">{item.description}</span>
-											<span className="font-number shrink-0 text-xs text-muted-foreground tabular-nums">
-												{formatInvoiceCurrency(item.unitPrice)}
-											</span>
-										</div>
-									</CommandItem>
-								))}
-							</CommandGroup>
-						) : null}
+						<CommandGroup>
+							{listSuggestions.map((item) => (
+								<CommandItem
+									key={suggestionValue(item)}
+									value={suggestionValue(item)}
+									keywords={[item.description]}
+									onMouseDown={(e) => e.preventDefault()}
+									onSelect={() =>
+										handleSelectSuggestion(item.description, item.unitPrice)
+									}
+								>
+									<div className="flex w-full items-center justify-between gap-3">
+										<span className="truncate">{item.description}</span>
+										<span className="font-number shrink-0 text-xs text-muted-foreground tabular-nums">
+											{formatInvoiceCurrency(item.unitPrice)}
+										</span>
+									</div>
+								</CommandItem>
+							))}
+						</CommandGroup>
 					</CommandList>
 				</PopoverContent>
 			</Command>
