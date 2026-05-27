@@ -237,7 +237,7 @@ function DashboardPage() {
 	}, [stats, invoices, invoiceList]);
 
 	return (
-		<div className="px-4 py-6 sm:px-8 sm:py-8">
+		<div className="min-w-0 px-4 py-6 sm:px-8 sm:py-8">
 				<h1 className="mb-4 text-2xl font-bold sm:mb-8 sm:text-3xl">
 					Dashboard
 				</h1>
@@ -247,7 +247,7 @@ function DashboardPage() {
 					className="mb-6"
 				/>
 
-				<div className="space-y-6">
+				<div className="min-w-0 space-y-6">
 					{displayStats ? (
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 							<Card variant="stat">
@@ -322,8 +322,8 @@ function DashboardPage() {
 
 					<Suspense
 						fallback={
-							<div className="grid gap-4 lg:grid-cols-3">
-								<Card variant="panel" className="lg:col-span-2">
+							<div className="grid min-w-0 gap-4 lg:grid-cols-3">
+								<Card variant="panel" className="min-w-0 lg:col-span-2">
 									<CardHeader>
 										<CardTitle>Revenue (last 8 weeks)</CardTitle>
 										<p className="text-sm text-muted-foreground">
@@ -334,7 +334,7 @@ function DashboardPage() {
 										<Skeleton className="h-full w-full" />
 									</CardContent>
 								</Card>
-								<Card variant="panel">
+								<Card variant="panel" className="min-w-0">
 									<CardHeader>
 										<CardTitle>Invoice status mix</CardTitle>
 										<p className="text-sm text-muted-foreground">
@@ -354,7 +354,7 @@ function DashboardPage() {
 						/>
 					</Suspense>
 
-					<Card variant="panel">
+					<Card variant="panel" className="min-w-0">
 						<CardHeader>
 							<CardTitle>Recent invoices</CardTitle>
 							<p className="text-sm text-muted-foreground">

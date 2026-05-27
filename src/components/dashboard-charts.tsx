@@ -49,8 +49,8 @@ const STATUS_CHART_COLORS: Record<InvoiceStatus, string> = {
 
 function ChartSkeleton() {
 	return (
-		<div className="grid gap-4 lg:grid-cols-3">
-			<Card variant="panel" className="lg:col-span-2">
+		<div className="grid min-w-0 gap-4 lg:grid-cols-3">
+			<Card variant="panel" className="min-w-0 lg:col-span-2">
 				<CardHeader>
 					<CardTitle>Revenue (last 8 weeks)</CardTitle>
 					<p className="text-sm text-muted-foreground">
@@ -79,7 +79,7 @@ function ChartSkeleton() {
 					</div>
 				</CardContent>
 			</Card>
-			<Card variant="panel">
+			<Card variant="panel" className="min-w-0">
 				<CardHeader>
 					<CardTitle>Invoice status mix</CardTitle>
 					<p className="text-sm text-muted-foreground">
@@ -185,20 +185,20 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 	}
 
 	return (
-		<div className="grid gap-4 lg:grid-cols-3">
-			<Card variant="panel" className="lg:col-span-2">
+		<div className="grid min-w-0 gap-4 lg:grid-cols-3">
+			<Card variant="panel" className="min-w-0 lg:col-span-2">
 				<CardHeader>
 					<CardTitle>Revenue (last 8 weeks)</CardTitle>
 					<p className="text-sm text-muted-foreground">
 						Total and paid revenue by issue date
 					</p>
 				</CardHeader>
-				<CardContent className="h-[240px] md:h-[280px]">
-					<div className="h-full w-full">
+				<CardContent className="h-[240px] overflow-hidden md:h-[280px]">
+					<div className="h-full min-w-0 w-full max-w-full overflow-hidden">
 						{invoiceList.length ? (
 							<ChartContainer
 								config={revenueChartConfig}
-								className="h-full w-full"
+								className="aspect-auto h-full min-h-0 w-full min-w-0 max-w-full"
 							>
 								<BarChart
 									data={weeklyRevenueData}
@@ -276,15 +276,15 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 				</CardContent>
 			</Card>
 
-			<Card variant="panel">
+			<Card variant="panel" className="min-w-0">
 				<CardHeader>
 					<CardTitle>Invoice status mix</CardTitle>
 					<p className="text-sm text-muted-foreground">
 						All invoices grouped by status
 					</p>
 				</CardHeader>
-				<CardContent className="h-[240px] md:h-[280px]">
-					<div className="h-full w-full">
+				<CardContent className="h-[240px] overflow-hidden md:h-[280px]">
+					<div className="h-full min-w-0 w-full max-w-full overflow-hidden">
 						{invoiceList.length ? (
 							<ChartContainer
 								config={{
@@ -296,7 +296,7 @@ export function DashboardCharts({ invoices, isLoading }: DashboardChartsProps) {
 										color: STATUS_CHART_COLORS.overdue,
 									},
 								}}
-								className="h-full w-full"
+								className="aspect-auto h-full min-h-0 w-full min-w-0 max-w-full"
 							>
 								<PieChart>
 									<ChartTooltip content={<ChartTooltipContent hideLabel />} />
