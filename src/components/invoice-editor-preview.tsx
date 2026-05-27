@@ -375,34 +375,37 @@ export function InvoiceEditorPreview({
 						)}
 					</div>
 
-					<div className="my-6">
-						<table className="w-full table-fixed border-collapse">
+					<div className="my-6 overflow-x-auto">
+						<table className="w-full min-w-0 table-fixed border-collapse">
 							<colgroup>
-								<col />
-								<col className="w-14" />
-								<col className="w-[7.5rem]" />
-								<col className="w-[7.5rem]" />
+								<col className="w-[40%] sm:w-auto" />
+								<col className="w-9 sm:w-14" />
+								<col className="w-[4.25rem] sm:w-[7.5rem]" />
+								<col className="w-[4.25rem] sm:w-[7.5rem]" />
 							</colgroup>
 							<thead>
 								<tr>
-									<PreviewTableHead color={textColors.accent}>
+									<PreviewTableHead
+										color={textColors.accent}
+										className="pr-2 break-words"
+									>
 										Description
 									</PreviewTableHead>
 									<PreviewTableHead
 										color={textColors.accent}
-										className="text-right"
+										className="whitespace-nowrap text-right"
 									>
 										Qty
 									</PreviewTableHead>
 									<PreviewTableHead
 										color={textColors.accent}
-										className="pl-3 text-right"
+										className="pl-1 text-right sm:pl-3"
 									>
 										Rate
 									</PreviewTableHead>
 									<PreviewTableHead
 										color={textColors.accent}
-										className="pl-3 text-right"
+										className="pl-1 text-right sm:pl-3"
 									>
 										Amount
 									</PreviewTableHead>
@@ -414,19 +417,19 @@ export function InvoiceEditorPreview({
 										<tr key={index}>
 											<PreviewTableCell
 												className={cn(
-													"pr-3",
+													"pr-2 break-words",
 													item.isPlaceholder && "italic invoice-text-muted",
 												)}
 											>
 												{item.description}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number text-right">
+											<PreviewTableCell className="font-number whitespace-nowrap text-right">
 												{item.quantity}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number pl-3 text-right">
+											<PreviewTableCell className="font-number whitespace-nowrap pl-1 text-right sm:pl-3">
 												{formatInvoiceCurrency(item.unitPrice)}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number pl-3 text-right">
+											<PreviewTableCell className="font-number whitespace-nowrap pl-1 text-right sm:pl-3">
 												{formatInvoiceCurrency(item.total)}
 											</PreviewTableCell>
 										</tr>
@@ -446,33 +449,36 @@ export function InvoiceEditorPreview({
 					</div>
 
 					{hasClaims ? (
-						<div className="my-6">
+						<div className="my-6 overflow-x-auto">
 							<p
 								className="mb-2 text-sm font-bold"
 								style={{ color: textColors.accent }}
 							>
 								Reimbursable Expenses
 							</p>
-							<table className="w-full table-fixed border-collapse">
+							<table className="w-full min-w-0 table-fixed border-collapse">
 								<colgroup>
-									<col />
-									<col className="w-[6.5rem]" />
-									<col className="w-[7.5rem]" />
+									<col className="w-[40%] sm:w-auto" />
+									<col className="w-[5.5rem] sm:w-[6.5rem]" />
+									<col className="w-[4.25rem] sm:w-[7.5rem]" />
 								</colgroup>
 								<thead>
 									<tr>
-										<PreviewTableHead color={textColors.accent}>
+										<PreviewTableHead
+											color={textColors.accent}
+											className="pr-2 break-words"
+										>
 											Description
 										</PreviewTableHead>
 										<PreviewTableHead
 											color={textColors.accent}
-											className="pl-3"
+											className="whitespace-nowrap pl-1 sm:pl-3"
 										>
 											Date
 										</PreviewTableHead>
 										<PreviewTableHead
 											color={textColors.accent}
-											className="pl-3 text-right"
+											className="pl-1 text-right sm:pl-3"
 										>
 											Amount
 										</PreviewTableHead>
@@ -481,7 +487,7 @@ export function InvoiceEditorPreview({
 								<tbody>
 									{data.claims.map((claim, index) => (
 										<tr key={index}>
-											<PreviewTableCell className="pr-3">
+											<PreviewTableCell className="pr-2 break-words">
 												{claim.description}
 												{claim.hasReceipt ? (
 													<span className="mt-1 block text-xs invoice-text-muted">
@@ -489,10 +495,10 @@ export function InvoiceEditorPreview({
 													</span>
 												) : null}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number pl-3">
+											<PreviewTableCell className="font-number whitespace-nowrap pl-1 sm:pl-3">
 												{format(claim.date, "MMM d, yyyy")}
 											</PreviewTableCell>
-											<PreviewTableCell className="font-number pl-3 text-right">
+											<PreviewTableCell className="font-number whitespace-nowrap pl-1 text-right sm:pl-3">
 												{formatInvoiceCurrency(claim.amount)}
 											</PreviewTableCell>
 										</tr>
