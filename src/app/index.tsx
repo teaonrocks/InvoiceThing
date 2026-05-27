@@ -149,24 +149,24 @@ function Home() {
 	}
 
 	return (
-		<div className="swiss-grid min-h-screen text-foreground">
+		<div className="swiss-grid min-h-screen overflow-x-hidden text-foreground">
 			<motion.header
 				initial={{ opacity: 0, y: -10 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-				className="flex items-center justify-between border-b-2 border-border-strong px-6 py-5 sm:px-10 lg:px-16"
+				className="flex flex-col gap-4 border-b-2 border-border-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-10 lg:px-16"
 			>
 					<span className="font-instrument text-2xl">
 						Invoice<span className="text-brand">Thing</span>
 					</span>
-					<div className="flex items-center gap-4">
-						<Link to="/sign-in">
-							<Button variant="plain" className="text-sm font-500">
+					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+						<Link to="/sign-in" className="sm:w-auto">
+							<Button variant="plain" className="w-full text-sm font-500 sm:w-auto">
 								Sign In
 							</Button>
 						</Link>
-						<Link to="/sign-up">
-							<Button variant="brand" className="px-6 text-sm font-600">
+						<Link to="/sign-up" className="sm:w-auto">
+							<Button variant="brand" className="w-full px-6 text-sm font-600 sm:w-auto">
 								Register
 							</Button>
 						</Link>
@@ -175,7 +175,7 @@ function Home() {
 
 				<main>
 					<section className="border-b-2 border-border-strong px-6 py-16 sm:px-10 lg:px-16 lg:py-24">
-						<div className="relative mx-auto max-w-7xl">
+						<div className="relative mx-auto max-w-7xl overflow-hidden">
 							<motion.div
 								className="number-accent pointer-events-none absolute right-[-20px] top-1/2 -translate-y-1/2 select-none font-instrument text-brand opacity-[0.08]"
 								style={{
@@ -229,13 +229,13 @@ function Home() {
 									variants={fadeUp}
 									initial="hidden"
 									animate="visible"
-									className="flex items-center gap-6"
+									className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6"
 								>
-									<Link to="/sign-up">
+									<Link to="/sign-up" className="sm:w-auto">
 										<Button
 											variant="brand"
 											size="lg"
-											className="group px-8 py-6 text-sm font-600"
+											className="group w-full px-8 py-6 text-sm font-600 sm:w-auto"
 										>
 											Get Started Free
 											<ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
@@ -289,7 +289,7 @@ function Home() {
 					</section>
 
 					<section className="border-b-2 border-border-strong px-6 py-16 sm:px-10 lg:px-16 lg:py-24">
-						<div className="max-w-7xl mx-auto relative">
+						<div className="max-w-7xl mx-auto relative overflow-hidden">
 							<ScrollReveal>
 								<motion.div
 									className="number-accent pointer-events-none absolute right-[-20px] top-1/2 -translate-y-1/2 select-none font-instrument text-brand opacity-[0.08]"
@@ -385,7 +385,7 @@ function Home() {
 					</section>
 
 					<section className="border-b-2 border-border-strong px-6 py-16 sm:px-10 lg:px-16 lg:py-24">
-						<div className="max-w-7xl mx-auto relative">
+						<div className="max-w-7xl mx-auto relative overflow-hidden">
 							<ScrollReveal>
 								<motion.div
 									className="number-accent pointer-events-none absolute right-[-20px] top-1/2 -translate-y-1/2 select-none font-instrument text-brand opacity-[0.08]"
