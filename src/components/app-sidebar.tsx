@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { UserButton } from "@clerk/clerk-react";
+import { ClerkUserButton } from "@/components/clerk-user-button";
 import {
 	LayoutDashboard,
 	Users,
@@ -39,9 +39,10 @@ export function AppSidebar({ children }: { children: React.ReactNode }) {
 			<SidebarInset>
 				<header className="flex h-14 items-center gap-2 border-b px-4 md:hidden">
 					<SidebarTrigger />
-					<span className="font-instrument text-lg">
+					<span className="font-instrument flex-1 text-lg">
 						Invoice<span className="text-brand">Thing</span>
 					</span>
+					<ClerkUserButton />
 				</header>
 				<MobileAppShell>{children}</MobileAppShell>
 			</SidebarInset>
@@ -115,7 +116,7 @@ function SidebarNav() {
 
 			<SidebarFooter className="shrink-0 p-3 group-data-[collapsible=icon]:p-2">
 				<div className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
-					<UserButton afterSignOutUrl="/" />
+					<ClerkUserButton />
 					<div className="group-data-[collapsible=icon]:hidden">
 						<ThemeToggle />
 					</div>

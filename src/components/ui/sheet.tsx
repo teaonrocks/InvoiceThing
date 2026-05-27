@@ -65,26 +65,34 @@ const SheetContent = React.forwardRef<
       children,
       onInteractOutside,
       onPointerDownOutside,
+      onFocusOutside,
       ...props
     },
     ref
-  ) => (
+  ) => {
+    const preventClerkDismiss = (event: { target: EventTarget | null; preventDefault: () => void }) => {
+      if (isClerkPortalTarget(event.target)) {
+        event.preventDefault()
+      }
+    }
+
+    return (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), className)}
       onInteractOutside={(event) => {
-        if (isClerkPortalTarget(event.target)) {
-          event.preventDefault()
-        }
+        preventClerkDismiss(event)
         onInteractOutside?.(event)
       }}
       onPointerDownOutside={(event) => {
-        if (isClerkPortalTarget(event.target)) {
-          event.preventDefault()
-        }
+        preventClerkDismiss(event)
         onPointerDownOutside?.(event)
+      }}
+      onFocusOutside={(event) => {
+        preventClerkDismiss(event)
+        onFocusOutside?.(event)
       }}
       {...props}
     >
@@ -95,7 +103,8 @@ const SheetContent = React.forwardRef<
       {children}
     </SheetPrimitive.Content>
   </SheetPortal>
-  )
+    )
+  },
 )
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
