@@ -159,7 +159,7 @@ function Home() {
 					<span className="font-instrument text-2xl">
 						Invoice<span className="text-brand">Thing</span>
 					</span>
-					<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+					<div className="hidden flex-col gap-2 sm:flex sm:flex-row sm:items-center sm:gap-4">
 						<Link to="/sign-in" className="sm:w-auto">
 							<Button variant="plain" className="w-full text-sm font-500 sm:w-auto">
 								Sign In
