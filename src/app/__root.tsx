@@ -14,6 +14,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/context/app-data-provider";
 import { ArrowUpRight } from "lucide-react";
+import { PostHogProvider } from "@posthog/react";
 
 export const Route = createRootRoute({
 	head: () => {
@@ -116,12 +117,23 @@ function RootLayout() {
 				<HeadContent />
 			</head>
 			<body>
-				<Providers>
-					<AuthGate>
-						<AppShell />
-					</AuthGate>
-					<Toaster />
-				</Providers>
+				<PostHogProvider
+					apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN!}
+					options={{
+						api_host: "/ingest",
+						ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://us.posthog.com",
+						defaults: "2025-05-24",
+						capture_exceptions: true,
+						debug: import.meta.env.DEV,
+					}}
+				>
+					<Providers>
+						<AuthGate>
+							<AppShell />
+						</AuthGate>
+						<Toaster />
+					</Providers>
+				</PostHogProvider>
 				<Scripts />
 			</body>
 		</html>

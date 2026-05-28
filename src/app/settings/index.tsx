@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { useStoreUser } from "@/hooks/use-store-user";
@@ -96,6 +97,7 @@ function SettingsPageSkeleton() {
 function SettingsPage() {
 	useStoreUser();
 	const { toast } = useToast();
+	const posthog = usePostHog();
 	const { clerkUser: user, currentUser } = useAppData();
 
 	const settings = useQuery(
@@ -217,6 +219,15 @@ function SettingsPage() {
 				invoiceAccentColor: normalizedAccent,
 				invoiceSecondaryColor: normalizedSecondary,
 				invoiceFontFamily,
+			});
+
+			posthog.capture("settings_saved", {
+				tax_rate: taxRate,
+				due_date_days: dueDateDays,
+				enable_rounding: enableRounding,
+				has_logo: Boolean(logoStorageId) && !clearLogo,
+				has_payment_instructions: Boolean(paymentInstructions.trim()),
+				font_family: invoiceFontFamily,
 			});
 
 			toast({

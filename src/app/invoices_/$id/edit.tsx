@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ function EditInvoicePage() {
 	const { user } = useUser();
 	useStoreUser();
 	const { toast } = useToast();
+	const posthog = usePostHog();
 
 	const invoice = useQuery(api.invoices.get, {
 		invoiceId: id as Id<"invoices">,
@@ -299,6 +301,15 @@ function EditInvoicePage() {
 							}))
 						: undefined,
 			})
+
+			posthog.capture("invoice_updated", {
+				invoice_id: id,
+				invoice_number: invoiceNumber,
+				line_item_count: lineItems.length,
+				has_claims: claims.length > 0,
+				claim_count: claims.length,
+				has_notes: Boolean(notes),
+			});
 
 			navigate({ to: "/invoices/$id", params: { id } });
 		} catch (error) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useQuery, useMutation, useConvex } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Doc, Id } from "@/../convex/_generated/dataModel";
 import { pdf } from "@react-pdf/renderer";
@@ -139,6 +140,7 @@ function InvoicesPage() {
 	const { openReceiptSheet } = useMobileReceipt();
 	const { toast } = useToast();
 	const convex = useConvex();
+	const posthog = usePostHog();
 	const { invoices: cachedInvoices, currentUser } = useAppData();
 	const invoices = cachedInvoices;
 
@@ -410,6 +412,11 @@ function InvoicesPage() {
 					invoiceId,
 					status: newStatus,
 				});
+				posthog.capture("invoice_status_updated", {
+					invoice_id: invoiceId,
+					new_status: newStatus,
+					source: "invoices_list",
+				});
 				toast({
 					title: "Status updated",
 					description: `Invoice status changed to ${newStatus}.`,
@@ -438,6 +445,10 @@ function InvoicesPage() {
 					invoiceIds: selectedIds,
 					status,
 				});
+				posthog.capture("invoice_bulk_status_updated", {
+					invoice_count: selectedIds.length,
+					new_status: status,
+				});
 				toast({
 					title: "Status updated",
 					description: `Updated ${selectedIds.length} invoice(s).`,
@@ -462,6 +473,9 @@ function InvoicesPage() {
 		try {
 			await deleteInvoices({
 				invoiceIds: selectedIds,
+			});
+			posthog.capture("invoice_bulk_deleted", {
+				invoice_count: selectedIds.length,
 			});
 			setSelectedInvoices([]);
 			if (previewInvoiceId && selectedIds.includes(previewInvoiceId)) {

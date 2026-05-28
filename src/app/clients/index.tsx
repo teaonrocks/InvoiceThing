@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { format } from "date-fns";
 import { useMutation, useQuery } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import type { ClientRow } from "./-columns";
@@ -51,6 +52,7 @@ export const Route = createFileRoute("/clients/")({
 
 function ClientsPage() {
 	const { toast } = useToast();
+	const posthog = usePostHog();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
@@ -88,6 +90,12 @@ function ClientsPage() {
 			unitNumber: unitNumber.trim() || undefined,
 			postalCode: postalCode.trim() || undefined,
 			contactPerson: contactPerson || undefined,
+		});
+
+		posthog.capture("client_created", {
+			source: "clients_page",
+			has_email: Boolean(email),
+			has_address: Boolean(streetName.trim()),
 		});
 
 		setName("");
@@ -172,6 +180,10 @@ function ClientsPage() {
 			setIsDeleting(true);
 			try {
 				await deleteClient({ clientId: client._id });
+				posthog.capture("client_deleted", {
+					client_id: client._id,
+					source: "clients_list",
+				});
 				setSelectedClients((current) =>
 					current.filter((item) => item._id !== client._id),
 				);

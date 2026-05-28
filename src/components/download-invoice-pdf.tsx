@@ -13,6 +13,7 @@ import { buildInvoiceBranding } from "@/lib/invoice-branding";
 import { fetchImageDataUrl } from "@/lib/image";
 import { useToast } from "@/hooks/use-toast";
 import type { InvoicePdfData } from "./invoice-pdf";
+import { usePostHog } from "@posthog/react";
 
 export type DownloadInvoiceData = {
 	_id: string;
@@ -262,6 +263,7 @@ export function DownloadInvoicePDF({
 }) {
 	const convex = useConvex();
 	const { toast } = useToast();
+	const posthog = usePostHog();
 	const [isGenerating, setIsGenerating] = useState(false);
 
 	const handleDownload = useCallback(async () => {
@@ -270,8 +272,15 @@ export function DownloadInvoicePDF({
 		setIsGenerating(true);
 		try {
 			await downloadInvoicePdf(convex, invoice, paymentInstructions);
+			posthog.capture("invoice_pdf_downloaded", {
+				invoice_id: invoice._id,
+				invoice_number: invoice.invoiceNumber,
+				status: invoice.status,
+				total: invoice.total,
+			});
 		} catch (error) {
 			console.error("Failed to generate invoice PDF:", error);
+			posthog.captureException(error);
 			toast({
 				title: "Unable to download PDF",
 				description:
@@ -281,7 +290,7 @@ export function DownloadInvoicePDF({
 		} finally {
 			setIsGenerating(false);
 		}
-	}, [convex, invoice, paymentInstructions, isGenerating, toast]);
+	}, [convex, invoice, paymentInstructions, isGenerating, toast, posthog]);
 
 	return (
 		<Button

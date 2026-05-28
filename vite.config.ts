@@ -9,6 +9,23 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
 	server: {
 		port: 3000,
+		proxy: {
+			"/ingest/static": {
+				target: "https://us-assets.i.posthog.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ingest/, ""),
+			},
+			"/ingest/array": {
+				target: "https://us-assets.i.posthog.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ingest/, ""),
+			},
+			"/ingest": {
+				target: "https://us.i.posthog.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/ingest/, ""),
+			},
+		},
 	},
 	assetsInclude: ["**/*.wasm"],
 	optimizeDeps: {
@@ -28,6 +45,17 @@ export default defineConfig({
 		// Nitro plugin for optimized deployment and better SSR support
 		nitroV2Plugin({
 			preset: "vercel", // Optimize for Vercel deployment
+			routeRules: {
+				"/ingest/static/**": {
+					proxy: "https://us-assets.i.posthog.com/static/**",
+				},
+				"/ingest/array/**": {
+					proxy: "https://us-assets.i.posthog.com/array/**",
+				},
+				"/ingest/**": {
+					proxy: "https://us.i.posthog.com/**",
+				},
+			},
 		}),
 		viteReact(),
 	],
