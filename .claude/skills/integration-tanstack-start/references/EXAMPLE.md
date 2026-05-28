@@ -49,7 +49,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Project structure
 
-```
+```text
 src/
 ├── components/
 │   └── Header.tsx           # Navigation header with auth state
@@ -224,7 +224,7 @@ VITE_PUBLIC_POSTHOG_HOST=<ph_client_api_host>
 
 ## .prettierignore
 
-```
+```text
 package-lock.json
 pnpm-lock.yaml
 yarn.lock

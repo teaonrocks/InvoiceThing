@@ -45,6 +45,17 @@ export default defineConfig({
 		// Nitro plugin for optimized deployment and better SSR support
 		nitroV2Plugin({
 			preset: "vercel", // Optimize for Vercel deployment
+			routeRules: {
+				"/ingest/static/**": {
+					proxy: "https://us-assets.i.posthog.com/static/**",
+				},
+				"/ingest/array/**": {
+					proxy: "https://us-assets.i.posthog.com/array/**",
+				},
+				"/ingest/**": {
+					proxy: "https://us.i.posthog.com/**",
+				},
+			},
 		}),
 		viteReact(),
 	],
