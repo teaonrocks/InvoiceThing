@@ -57,4 +57,5 @@ src/routeTree.gen.ts
 
 # Cursor / local AI tooling
 .cursor/
+.claude/
 .agents/
