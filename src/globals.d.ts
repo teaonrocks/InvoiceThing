@@ -17,6 +17,8 @@ interface ImportMetaEnv {
 	readonly NEXT_PUBLIC_CONVEX_URL?: string;
 	readonly VITE_PUBLIC_POSTHOG_PROJECT_TOKEN?: string;
 	readonly VITE_PUBLIC_POSTHOG_HOST?: string;
+	readonly VITE_POSTHOG_TOKEN?: string;
+	readonly VITE_POSTHOG_HOST?: string;
 	readonly VITE_CLERK_PUBLISHABLE_KEY?: string;
 	readonly VITE_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
 	readonly NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;

@@ -110,6 +110,16 @@ export const Route = createRootRoute({
 	notFoundComponent: NotFoundPage,
 });
 
+const posthogProjectToken =
+	import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ||
+	import.meta.env.VITE_POSTHOG_TOKEN ||
+	"";
+
+const posthogHost =
+	import.meta.env.VITE_PUBLIC_POSTHOG_HOST ||
+	import.meta.env.VITE_POSTHOG_HOST ||
+	"https://us.posthog.com";
+
 function RootLayout() {
 	return (
 		<html lang="en" suppressHydrationWarning>
@@ -118,10 +128,10 @@ function RootLayout() {
 			</head>
 			<body>
 				<PostHogProvider
-					apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN!}
+					apiKey={posthogProjectToken}
 					options={{
 						api_host: "/ingest",
-						ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST || "https://us.posthog.com",
+						ui_host: posthogHost,
 						defaults: "2025-05-24",
 						capture_exceptions: true,
 						debug: import.meta.env.DEV,
