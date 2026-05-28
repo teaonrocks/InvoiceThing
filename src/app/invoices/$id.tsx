@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ function InvoiceDetailPage() {
 	const { id } = Route.useParams();
 	const { openReceiptSheet } = useMobileReceipt();
 	const { currentUser } = useAppData();
+	const posthog = usePostHog();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
@@ -88,12 +90,29 @@ function InvoiceDetailPage() {
 		return { total: claims.length, missing };
 	}, [invoice?.claims]);
 
+	useEffect(() => {
+		if (!invoice) return;
+		posthog.capture("invoice_viewed", {
+			invoice_id: invoice._id,
+			invoice_number: invoice.invoiceNumber,
+			status: invoice.status,
+			total: invoice.total,
+		});
+	}, [invoice?._id]);
+
 	const handleStatusChange = async (newStatus: InvoiceStatus) => {
 		if (!invoice) return;
 
+		const previousStatus = invoice.status;
 		await updateStatus({
 			invoiceId: invoice._id,
 			status: newStatus,
+		});
+		posthog.capture("invoice_status_updated", {
+			invoice_id: invoice._id,
+			invoice_number: invoice.invoiceNumber,
+			previous_status: previousStatus,
+			new_status: newStatus,
 		});
 	};
 
@@ -103,6 +122,12 @@ function InvoiceDetailPage() {
 		setIsDeleting(true);
 		try {
 			await deleteInvoice({ invoiceId: invoice._id });
+			posthog.capture("invoice_deleted", {
+				invoice_id: invoice._id,
+				invoice_number: invoice.invoiceNumber,
+				status: invoice.status,
+				total: invoice.total,
+			});
 			navigate({ to: "/invoices" });
 		} finally {
 			setIsDeleting(false);

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { useMutation } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import {
@@ -56,6 +57,7 @@ export function QuickReceiptSheet({
 	onSuccess,
 }: QuickReceiptSheetProps) {
 	const { toast } = useToast();
+	const posthog = usePostHog();
 	const { uploadReceipt, isUploading } = useReceiptUpload();
 	const addClaim = useMutation(api.invoices.addClaimToInvoice);
 
@@ -136,6 +138,11 @@ export function QuickReceiptSheet({
 				amount: parsedAmount,
 				date: date.getTime(),
 				imageStorageId,
+			});
+			posthog.capture("expense_added", {
+				invoice_id: invoiceId,
+				amount: parsedAmount,
+				has_receipt_image: Boolean(imageStorageId),
 			});
 			toast({
 				title: "Expense added",

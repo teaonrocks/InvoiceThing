@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { useMutation } from "convex/react";
 import { api } from "@/../convex/_generated/api";
+import { usePostHog } from "@posthog/react";
 
 /**
  * Hook to sync the current Clerk user with Convex
@@ -12,6 +13,7 @@ import { api } from "@/../convex/_generated/api";
 export function useStoreUser() {
 	const { user } = useUser();
 	const storeUser = useMutation(api.users.store);
+	const posthog = usePostHog();
 
 	useEffect(() => {
 		if (!user) return;
@@ -24,11 +26,16 @@ export function useStoreUser() {
 					name: user.fullName ?? undefined,
 					imageUrl: user.imageUrl ?? undefined,
 				});
+
+				posthog.identify(user.id, {
+					email: user.emailAddresses[0]?.emailAddress,
+					name: user.fullName ?? undefined,
+				});
 			} catch (error) {
 				console.error("Error syncing user:", error);
 			}
 		};
 
 		syncUser();
-	}, [user, storeUser]);
+	}, [user, storeUser, posthog]);
 }

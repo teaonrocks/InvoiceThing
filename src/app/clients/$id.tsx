@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import type { Id } from "@/../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ function ClientDetailPage() {
 	const navigate = useNavigate();
 	const { id } = Route.useParams();
 	const { toast } = useToast();
+	const posthog = usePostHog();
 
 	const client = useQuery(api.clients.get, {
 		clientId: id as Id<"clients">,
@@ -94,6 +96,12 @@ function ClientDetailPage() {
 				description: "Client updated successfully",
 			})
 
+			posthog.capture("client_updated", {
+				client_id: id,
+				has_email: Boolean(email),
+				has_address: Boolean(streetName.trim()),
+			});
+
 			setIsEditing(false);
 		} catch (error) {
 			console.error("Error updating client:", error);
@@ -112,6 +120,10 @@ function ClientDetailPage() {
 
 		try {
 			await deleteClient({ clientId: id as Id<"clients"> });
+
+			posthog.capture("client_deleted", {
+				client_id: id,
+			});
 
 			toast({
 				title: "Success",

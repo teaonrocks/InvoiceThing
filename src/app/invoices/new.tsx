@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useUser } from "@clerk/clerk-react";
 import { useMutation, useQuery } from "convex/react";
+import { usePostHog } from "@posthog/react";
 import { api } from "@/../convex/_generated/api";
 import { useStoreUser } from "@/hooks/use-store-user";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ function NewInvoicePage() {
 	const navigate = useNavigate();
 	const { user } = useUser();
 	const { toast } = useToast();
+	const posthog = usePostHog();
 	useStoreUser();
 
 	const { currentUser, clients } = useAppData();
@@ -144,6 +146,10 @@ function NewInvoicePage() {
 			toast({
 				title: "Success",
 				description: "Client created successfully",
+			});
+
+			posthog.capture("client_created", {
+				source: "new_invoice_modal",
 			});
 
 			setSelectedClientId(clientId);
@@ -339,6 +345,15 @@ function NewInvoicePage() {
 								imageStorageId: claim.imageStorageId,
 							}))
 						: undefined,
+			});
+
+			posthog.capture("invoice_created", {
+				invoice_number: invoiceNumber,
+				line_item_count: lineItems.length,
+				has_claims: claims.length > 0,
+				claim_count: claims.length,
+				has_notes: Boolean(notes),
+				tax_rate: settings?.taxRate ?? 0,
 			});
 
 			navigate({ to: "/invoices/$id", params: { id: invoiceId } });
