@@ -527,6 +527,19 @@ export function InvoiceEditorPreview({
 								<p className="whitespace-pre-wrap text-sm leading-relaxed invoice-text-muted">
 									{data.paymentInstructions}
 								</p>
+								{data.notes ? (
+									<div className="mt-4">
+										<p
+											className="mb-2 text-sm font-bold"
+											style={{ color: textColors.accent }}
+										>
+											Notes
+										</p>
+										<p className="whitespace-pre-wrap text-sm leading-relaxed">
+											{data.notes}
+										</p>
+									</div>
+								) : null}
 							</div>
 						) : null}
 
@@ -587,9 +600,9 @@ export function InvoiceEditorPreview({
 						</div>
 					</div>
 
-					{data.notes ? (
+					{data.notes && !data.paymentInstructions ? (
 						<div
-							className="mt-8 rounded p-4"
+							className="mt-4 rounded p-4"
 							style={{ backgroundColor: secondaryColor }}
 						>
 							<p

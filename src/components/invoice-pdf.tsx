@@ -30,10 +30,12 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 	return StyleSheet.create({
 		page: {
 			padding: 40,
+			paddingBottom: 56,
 			fontSize: 11,
 			...body,
 			backgroundColor: secondary,
 			color: textColors.foreground,
+			justifyContent: "flex-start",
 		},
 		header: {
 			position: "relative",
@@ -135,6 +137,23 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			justifyContent: "space-between",
 			alignItems: "flex-start",
 		},
+		totalsOnlyContainer: {
+			marginTop: 20,
+			flexDirection: "row",
+			justifyContent: "flex-end",
+			alignItems: "flex-start",
+		},
+		summarySection: {
+			flexGrow: 0,
+			flexShrink: 0,
+		},
+		summarySide: {
+			flex: 1,
+			maxWidth: "45%",
+			paddingRight: 20,
+			flexDirection: "column",
+			alignItems: "flex-start",
+		},
 		totals: {
 			alignItems: "flex-end",
 			backgroundColor: secondary,
@@ -178,9 +197,8 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 			color: textColors.accent,
 		},
 		paymentInfo: {
-			flex: 1,
-			maxWidth: "45%",
-			paddingRight: 20,
+			flexGrow: 0,
+			flexShrink: 0,
 		},
 		paymentTitle: {
 			...heading,
@@ -190,24 +208,32 @@ function createInvoicePdfStyles(branding: InvoiceBranding) {
 		},
 		paymentText: {
 			fontSize: 9,
-			lineHeight: 1.5,
 			whiteSpace: "pre-wrap",
 			color: textColors.mutedForeground,
 		},
 		notes: {
-			marginTop: 30,
+			marginTop: 16,
+			flexGrow: 0,
+			flexShrink: 0,
+			alignSelf: "stretch",
+		},
+		notesPanel: {
+			marginTop: 16,
 			padding: 15,
 			backgroundColor: secondary,
 			borderRadius: 4,
+			flexGrow: 0,
+			flexShrink: 0,
 		},
 		notesTitle: {
 			...heading,
 			marginBottom: 8,
+			fontSize: 11,
 			color: textColors.accent,
 		},
 		notesText: {
 			fontSize: 10,
-			lineHeight: 1.5,
+			whiteSpace: "pre-wrap",
 		},
 		footer: {
 			position: "absolute",
@@ -453,64 +479,84 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoicePdfData }) => {
 					</View>
 				)}
 
-				<View
-					style={
-						invoice.paymentInstructions
-							? styles.totalsContainer
-							: { marginTop: 20, alignItems: "flex-end" }
-					}
-				>
-					{invoice.paymentInstructions && (
-						<View style={styles.paymentInfo}>
-							<Text style={styles.paymentTitle}>Payment Information</Text>
-							<Text style={styles.paymentText}>
-								{invoice.paymentInstructions}
-							</Text>
-						</View>
-					)}
-
-					<View style={styles.totals}>
-						<View style={styles.totalRow}>
-							<Text style={styles.totalLabel}>Subtotal:</Text>
-							<Text style={styles.totalValue}>
-								${invoice.subtotal.toFixed(2)}
-							</Text>
-						</View>
-						{invoice.tax > 0 && (
-							<View style={styles.totalRow}>
-								<Text style={styles.totalLabel}>
-									Tax ({((invoice.tax / invoice.subtotal) * 100).toFixed(1)}%):
-								</Text>
-								<Text style={styles.totalValue}>${invoice.tax.toFixed(2)}</Text>
+				<View style={styles.summarySection} wrap={false}>
+					<View
+						style={
+							invoice.paymentInstructions
+								? styles.totalsContainer
+								: styles.totalsOnlyContainer
+						}
+						wrap={false}
+					>
+						{invoice.paymentInstructions && (
+							<View style={styles.summarySide} wrap={false}>
+								<View style={styles.paymentInfo} wrap={false}>
+									<Text style={styles.paymentTitle}>
+										Payment Information
+									</Text>
+									<Text style={styles.paymentText} wrap={false}>
+										{invoice.paymentInstructions}
+									</Text>
+								</View>
+								{invoice.notes && (
+									<View style={styles.notes} wrap={false}>
+										<Text style={styles.notesTitle}>Notes</Text>
+										<Text style={styles.notesText} wrap={false}>
+											{invoice.notes}
+										</Text>
+									</View>
+								)}
 							</View>
 						)}
-						{invoice.roundingAdjustment &&
-							Math.abs(invoice.roundingAdjustment) >= 0.001 && (
+
+						<View style={styles.totals} wrap={false}>
+							<View style={styles.totalRow}>
+								<Text style={styles.totalLabel}>Subtotal:</Text>
+								<Text style={styles.totalValue}>
+									${invoice.subtotal.toFixed(2)}
+								</Text>
+							</View>
+							{invoice.tax > 0 && (
 								<View style={styles.totalRow}>
-									<Text style={styles.totalLabelNoWrap}>Rounding:</Text>
+									<Text style={styles.totalLabel}>
+										Tax (
+										{((invoice.tax / invoice.subtotal) * 100).toFixed(1)}%):
+									</Text>
 									<Text style={styles.totalValue}>
-										{invoice.roundingAdjustment > 0 ? "+" : ""}$
-										{invoice.roundingAdjustment.toFixed(2)}
+										${invoice.tax.toFixed(2)}
 									</Text>
 								</View>
 							)}
-						<View style={[styles.totalRow, styles.grandTotal]}>
-							<Text style={[styles.totalLabel, styles.grandTotalLabel]}>
-								Total:
-							</Text>
-							<Text style={[styles.totalValue, styles.grandTotalValue]}>
-								${invoice.total.toFixed(2)}
-							</Text>
+							{invoice.roundingAdjustment &&
+								Math.abs(invoice.roundingAdjustment) >= 0.001 && (
+									<View style={styles.totalRow}>
+										<Text style={styles.totalLabelNoWrap}>Rounding:</Text>
+										<Text style={styles.totalValue}>
+											{invoice.roundingAdjustment > 0 ? "+" : ""}$
+											{invoice.roundingAdjustment.toFixed(2)}
+										</Text>
+									</View>
+								)}
+							<View style={[styles.totalRow, styles.grandTotal]}>
+								<Text style={[styles.totalLabel, styles.grandTotalLabel]}>
+									Total:
+								</Text>
+								<Text style={[styles.totalValue, styles.grandTotalValue]}>
+									${invoice.total.toFixed(2)}
+								</Text>
+							</View>
 						</View>
 					</View>
-				</View>
 
-				{invoice.notes && (
-					<View style={styles.notes}>
-						<Text style={styles.notesTitle}>Notes</Text>
-						<Text style={styles.notesText}>{invoice.notes}</Text>
-					</View>
-				)}
+					{invoice.notes && !invoice.paymentInstructions && (
+						<View style={styles.notesPanel} wrap={false}>
+							<Text style={styles.notesTitle}>Notes</Text>
+							<Text style={styles.notesText} wrap={false}>
+								{invoice.notes}
+							</Text>
+						</View>
+					)}
+				</View>
 
 				<Text style={styles.footer}>
 					Thank you for your business! • Payment is due by {invoice.dueDate}
