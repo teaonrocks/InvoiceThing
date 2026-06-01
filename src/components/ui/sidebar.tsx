@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useOwnerWindow } from "@/hooks/use-owner-window"
+import { useOwnerWindowRef } from "@/hooks/use-owner-window"
 import {
   getSidebarOpenFromDom,
   persistSidebarOpen,
@@ -77,8 +77,15 @@ const SidebarProvider = React.forwardRef<
     ref
   ) => {
     const wrapperRef = React.useRef<HTMLDivElement>(null)
+    const { ref: ownerRef, ownerWindow } = useOwnerWindowRef()
+    const setWrapperRef = React.useCallback(
+      (node: HTMLDivElement | null) => {
+        wrapperRef.current = node
+        ownerRef(node)
+      },
+      [ownerRef],
+    )
     React.useImperativeHandle(ref, () => wrapperRef.current!)
-    const ownerWindow = useOwnerWindow(wrapperRef)
     const isMobile = useIsMobile(ownerWindow)
     const [openMobile, setOpenMobile] = React.useState(false)
 
@@ -159,7 +166,7 @@ const SidebarProvider = React.forwardRef<
               "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
               className
             )}
-            ref={wrapperRef}
+            ref={setWrapperRef}
             suppressHydrationWarning
             {...props}
           >

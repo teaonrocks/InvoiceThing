@@ -1,40 +1,42 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { getInvoiceFont } from "@/lib/invoice-branding";
 
 export function useInvoiceBrandingFont(fontKey?: string) {
 	const font = getInvoiceFont(fontKey);
 	const linkRef = useRef<HTMLLinkElement | null>(null);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
+		const previousLink = linkRef.current;
+		if (previousLink) {
+			previousLink.remove();
+			linkRef.current = null;
+		}
+
 		if (!fontKey) return;
 
 		const linkId = `invoice-branding-font-${font.key}`;
 		const existing = document.getElementById(linkId);
-		if (existing instanceof HTMLLinkElement) {
-			linkRef.current = existing;
-			return;
-		}
+		const link =
+			existing instanceof HTMLLinkElement
+				? existing
+				: (() => {
+						const created = document.createElement("link");
+						created.id = linkId;
+						created.rel = "stylesheet";
+						created.href = font.googleFontsUrl;
+						document.head.appendChild(created);
+						return created;
+					})();
 
-		const link = document.createElement("link");
-		link.id = linkId;
-		link.rel = "stylesheet";
-		link.href = font.googleFontsUrl;
-		link.disabled = true;
-		document.head.appendChild(link);
+		link.disabled = false;
 		linkRef.current = link;
 
 		return () => {
-			linkRef.current?.remove();
-			linkRef.current = null;
-		};
-	}, [font.googleFontsUrl, font.key, fontKey]);
-
-	useLayoutEffect(() => {
-		const link = linkRef.current;
-		if (!link) return;
-		link.disabled = false;
-		return () => {
-			link.disabled = true;
+			if (linkRef.current === link) {
+				link.disabled = true;
+				link.remove();
+				linkRef.current = null;
+			}
 		};
 	}, [font.googleFontsUrl, font.key, fontKey]);
 

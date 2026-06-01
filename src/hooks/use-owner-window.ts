@@ -1,21 +1,28 @@
-import { type RefObject, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 /** Resolve the window that owns a DOM node (portal / iframe safe). */
-export function getOwnerWindow(node: Node | null | undefined): Window | undefined {
+export function getOwnerWindow(
+	node: Node | null | undefined,
+): Window | undefined {
 	if (!node) return undefined;
 	return node.ownerDocument?.defaultView ?? undefined;
 }
 
-export function useOwnerWindow(
-	ref: RefObject<Element | null>,
-): Window | undefined {
+export function useOwnerWindowRef(): {
+	ref: (node: Element | null) => void;
+	ownerWindow: Window | undefined;
+} {
 	const [ownerWindow, setOwnerWindow] = useState<Window | undefined>(
 		undefined,
 	);
 
-	useEffect(() => {
-		setOwnerWindow(getOwnerWindow(ref.current));
-	}, [ref]);
+	const ref = useCallback((node: Element | null) => {
+		setOwnerWindow(getOwnerWindow(node));
+	}, []);
 
-	return ownerWindow ?? (typeof window !== "undefined" ? window : undefined);
+	return {
+		ref,
+		ownerWindow:
+			ownerWindow ?? (typeof window !== "undefined" ? window : undefined),
+	};
 }

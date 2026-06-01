@@ -7,14 +7,6 @@ import { motion, useInView } from "motion/react";
 
 export const Route = createFileRoute("/")({
 	ssr: true,
-	loader: async ({ context }) => {
-		const { getHomeLoaderData, getRequestFromLoaderContext } = await import(
-			"@/lib/server-data"
-		);
-		const request = getRequestFromLoaderContext(context);
-		if (!request) return null;
-		return getHomeLoaderData(request);
-	},
 	component: Home,
 });
 

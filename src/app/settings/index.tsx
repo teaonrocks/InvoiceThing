@@ -1,4 +1,4 @@
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { usePostHog } from "@posthog/react";

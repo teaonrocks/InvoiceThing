@@ -40,6 +40,7 @@ export function InvoiceStatusSelect({
 	const [selectedValueState, setSelectedValueState] = useState<
 		InvoiceStatus | undefined
 	>(defaultValue);
+	const [isUncontrolledPending, setIsUncontrolledPending] = useState(false);
 	const [, startTransition] = useTransition();
 
 	const controlled = useOptimisticAction(
@@ -62,17 +63,31 @@ export function InvoiceStatusSelect({
 			return;
 		}
 
+		if (isUncontrolledPending) return;
+
+		const previousValue = selectedValueState ?? defaultValue ?? "draft";
+
 		startTransition(async () => {
+			setIsUncontrolledPending(true);
 			setSelectedValueState(nextValue);
-			await onValueChange(nextValue);
+			try {
+				await onValueChange(nextValue);
+			} catch (error) {
+				setSelectedValueState(previousValue);
+				throw error;
+			} finally {
+				setIsUncontrolledPending(false);
+			}
 		});
 	};
+
+	const isPending = controlled.isPending || isUncontrolledPending;
 
 	return (
 		<Select
 			value={selectedValue}
 			onValueChange={(next) => handleValueChange(next as InvoiceStatus)}
-			disabled={disabled || controlled.isPending}
+			disabled={disabled || isPending}
 		>
 			<SelectTrigger className={cn("h-8 w-[140px]", triggerClassName)}>
 				<SelectValue placeholder="Select status">

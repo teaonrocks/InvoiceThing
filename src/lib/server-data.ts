@@ -11,9 +11,12 @@ import {
 
 export type SafeConvexUser = {
 	_id: string;
-	clerkId?: string;
-	[key: string]: unknown;
-} | null;
+	clerkId: string;
+	email: string;
+	name?: string;
+	imageUrl?: string;
+	createdAt: number;
+};
 
 export type HomeLoaderData = {
 	convexUser: SafeConvexUser;
@@ -34,7 +37,30 @@ function getConvexUrl(): string {
 	);
 }
 
-export function getRequestFromLoaderContext(context: unknown): Request | undefined {
+function toSafeConvexUser(raw: unknown): SafeConvexUser | null {
+	if (!raw || typeof raw !== "object") return null;
+
+	const user = raw as Record<string, unknown>;
+	if (typeof user._id !== "string" || typeof user.clerkId !== "string") {
+		return null;
+	}
+	if (typeof user.email !== "string" || typeof user.createdAt !== "number") {
+		return null;
+	}
+
+	return {
+		_id: user._id,
+		clerkId: user.clerkId,
+		email: user.email,
+		createdAt: user.createdAt,
+		...(typeof user.name === "string" ? { name: user.name } : {}),
+		...(typeof user.imageUrl === "string" ? { imageUrl: user.imageUrl } : {}),
+	};
+}
+
+export function getRequestFromLoaderContext(
+	context: unknown,
+): Request | undefined {
 	if (context && typeof context === "object" && "request" in context) {
 		return (context as { request?: Request }).request;
 	}
@@ -43,13 +69,6 @@ export function getRequestFromLoaderContext(context: unknown): Request | undefin
 		const event = (context as { event?: { request?: Request } }).event;
 		if (event && typeof event === "object" && "request" in event) {
 			return event.request;
-		}
-	}
-
-	if (typeof globalThis !== "undefined") {
-		const globalRequest = (globalThis as { request?: Request }).request;
-		if (globalRequest instanceof Request) {
-			return globalRequest;
 		}
 	}
 
@@ -64,23 +83,27 @@ export const getRequestAuth = cache(async (request: Request) => {
 	return getServerAuth(request);
 });
 
-export const getRequestConvexUser = cache(async (request: Request) => {
-	const convexUrl = getConvexUrl();
-	if (!convexUrl) return null;
+export const getRequestConvexUser = cache(
+	async (request: Request): Promise<SafeConvexUser | null> => {
+		const convexUrl = getConvexUrl();
+		if (!convexUrl) return null;
 
-	const clerkToken = await getRequestClerkToken(request);
-	if (!clerkToken) return null;
+		const clerkToken = await getRequestClerkToken(request);
+		if (!clerkToken) return null;
 
-	const auth = await getRequestAuth(request);
-	if (!auth?.userId) return null;
+		const auth = await getRequestAuth(request);
+		if (!auth?.userId) return null;
 
-	return callConvexHttp(
-		convexUrl,
-		"users/getCurrentUser",
-		{ clerkId: auth.userId },
-		clerkToken,
-	);
-});
+		const raw = await callConvexHttp(
+			convexUrl,
+			"users/getCurrentUser",
+			{ clerkId: auth.userId },
+			clerkToken,
+		);
+
+		return toSafeConvexUser(raw);
+	},
+);
 
 export const getHomeLoaderData = cache(
 	async (request: Request): Promise<HomeLoaderData | null> => {
@@ -89,7 +112,7 @@ export const getHomeLoaderData = cache(
 		try {
 			const convexUser = await getRequestConvexUser(request);
 			if (!convexUser) return null;
-			return { convexUser: convexUser || null };
+			return { convexUser };
 		} catch (error) {
 			console.debug(
 				"Server-side home loader failed, using client-side hooks:",
