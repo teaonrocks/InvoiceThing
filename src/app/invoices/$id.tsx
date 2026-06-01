@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { InvoiceStatusBadge } from "@/components/invoice-status-badge";
 import { formatInvoiceCurrency } from "@/lib/invoice-format";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useInvoiceSettingsBranding } from "@/hooks/use-invoice-settings-branding";
 import { useInvoiceBrandingFont } from "@/hooks/use-invoice-branding-font";
@@ -57,6 +58,7 @@ function InvoiceDetailPage() {
 	const { openReceiptSheet } = useMobileReceipt();
 	const { currentUser } = useAppData();
 	const posthog = usePostHog();
+	const { toast } = useToast();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
@@ -104,16 +106,29 @@ function InvoiceDetailPage() {
 		if (!invoice) return;
 
 		const previousStatus = invoice.status;
-		await updateStatus({
-			invoiceId: invoice._id,
-			status: newStatus,
-		});
-		posthog.capture("invoice_status_updated", {
-			invoice_id: invoice._id,
-			invoice_number: invoice.invoiceNumber,
-			previous_status: previousStatus,
-			new_status: newStatus,
-		});
+		try {
+			await updateStatus({
+				invoiceId: invoice._id,
+				status: newStatus,
+			});
+			posthog.capture("invoice_status_updated", {
+				invoice_id: invoice._id,
+				invoice_number: invoice.invoiceNumber,
+				previous_status: previousStatus,
+				new_status: newStatus,
+			});
+		} catch (error) {
+			console.error(error);
+			toast({
+				title: "Failed to update status",
+				description:
+					error instanceof Error
+						? error.message
+						: "Could not update invoice status.",
+				variant: "destructive",
+			});
+			throw error;
+		}
 	};
 
 	const handleDelete = async () => {

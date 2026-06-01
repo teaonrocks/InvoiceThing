@@ -1,19 +1,34 @@
-import * as React from "react"
+import * as React from "react";
 
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
+const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+function subscribeToMobileQuery(
+	onStoreChange: () => void,
+	ownerWindow: Window | undefined,
+) {
+	if (!ownerWindow) return () => {};
+	const mql = ownerWindow.matchMedia(MOBILE_MEDIA_QUERY);
+	mql.addEventListener("change", onStoreChange);
+	return () => mql.removeEventListener("change", onStoreChange);
+}
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+function getMobileSnapshot(ownerWindow: Window | undefined) {
+	if (!ownerWindow) return false;
+	return ownerWindow.matchMedia(MOBILE_MEDIA_QUERY).matches;
+}
 
-  return !!isMobile
+function getServerMobileSnapshot() {
+	return false;
+}
+
+export function useIsMobile(ownerWindow?: Window) {
+	const win =
+		ownerWindow ?? (typeof window !== "undefined" ? window : undefined);
+
+	return React.useSyncExternalStore(
+		(onStoreChange) => subscribeToMobileQuery(onStoreChange, win),
+		() => getMobileSnapshot(win),
+		getServerMobileSnapshot,
+	);
 }

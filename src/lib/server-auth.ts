@@ -1,10 +1,16 @@
 /**
- * Server-side authentication utilities for TanStack Start SSR
- * 
+ * Server-side authentication utilities for TanStack Start SSR.
+ *
+ * SECURITY BOUNDARY: This module runs only on the server. Never import it from
+ * client components except via dynamic import inside route loaders. Functions
+ * here may access CLERK_SECRET_KEY and return short-lived JWTs — those values
+ * must never be returned from loaders or passed as React props to the client.
+ * Loaders should return only safe, serializable data (see src/lib/server-data.ts).
+ *
  * Requires:
  * - @clerk/backend package installed (optional, will gracefully degrade if not available)
  * - CLERK_SECRET_KEY environment variable set for server-side auth
- * 
+ *
  * Note: This file uses dynamic imports to avoid requiring @clerk/backend on client
  */
 
@@ -31,16 +37,12 @@ async function getClerkBackend() {
 	}
 
 	if (!clerkInstance) {
-		const secretKey =
-			process.env.CLERK_SECRET_KEY ||
-			process.env.VITE_CLERK_SECRET_KEY ||
-			"";
-		
+		const secretKey = process.env.CLERK_SECRET_KEY || "";
+
 		if (!secretKey) {
 			if (process.env.NODE_ENV === "development") {
-				console.warn("[Server Auth] CLERK_SECRET_KEY not found. Available env vars:", {
+				console.warn("[Server Auth] CLERK_SECRET_KEY not found.", {
 					hasCLERK_SECRET_KEY: !!process.env.CLERK_SECRET_KEY,
-					hasVITE_CLERK_SECRET_KEY: !!process.env.VITE_CLERK_SECRET_KEY,
 					nodeEnv: process.env.NODE_ENV,
 				});
 			}
@@ -127,10 +129,14 @@ export async function callConvexHttp(
 		throw new Error("Authentication token required for Convex HTTP calls");
 	}
 
+	const CONVEX_HTTP_TIMEOUT_MS = 5000;
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), CONVEX_HTTP_TIMEOUT_MS);
+
 	try {
 		// Convex HTTP API endpoint format: {convexUrl}/api/query
 		const url = `${convexUrl.replace(/\/$/, "")}/api/query`;
-		
+
 		const response = await fetch(url, {
 			method: "POST",
 			headers: {
@@ -142,12 +148,13 @@ export async function callConvexHttp(
 				args,
 				format: "json",
 			}),
+			signal: controller.signal,
 		});
 
 		if (!response.ok) {
 			const errorText = await response.text();
 			throw new Error(
-				`Convex query failed: ${response.status} ${response.statusText} - ${errorText}`
+				`Convex query failed: ${response.status} ${response.statusText} - ${errorText}`,
 			);
 		}
 
@@ -155,7 +162,12 @@ export async function callConvexHttp(
 		// Convex returns { value: ... } for queries
 		return result.value;
 	} catch (error) {
+		if (error instanceof Error && error.name === "AbortError") {
+			throw new Error("Convex request timed out");
+		}
 		console.error("Error calling Convex HTTP:", error);
 		throw error;
+	} finally {
+		clearTimeout(timeoutId);
 	}
 }

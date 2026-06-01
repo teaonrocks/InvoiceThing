@@ -152,7 +152,7 @@ export const useInvoiceColumns = ({
 				header: () => <ColumnHeader title="Status" />,
 				cell: ({ row }) => (
 					<InvoiceStatusSelect
-						defaultValue={row.original.status}
+						value={row.original.status}
 						onValueChange={(value) =>
 							onStatusChange(row.original._id, value)
 						}

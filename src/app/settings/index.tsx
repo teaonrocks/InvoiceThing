@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "convex/react";
 import { usePostHog } from "@posthog/react";
@@ -124,6 +124,7 @@ function SettingsPage() {
 	);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
+	const [, startTransition] = useTransition();
 
 	const { uploadImage, isUploading: isUploadingLogo } = useImageUpload({
 		preserveTransparency: true,
@@ -204,46 +205,48 @@ function SettingsPage() {
 
 		setIsSubmitting(true);
 
-		try {
-			await upsertSettings({
-				userId: currentUser._id,
-				invoicePrefix,
-				invoiceNumberStart,
-				dueDateDays,
-				taxRate: taxRate / 100, // Convert percentage to decimal
-				paymentInstructions: paymentInstructions.trim() || undefined,
-				enableRounding,
-				roundingIncrement,
-				logoStorageId: clearLogo ? undefined : logoStorageId,
-				clearLogo,
-				invoiceAccentColor: normalizedAccent,
-				invoiceSecondaryColor: normalizedSecondary,
-				invoiceFontFamily,
-			});
+		startTransition(async () => {
+			try {
+				await upsertSettings({
+					userId: currentUser._id,
+					invoicePrefix,
+					invoiceNumberStart,
+					dueDateDays,
+					taxRate: taxRate / 100, // Convert percentage to decimal
+					paymentInstructions: paymentInstructions.trim() || undefined,
+					enableRounding,
+					roundingIncrement,
+					logoStorageId: clearLogo ? undefined : logoStorageId,
+					clearLogo,
+					invoiceAccentColor: normalizedAccent,
+					invoiceSecondaryColor: normalizedSecondary,
+					invoiceFontFamily,
+				});
 
-			posthog.capture("settings_saved", {
-				tax_rate: taxRate,
-				due_date_days: dueDateDays,
-				enable_rounding: enableRounding,
-				has_logo: Boolean(logoStorageId) && !clearLogo,
-				has_payment_instructions: Boolean(paymentInstructions.trim()),
-				font_family: invoiceFontFamily,
-			});
+				posthog.capture("settings_saved", {
+					tax_rate: taxRate,
+					due_date_days: dueDateDays,
+					enable_rounding: enableRounding,
+					has_logo: Boolean(logoStorageId) && !clearLogo,
+					has_payment_instructions: Boolean(paymentInstructions.trim()),
+					font_family: invoiceFontFamily,
+				});
 
-			toast({
-				title: "Success",
-				description: "Settings saved successfully",
-			});
-		} catch (error) {
-			console.error("Error saving settings:", error);
-			toast({
-				title: "Error",
-				description: "Failed to save settings. Please try again.",
-				variant: "destructive",
-			});
-		} finally {
-			setIsSubmitting(false);
-		}
+				toast({
+					title: "Success",
+					description: "Settings saved successfully",
+				});
+			} catch (error) {
+				console.error("Error saving settings:", error);
+				toast({
+					title: "Error",
+					description: "Failed to save settings. Please try again.",
+					variant: "destructive",
+				});
+			} finally {
+				setIsSubmitting(false);
+			}
+		});
 	};
 
 	if (!user || !currentUser) {

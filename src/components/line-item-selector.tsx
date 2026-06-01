@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useMemo } from "react";
+import { getOwnerWindow } from "@/hooks/use-owner-window";
 import { Command as CommandPrimitive } from "cmdk";
 import { Button } from "@/components/ui/button";
 import { Input, inputShellClassName } from "@/components/ui/input";
@@ -81,6 +82,9 @@ export function LineItemSelector({
 	useEffect(() => {
 		if (!comboboxOpen || !containerRef.current) return;
 
+		const ownerWindow = getOwnerWindow(containerRef.current);
+		if (!ownerWindow) return;
+
 		const updateWidth = () => {
 			if (containerRef.current) {
 				setPopoverWidth(containerRef.current.offsetWidth);
@@ -88,8 +92,8 @@ export function LineItemSelector({
 		};
 
 		updateWidth();
-		window.addEventListener("resize", updateWidth);
-		return () => window.removeEventListener("resize", updateWidth);
+		ownerWindow.addEventListener("resize", updateWidth);
+		return () => ownerWindow.removeEventListener("resize", updateWidth);
 	}, [popoverOpen]);
 
 	useEffect(() => {
