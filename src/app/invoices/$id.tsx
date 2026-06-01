@@ -104,16 +104,21 @@ function InvoiceDetailPage() {
 		if (!invoice) return;
 
 		const previousStatus = invoice.status;
-		await updateStatus({
-			invoiceId: invoice._id,
-			status: newStatus,
-		});
-		posthog.capture("invoice_status_updated", {
-			invoice_id: invoice._id,
-			invoice_number: invoice.invoiceNumber,
-			previous_status: previousStatus,
-			new_status: newStatus,
-		});
+		try {
+			await updateStatus({
+				invoiceId: invoice._id,
+				status: newStatus,
+			});
+			posthog.capture("invoice_status_updated", {
+				invoice_id: invoice._id,
+				invoice_number: invoice.invoiceNumber,
+				previous_status: previousStatus,
+				new_status: newStatus,
+			});
+		} catch (error) {
+			console.error(error);
+			throw error;
+		}
 	};
 
 	const handleDelete = async () => {

@@ -14,146 +14,23 @@ const DashboardCharts = lazy(() =>
 );
 
 export const Route = createFileRoute("/dashboard/")({
-	// Enable SSR for this route
 	ssr: true,
-	// Loader runs on server during SSR and on client during navigation
 	loader: async ({ context }) => {
-		// Try to get request from context (if available in SSR)
-		// Nitro passes request as event.request in some setups
-		let request: Request | undefined;
+		const { getDashboardLoaderData, getRequestFromLoaderContext } =
+			await import("@/lib/server-data");
+		const request = getRequestFromLoaderContext(context);
 
-		// Check context.request (standard TanStack Start)
-		if (context && typeof context === "object" && "request" in context) {
-			request = (context as any).request as Request | undefined;
+		if (process.env.NODE_ENV === "development" && typeof window === "undefined") {
+			console.log("[SSR Loader] Running on server");
+			console.log("[SSR Loader] Request available:", !!request);
+			console.log(
+				"[SSR Loader] CLERK_SECRET_KEY set:",
+				!!process.env.CLERK_SECRET_KEY,
+			);
 		}
 
-		// Check context.event.request (Nitro format)
-		if (
-			!request &&
-			context &&
-			typeof context === "object" &&
-			"event" in context
-		) {
-			const event = (context as any).event;
-			if (event && typeof event === "object" && "request" in event) {
-				request = event.request as Request | undefined;
-			}
-		}
-
-		// Fallback: check globalThis (for some SSR setups)
-		if (!request && typeof globalThis !== "undefined") {
-			const globalRequest = (globalThis as any).request;
-			if (globalRequest instanceof Request) {
-				request = globalRequest;
-			}
-		}
-
-		// Check if we're on the server
-		if (typeof window === "undefined") {
-			try {
-				// Import server-side utilities
-				const { getClerkToken, callConvexHttp } =
-					await import("@/lib/server-auth");
-
-				// Debug: Log if we're on server and if request is available
-				if (process.env.NODE_ENV === "development") {
-					console.log("[SSR Loader] Running on server");
-					console.log("[SSR Loader] Request available:", !!request);
-					console.log(
-						"[SSR Loader] CLERK_SECRET_KEY set:",
-						!!process.env.CLERK_SECRET_KEY,
-					);
-				}
-
-				// If no request, we can't authenticate - fall back to client-side
-				if (!request) {
-					if (process.env.NODE_ENV === "development") {
-						console.log(
-							"[SSR Loader] No request available, falling back to client-side hooks",
-						);
-					}
-					return null;
-				}
-
-				// Get Clerk user ID and JWT token
-				const clerkToken = await getClerkToken(request);
-				if (!clerkToken) {
-					// Not authenticated, return null to use client-side hooks
-					if (process.env.NODE_ENV === "development") {
-						console.log(
-							"[SSR Loader] No Clerk token available, falling back to client-side hooks",
-						);
-					}
-					return null;
-				}
-
-				// Get Convex URL from environment
-				const convexUrl =
-					process.env.VITE_CONVEX_URL ||
-					process.env.VITE_PUBLIC_CONVEX_URL ||
-					process.env.NEXT_PUBLIC_CONVEX_URL ||
-					"";
-
-				if (!convexUrl) {
-					console.warn("Convex URL not found in environment variables");
-					return null;
-				}
-
-				// Get Clerk user ID for Convex queries
-				const { getServerAuth } = await import("@/lib/server-auth");
-				const auth = await getServerAuth(request);
-				if (!auth?.userId) {
-					return null;
-				}
-
-				// Fetch Convex user by Clerk ID
-				const convexUser = await callConvexHttp(
-					convexUrl,
-					"users/getCurrentUser",
-					{ clerkId: auth.userId },
-					clerkToken,
-				);
-
-				if (!convexUser?._id) {
-					// User not found in Convex, return null
-					return null;
-				}
-
-				// Fetch stats and invoices in parallel
-				const [stats, invoices] = await Promise.all([
-					callConvexHttp(
-						convexUrl,
-						"invoices/getStats",
-						{ userId: convexUser._id },
-						clerkToken,
-					),
-					callConvexHttp(
-						convexUrl,
-						"invoices/getByUser",
-						{ userId: convexUser._id },
-						clerkToken,
-					),
-				]);
-
-				// Return pre-fetched data
-				return {
-					stats,
-					invoices: invoices || [],
-					convexUser,
-				};
-			} catch (error) {
-				// Server-side auth/data fetching failed
-				// Fall back to client-side hooks
-				console.debug(
-					"Server-side data fetching failed, using client-side hooks:",
-					error,
-				);
-			}
-		}
-
-		// Return null to let existing hooks handle data fetching
-		// This ensures the component still works even without SSR
-		return null;
+		if (!request) return null;
+		return getDashboardLoaderData(request);
 	},
 	component: DashboardPage,
 });

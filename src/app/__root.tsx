@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useAppData } from "@/context/app-data-provider";
 import { ArrowUpRight } from "lucide-react";
 import { PostHogProvider } from "@posthog/react";
+import { SIDEBAR_HYDRATION_SCRIPT } from "@/lib/sidebar-state";
 
 export const Route = createRootRoute({
 	head: () => {
@@ -125,6 +126,9 @@ function RootLayout() {
 		<html lang="en" suppressHydrationWarning>
 			<head>
 				<HeadContent />
+				<script
+					dangerouslySetInnerHTML={{ __html: SIDEBAR_HYDRATION_SCRIPT }}
+				/>
 			</head>
 			<body>
 				<PostHogProvider

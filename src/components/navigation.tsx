@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { UserButton } from "@clerk/clerk-react";
 import { Menu, X } from "lucide-react";
@@ -28,13 +28,18 @@ export function Navigation() {
 	const location = useLocation();
 	const pathname = location.pathname;
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [, startTransition] = useTransition();
 
 	useEffect(() => {
-		setIsMenuOpen(false);
+		startTransition(() => {
+			setIsMenuOpen(false);
+		});
 	}, [pathname]);
 
 	const handleToggleMenu = () => {
-		setIsMenuOpen((open) => !open);
+		startTransition(() => {
+			setIsMenuOpen((open) => !open);
+		});
 	};
 
 	return (

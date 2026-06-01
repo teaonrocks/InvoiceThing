@@ -6,6 +6,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useOwnerWindow } from "@/hooks/use-owner-window"
+import {
+  getSidebarOpenFromDom,
+  persistSidebarOpen,
+} from "@/lib/sidebar-state"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,17 +30,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state"
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-
-function getSidebarStateFromCookie(): boolean | null {
-  if (typeof document === "undefined") return null
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${SIDEBAR_COOKIE_NAME}=([^;]*)`)
-  )
-  if (!match) return null
-  return match[1] === "true"
-}
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -82,15 +76,17 @@ const SidebarProvider = React.forwardRef<
     },
     ref
   ) => {
-    const isMobile = useIsMobile()
+    const wrapperRef = React.useRef<HTMLDivElement>(null)
+    React.useImperativeHandle(ref, () => wrapperRef.current!)
+    const ownerWindow = useOwnerWindow(wrapperRef)
+    const isMobile = useIsMobile(ownerWindow)
     const [openMobile, setOpenMobile] = React.useState(false)
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(() => {
-      const cookieState = getSidebarStateFromCookie()
-      return cookieState ?? defaultOpen
-    })
+    const [_open, _setOpen] = React.useState(() =>
+      getSidebarOpenFromDom(defaultOpen),
+    )
     const open = openProp ?? _open
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
@@ -101,8 +97,7 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        persistSidebarOpen(openState)
       },
       [setOpenProp, open]
     )
@@ -116,6 +111,8 @@ const SidebarProvider = React.forwardRef<
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
+      if (!ownerWindow) return
+
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
           event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -126,9 +123,9 @@ const SidebarProvider = React.forwardRef<
         }
       }
 
-      window.addEventListener("keydown", handleKeyDown)
-      return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [toggleSidebar])
+      ownerWindow.addEventListener("keydown", handleKeyDown)
+      return () => ownerWindow.removeEventListener("keydown", handleKeyDown)
+    }, [ownerWindow, toggleSidebar])
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
@@ -162,7 +159,8 @@ const SidebarProvider = React.forwardRef<
               "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
               className
             )}
-            ref={ref}
+            ref={wrapperRef}
+            suppressHydrationWarning
             {...props}
           >
             {children}

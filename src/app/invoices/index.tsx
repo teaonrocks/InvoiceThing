@@ -429,6 +429,7 @@ function InvoicesPage() {
 						"We couldn't update the invoice status. Please try again.",
 					variant: "destructive",
 				});
+				throw error;
 			} finally {
 				setIsStatusUpdating(false);
 			}

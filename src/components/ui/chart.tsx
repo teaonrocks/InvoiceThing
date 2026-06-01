@@ -68,9 +68,19 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = "Chart"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const styleRef = React.useRef<HTMLStyleElement>(null)
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color
   )
+
+  React.useLayoutEffect(() => {
+    const style = styleRef.current
+    if (!style) return
+    style.media = "all"
+    return () => {
+      style.media = "not all"
+    }
+  }, [])
 
   if (!colorConfig.length) {
     return null
@@ -78,6 +88,8 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
   return (
     <style
+      ref={styleRef}
+      media="not all"
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(

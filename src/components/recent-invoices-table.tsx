@@ -18,13 +18,7 @@ import {
 	InvoiceStatusBadge,
 	type InvoiceStatus,
 } from "@/components/invoice-status-badge";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { InvoiceStatusSelect } from "@/components/invoice-status-select";
 import {
 	Table,
 	TableBody,
@@ -64,13 +58,6 @@ type Invoice = {
 		contactPerson?: string | null;
 	} | null;
 };
-
-const STATUS_OPTIONS = [
-	{ value: "draft" as InvoiceStatus, label: "Draft", color: "bg-status-draft" },
-	{ value: "sent" as InvoiceStatus, label: "Sent", color: "bg-status-sent" },
-	{ value: "paid" as InvoiceStatus, label: "Paid", color: "bg-status-paid" },
-	{ value: "overdue" as InvoiceStatus, label: "Overdue", color: "bg-status-overdue" },
-];
 
 export function RecentInvoicesTable({
 	invoices,
@@ -125,6 +112,7 @@ export function RecentInvoicesTable({
 						"We couldn't update the invoice status. Please try again.",
 					variant: "destructive",
 				});
+				throw error;
 			} finally {
 				setIsUpdating(false);
 			}
@@ -209,31 +197,13 @@ export function RecentInvoicesTable({
 				accessorKey: "status",
 				header: () => <ColumnHeader title="Status" />,
 				cell: ({ row }) => (
-					<div className="flex items-center gap-2">
-						<Select
-							defaultValue={row.original.status}
-							onValueChange={(value) =>
-								handleStatusChange(row.original._id, value as InvoiceStatus)
-							}
-							disabled={isUpdating}
-						>
-							<SelectTrigger className="h-8 w-[140px]">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{STATUS_OPTIONS.map((option) => (
-									<SelectItem key={option.value} value={option.value}>
-										<div className="flex items-center gap-2">
-											<span
-												className={cn("h-2.5 w-2.5 rounded-full", option.color)}
-											/>
-											{option.label}
-										</div>
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<InvoiceStatusSelect
+						value={row.original.status}
+						onValueChange={(value) =>
+							handleStatusChange(row.original._id, value)
+						}
+						disabled={isUpdating}
+					/>
 				),
 			},
 		],

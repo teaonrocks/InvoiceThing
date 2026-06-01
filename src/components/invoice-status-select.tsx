@@ -1,3 +1,4 @@
+import { useState, useTransition } from "react";
 import {
 	Select,
 	SelectContent,
@@ -7,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { InvoiceStatus } from "@/components/invoice-status-badge";
-import { useState } from "react";
+import { useOptimisticAction } from "@/hooks/use-optimistic-action";
 
 export type InvoiceStatusOption = {
 	value: InvoiceStatus;
@@ -31,29 +32,47 @@ export function InvoiceStatusSelect({
 }: {
 	value?: InvoiceStatus;
 	defaultValue?: InvoiceStatus;
-	onValueChange: (value: InvoiceStatus) => void;
+	onValueChange: (value: InvoiceStatus) => void | Promise<void>;
 	disabled?: boolean;
 	triggerClassName?: string;
 }) {
-	const [selectedValueState, setSelectedValueState] = useState<InvoiceStatus | undefined>(defaultValue);
-	const selectedValue = value ?? selectedValueState;
+	const isControlled = value !== undefined;
+	const [selectedValueState, setSelectedValueState] = useState<
+		InvoiceStatus | undefined
+	>(defaultValue);
+	const [, startTransition] = useTransition();
+
+	const controlled = useOptimisticAction(
+		value ?? defaultValue ?? "draft",
+		async (next) => {
+			await onValueChange(next);
+		},
+	);
+
+	const selectedValue = isControlled
+		? controlled.value
+		: (selectedValueState ?? defaultValue);
 	const selectedOption = INVOICE_STATUS_OPTIONS.find(
 		(option) => option.value === selectedValue,
 	);
 
 	const handleValueChange = (nextValue: InvoiceStatus) => {
-		if (value === undefined) {
-			setSelectedValueState(nextValue);
+		if (isControlled) {
+			controlled.commit(nextValue);
+			return;
 		}
-		onValueChange(nextValue);
+
+		startTransition(async () => {
+			setSelectedValueState(nextValue);
+			await onValueChange(nextValue);
+		});
 	};
 
 	return (
 		<Select
-			value={value}
-			defaultValue={defaultValue}
+			value={selectedValue}
 			onValueChange={(next) => handleValueChange(next as InvoiceStatus)}
-			disabled={disabled}
+			disabled={disabled || controlled.isPending}
 		>
 			<SelectTrigger className={cn("h-8 w-[140px]", triggerClassName)}>
 				<SelectValue placeholder="Select status">
