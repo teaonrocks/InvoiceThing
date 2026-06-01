@@ -558,7 +558,7 @@ export const InvoicePDF = ({ invoice }: { invoice: InvoicePdfData }) => {
 					)}
 				</View>
 
-				<Text style={styles.footer} wrap={false}>
+				<Text style={styles.footer}>
 					Thank you for your business! • Payment is due by {invoice.dueDate}
 				</Text>
 			</Page>
