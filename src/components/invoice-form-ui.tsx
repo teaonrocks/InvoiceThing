@@ -447,14 +447,15 @@ export function InvoiceLineItemsEditor({
 							<Input
 								id={`qty-${item.id}`}
 								type="number"
-								min="1"
+								min="0.01"
+								step="any"
 								className="font-number"
 								value={item.quantity}
 								onChange={(e) =>
 									onUpdate(
 										item.id,
 										"quantity",
-										parseInt(e.target.value) || 1,
+										parseFloat(e.target.value) || 1,
 									)
 								}
 								required
